@@ -1,0 +1,35 @@
+<configuration debug="false">
+
+    <conversionRule conversionWord="coloredLevel" converterClass="play.api.Logger$ColoredLevel" />
+
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>/tmp/worker.log</file>
+        <encoder>
+            <pattern>%date - [%level] - from %logger{10} in %.15thread %message %xException%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="BEAT" class="ch.qos.logback.core.FileAppender">
+        <file>/tmp/beat.log</file>
+        <encoder>
+            <pattern>%message%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%date - [%level] - from %logger{10} in %.15thread %message %xException{8}%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="com.lucidchart" level="DEBUG" />
+    <logger name="com.lucidchart.piezo.jobs.monitoring.HeartBeat" level="INFO">
+        <appender-ref ref="BEAT" />
+    </logger>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE" />
+    </root>
+
+</configuration>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<job-scheduling-data xmlns="http://www.quartz-scheduler.org/xml/JobSchedulingData"
+                     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                     xsi:schemaLocation="http://www.quartz-scheduler.org/xml/JobSchedulingData http://www.quartz-scheduler.org/xml/job_scheduling_data_2_0.xsd"
+                     version="2.0">
+
+    <pre-processing-commands>
+    </pre-processing-commands>
+
+    <processing-directives>
+        <overwrite-existing-data>true</overwrite-existing-data>
+        <ignore-duplicates>false</ignore-duplicates>
+    </processing-directives>
+
+    <schedule>
+        <job>
+            <name>HeartBeatJob</name>
+            <group>Monitoring</group>
+            <job-class>com.lucidchart.piezo.jobs.monitoring.HeartBeat</job-class>
+            <durability>true</durability>
+            <recover>false</recover>
+        </job>
+
+        <trigger>
+            <cron>
+                <name>HeartBeatJob</name>
+                <group>Monitoring</group>
+                <job-name>HeartBeatJob</job-name>
+                <job-group>Monitoring</job-group>
+                <misfire-instruction>MISFIRE_INSTRUCTION_SMART_POLICY</misfire-instruction>
+                <cron-expression>0 * * * * ?</cron-expression>
+            </cron>
+        </trigger>
+
+        <job>
+            <name>JobHistoryCleanup</name>
+            <group>Worker</group>
+            <job-class>com.lucidchart.piezo.jobs.cleanup.jobs.JobHistoryCleanup</job-class>
+            <durability>true</durability>
+            <recover>false</recover>
+            <job-data-map>
+                <entry>
+                    <key>maxAgeDays</key>
+                    <value>60</value>
+                </entry>
+            </job-data-map>
+        </job>
+        <trigger>
+            <cron>
+                <name>JobHistoryCleanup</name>
+                <group>Worker</group>
+                <job-name>JobHistoryCleanup</job-name>
+                <job-group>Worker</job-group>
+                <misfire-instruction>MISFIRE_INSTRUCTION_SMART_POLICY</misfire-instruction>
+                <cron-expression>53 29 5 * * ?</cron-expression>
+            </cron>
+        </trigger>
+    </schedule>
+</job-scheduling-data>
