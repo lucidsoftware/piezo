@@ -40,6 +40,13 @@ TaskKey[Set[File]]("stage") <<= (fullClasspath in Runtime, target) map { (cp, ou
   IO.copy( entries x flat(toDirectory) )
 }
 
+mappings in (Compile, packageBin) ~= { (ms: Seq[(File, String)]) =>
+  ms filter {
+    case (file, toPath) =>
+      !excludeFileRegex.pattern.matcher(file.getName).matches
+  }
+}
+
 credentials += Credentials(Path.userHome / ".ivy2" / ".credentials")
 
 publishTo <<= (version) {
