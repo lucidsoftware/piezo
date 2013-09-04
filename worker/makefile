@@ -21,7 +21,7 @@ publish:
 
 .PHONY: fullbuild
 fullbuild:
-	sbt-0.12.2 clean compile "test" package
+	sbt-0.12.2 clean compile "test" package publish
 
 .PHONY: %
 %:
