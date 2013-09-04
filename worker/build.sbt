@@ -2,7 +2,7 @@ name := "piezo-worker"
 
 organization := "com.lucidchart"
 
-version := "1.0"
+version := "1.0-SNAPSHOT"
 
 scalaVersion := "2.10.1"
 
@@ -38,4 +38,17 @@ TaskKey[Set[File]]("stage") <<= (fullClasspath in Runtime, target) map { (cp, ou
   val entries: Seq[File] = cp.files
   val toDirectory: File = out / "staged"
   IO.copy( entries x flat(toDirectory) )
+}
+
+credentials += Credentials(Path.userHome / ".ivy2" / ".credentials")
+
+publishTo <<= (version) {
+	version: String =>
+		val lucidRepo = "http://repo.lucidchart.com:8081/artifactory/"
+		if (version.trim.endsWith("SNAPSHOT")) {
+			Some("snapshots" at lucidRepo + "libs-snapshot-local/")
+		}
+		else {
+			Some("releases" at lucidRepo + "libs-release-local/")
+		}
 }
