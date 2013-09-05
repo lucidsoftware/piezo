@@ -17,7 +17,7 @@ Worker also expands the set of tables that quartz uses with additional tables to
 3. Create the Piezo [job history tables](worker/src/main/resources/create_history_tables.sql).
 4. Create the quartz scheduler config file with a data source pointing to the job store database.
 5. Create your [Quartz scheduler library config file](http://quartz-scheduler.org/documentation/quartz-2.2.x/configuration/).
-6. Run Piezo as specified below.
+6. Run Piezo as specified in [Running](#running).
 
 ###Building
 Run
