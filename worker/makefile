@@ -6,27 +6,27 @@ default: all
 
 .PHONY: package
 package:
-	sbt-0.12.2 package
+	sbt package
 
 .PHONY: test
 test:
-	sbt-0.12.2 test
+	sbt test
 
 .PHONY: all
 all: compile test
 
 .PHONY: stage
 stage:
-	sbt-0.12.2 stage
+	sbt stage
 
 .PHONY: publish
 publish:
-	sbt-0.12.2 publish
+	sbt publish
 
 .PHONY: fullbuild
 fullbuild:
-	sbt-0.12.2 clean compile "test" package publish
+	sbt clean compile "test" package publish
 
 .PHONY: %
 %:
-	sbt-0.12.2 $*
+	sbt $*

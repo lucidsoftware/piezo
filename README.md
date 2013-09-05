@@ -20,12 +20,19 @@ Worker also expands the set of tables that quartz uses with additional tables to
 6. Run Piezo as specified in [Running](#running).
 
 ###Building
-Run
+You must have [sbt](http://www.scala-sbt.org/) version 0.12.0 or higher to build the worker project.
 
-```
-make package
-```
-to build the worker jar.
+To compile the project run
+
+`make compile`.
+
+To package the project into a jar run
+
+`make package`.
+
+To collect all dependencies into a single folder (target/staged) run
+
+`make stage`
 
 ###Configuration
 ####JVM properties
