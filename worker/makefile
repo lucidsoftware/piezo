@@ -15,6 +15,10 @@ test:
 .PHONY: all
 all: compile test
 
+.PHONY: stage
+stage:
+	sbt-0.12.2 stage
+
 .PHONY: publish
 publish:
 	sbt-0.12.2 publish
