@@ -37,7 +37,7 @@ to build the worker jar.
 A sample java command for running a single worker instance:
 
 ```
-java -Dlogback.configurationFile=<path to logback config> -Dorg.quartz.properties=<path to quartz properties> -Dpidfile.path=<path to pid file> -Dnetworkaddress.cache.ttl=10 -Dnetworkaddress.cache.negative.ttl=10 -cp <path to jars>/* com.lucidchart.piezo.Worker
+java -Dlogback.configurationFile=<path to logback config> -Dorg.quartz.properties=<path to quartz properties> -Dpidfile.path=<path to pid file> -Dnetworkaddress.cache.ttl=10 -Dnetworkaddress.cache.negative.ttl=10 -cp <path to jars> com.lucidchart.piezo.Worker
 ```
 
 ###Stats
