@@ -15,8 +15,8 @@ Worker also expands the set of tables that quartz uses with additional tables to
 1. Create a database. Piezo includes a [sample database creation script](worker/src/main/resources/create_database.sql)
 2. Create the standard [job store](http://quartz-scheduler.org/documentation/quartz-2.2.x/tutorials/tutorial-lesson-09) tables.
 3. Create the Piezo [job history tables](worker/src/main/resources/create_history_tables.sql).
-4. Create the quartz scheduler config file with a data source pointing to the job store database.
-5. Create your [Quartz scheduler library config file](http://quartz-scheduler.org/documentation/quartz-2.2.x/configuration/).
+4. Create your quartz scheduler [job initialization file](http://quartz-scheduler.org/documentation/quartz-2.2.x/cookbook/JobInitPlugin).
+5. Create your [Quartz scheduler library config file](http://quartz-scheduler.org/documentation/quartz-2.2.x/configuration/) with a data source pointing to the job store database just created.
 6. Run Piezo as specified in [Running](#running).
 
 ###Building
@@ -43,7 +43,7 @@ java -Dlogback.configurationFile=<path to logback config> -Dorg.quartz.propertie
 ###Stats
 Worker reports statistics to a [StatsD](https://github.com/etsy/statsd/) server if available.
 
-It also stores historical job execution data in pair of database tables defined in [create_history_tables.sql](worker/src/main/resources/create_history_tables.sql). These tables should be added to the same datasource as the standard quartz tables.
+It also stores historical job execution data in a pair of database tables defined in [create_history_tables.sql](worker/src/main/resources/create_history_tables.sql). These tables should be added to the same datasource as the standard quartz tables.
 
 
 ##Admin
