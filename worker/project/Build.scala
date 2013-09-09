@@ -5,5 +5,5 @@ object Build extends Build {
   lazy val root =
     Project("root", file("."))
 
-  val excludeFileRegex = """(.*)\.(properties|sql)$""".r
+  val excludeFileRegex = """(.*)\.(properties|sql|sh)$""".r
 }
