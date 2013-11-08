@@ -7,6 +7,7 @@ import java.util.Properties
 
 class JobHistoryModel(props: Properties) {
   val logger = LoggerFactory.getLogger(this.getClass)
+  val pwd = props.getProperty("org.quartz.dataSource.jobs.password")
   val connectionProvider = new ConnectionProvider(props)
 
   def addJob(context: JobExecutionContext, success:Boolean) {

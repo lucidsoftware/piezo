@@ -1,0 +1,19 @@
+@(
+)(
+implicit
+request: play.api.mvc.Request[AnyContent]
+)
+@import com.lucidchart.piezo.admin.controllers.{routes=>piezoRoutes}
+@import com.lucidchart.piezo.admin.views
+
+@com.lucidchart.piezo.admin.views.html.main("Piezo Admin Home") {
+<div class="clearfix" style="text-align: center; margin: 15px 0;">
+    <img src="@routes.Assets.at("img/PiezoLogo.png")">
+</div>
+<div class="well">
+    <a href="https://github.com/lucidsoftware/piezo">Piezo</a>
+    was created by
+    <a href="https://www.lucidchart.com/" target="_blank">Lucid Software, Inc.</a>
+    to provide management tools for quartz scheduler clusters.
+</div>
+}

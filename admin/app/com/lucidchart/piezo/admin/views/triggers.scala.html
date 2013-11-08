@@ -1,0 +1,17 @@
+@(
+triggers: List[String]
+)(
+implicit
+request: play.api.mvc.Request[AnyContent]
+)
+@import com.lucidchart.piezo.admin.controllers.{routes=>piezoRoutes}
+@import com.lucidchart.piezo.admin.views
+
+@com.lucidchart.piezo.admin.views.html.main("Piezo Triggers") {
+<h3>Triggers</h3>
+<ul>
+    @triggers.map { item =>
+    <li><a href="">@item</a></li>
+    }
+</ul>
+}

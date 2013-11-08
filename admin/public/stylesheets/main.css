@@ -1,0 +1,12 @@
+
+body {
+    padding-top: 60px; /* 40px to make the container go all the way to the bottom of the topbar */
+}
+
+.flash-container div {
+    margin-top: 10px;
+}
+
+a:link.piezoicon, a:visited.piezoicon, a:hover.piezoicon, a:active.piezoicon {
+    color: #29aae1 !important;
+}

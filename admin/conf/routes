@@ -1,0 +1,14 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Home page
+GET     /                           com.lucidchart.piezo.admin.controllers.Application.index
+GET     /jobs                       com.lucidchart.piezo.admin.controllers.Jobs.index
+GET     /triggers                   com.lucidchart.piezo.admin.controllers.Triggers.index
+
+GET     /favicon.ico                com.lucidchart.piezo.admin.controllers.Application.favicon
+
+# Map static resources from the /public folder to the /assets URL path
+
+GET     /assets/*file               controllers.Assets.at(path="/public", file)
