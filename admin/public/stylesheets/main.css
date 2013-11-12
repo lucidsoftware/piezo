@@ -10,3 +10,35 @@ body {
 a:link.piezoicon, a:visited.piezoicon, a:hover.piezoicon, a:active.piezoicon {
     color: #29aae1 !important;
 }
+
+div.jobs-list .list-group {
+    margin-bottom: 0px;
+}
+
+div.jobs-list .panel-heading {
+    padding: 0px 0px 0px 10px;
+}
+
+div.jobs-list .panel-body {
+    padding-top: 0px;
+    padding-right: 0px;
+    padding-bottom: 0px;
+}
+
+div.jobs-list .list-group-item {
+    border-style: none;
+}
+
+div.jobs-list h5.title {
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+div.jobs-list a[data-toggle="collapse"] {
+    display: block;
+    padding: 10px;
+}
+
+div.jobs-list a.list-group-item {
+    font-size: 12px;
+}

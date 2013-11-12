@@ -18,8 +18,8 @@ object Worker {
     writePID()
     setupShutdownHandler()
 
-    val schedulerFactory: WorkerSchedulerFactory = new WorkerSchedulerFactory
-    val scheduler = schedulerFactory.getScheduler
+    val schedulerFactory: WorkerSchedulerFactory = new WorkerSchedulerFactory()
+    val scheduler = schedulerFactory.getScheduler()
     val props = schedulerFactory.props
     scheduler.getListenerManager.addJobListener(new WorkerJobListener(props))
     scheduler.getListenerManager.addTriggerListener(new WorkerTriggerListener(props))
