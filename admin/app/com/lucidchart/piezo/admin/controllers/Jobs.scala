@@ -6,25 +6,14 @@ import com.lucidchart.piezo.{WorkerSchedulerFactory}
 import org.quartz.impl.matchers.GroupMatcher
 import scala.collection.JavaConverters._
 import scala.collection.mutable
-import org.quartz.{JobDetail, JobKey}
+import org.quartz._
+import scala.Some
 
 object Jobs extends Controller {
-  val logger = Logger(this.getClass())
-  private def logExceptions[T](value: => T): T =
-  {
-    try {
-      value
-    }
-    catch {
-      case t: Throwable =>
-        logger.error("Caught exception initializing class", t)
-        throw t
-    }
-  }
+  implicit val logger = Logger(this.getClass())
 
   val schedulerFactory: WorkerSchedulerFactory = new WorkerSchedulerFactory()
   val scheduler = logExceptions(schedulerFactory.getScheduler())
-  val props = schedulerFactory.props
 
   def getJobsByGroup(): mutable.Buffer[(String, List[JobKey])] = {
     val jobsByGroup =
@@ -44,11 +33,20 @@ object Jobs extends Controller {
     val jobKey = new JobKey(name, group)
     val jobExists = scheduler.checkExists(jobKey)
     if (!jobExists) {
-      val errorMsg = Some("Job " + group + "/" + name + " not found")
-      NotFound(com.lucidchart.piezo.admin.views.html.jobs(getJobsByGroup(), None, errorMsg)(request))
+      val errorMsg = Some("Job " + group + " " + name + " not found")
+      NotFound(com.lucidchart.piezo.admin.views.html.job(getJobsByGroup(), None, errorMsg)(request))
     } else {
-      val jobDetail: Option[JobDetail] = Some(scheduler.getJobDetail(jobKey))
-      Ok(com.lucidchart.piezo.admin.views.html.jobs(getJobsByGroup(), jobDetail)(request))
+      try {
+        val jobDetail: Option[JobDetail] = Some(scheduler.getJobDetail(jobKey))
+        jobDetail.get.getJobDataMap.getKeys
+        Ok(com.lucidchart.piezo.admin.views.html.job(getJobsByGroup(), jobDetail)(request))
+      } catch {
+        case e: Exception => {
+          val errorMsg = "Exception caught getting job " + group + " " + name + ". -- " + e.getLocalizedMessage()
+          logger.error(errorMsg, e)
+          InternalServerError(com.lucidchart.piezo.admin.views.html.job(getJobsByGroup(), None, Some(errorMsg))(request))
+        }
+      }
     }
   }
  }

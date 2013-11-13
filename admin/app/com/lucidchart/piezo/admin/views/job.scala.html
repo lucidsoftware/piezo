@@ -1,0 +1,66 @@
+@(
+jobsByGroup: scala.collection.mutable.Buffer[(String, scala.collection.immutable.List[org.quartz.JobKey])],
+currentJob: Option[org.quartz.JobDetail],
+errorMessage: Option[String] = None
+)(
+implicit
+request: play.api.mvc.Request[AnyContent]
+)
+@import com.lucidchart.piezo.admin.controllers.{routes=>piezoRoutes}
+@import com.lucidchart.piezo.admin.views
+@import java.net.URLEncoder
+
+@com.lucidchart.piezo.admin.views.html.jobsLayout(jobsByGroup, currentJob) {
+        @if(!errorMessage.isEmpty) {
+        <h3 class="text-danger">@errorMessage.get</h3>
+        }
+        @if(!currentJob.isEmpty) {
+        <h3>@currentJob.get.getKey.getGroup() @currentJob.get.getKey.getName()</h3>
+        <table class="table table-condensed job-details">
+            <tbody>
+            <tr>
+                <td class="text-right">Class</td>
+                <td>@currentJob.get.getJobClass.getName()</td>
+            </tr>
+            <tr>
+                <td class="text-right">Description</td>
+                <td>@currentJob.get.getDescription()</td>
+            </tr>
+            <tr>
+                <td class="text-right small">Durable</td>
+                <td class="small">@currentJob.get.isDurable()</td>
+            </tr>
+            <tr>
+                <td class="text-right small">Persist job data after execution</td>
+                <td class="small">@currentJob.get.isPersistJobDataAfterExecution()</td>
+            </tr>
+            <tr>
+                <td class="text-right small">Concurrent execution disallowed</td>
+                <td class="small">@currentJob.get.isConcurrentExectionDisallowed()</td>
+            </tr>
+            <tr>
+                <td class="text-right small">Requests recovery</td>
+                <td class="small">@currentJob.get.requestsRecovery()</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <h4>Job Data Map</h4>
+        <table class="table table-striped table-condensed job-data">
+            <thead>
+            <tr>
+                <th class="text-right">Key</th>
+                <th>Value</th>
+            </tr>
+            </thead>
+            <tbody>
+            @currentJob.get.getJobDataMap.getKeys.map { jobDataKey =>
+            <tr>
+                <td class="text-right">jobDataKey</td>
+                <td>@currentJob.get.getJobDataMap.getString(jobDataKey)</td>
+            </tr>
+            }
+            </tbody>
+        </table>
+        }
+}

@@ -1,0 +1,58 @@
+@(
+jobsByGroup: scala.collection.mutable.Buffer[(String, scala.collection.immutable.List[org.quartz.JobKey])],
+currentJob: Option[org.quartz.JobDetail]
+)(
+detailsContent: Html
+)(
+implicit
+request: play.api.mvc.Request[AnyContent]
+)
+@import com.lucidchart.piezo.admin.controllers.{routes=>piezoRoutes}
+@import com.lucidchart.piezo.admin.views
+@import java.net.URLEncoder
+
+@com.lucidchart.piezo.admin.views.html.main("Piezo Jobs") {
+<div class="row">
+    <div class="col-md-3">
+        <h3>Job groups</h3>
+        <div class="panel-group jobs-list" id="accordion">
+            @jobsByGroup.map { jobGroup =>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h5 class="title">
+                        <a data-toggle="collapse" data-parent="#accordion" href="#collapse@jobGroup._1">
+                            @jobGroup._1
+                        </a>
+                    </h5>
+                </div>
+                <div id="collapse@jobGroup._1"
+                @if(!currentJob.isEmpty && jobGroup._1 == currentJob.get.getKey().getGroup()) {
+                    class="panel-collapse collapse in">
+                } else {
+                    class="panel-collapse collapse ">
+                }
+                    <div class="panel-body">
+                        <div class="list-group">
+                        @jobGroup._2.map { jobKey =>
+                            <a href="@piezoRoutes.Jobs.getJob(jobKey.getGroup(), jobKey.getName())"
+                            @if(!currentJob.isEmpty && jobGroup._1 == currentJob.get.getKey.getGroup() && jobKey.getName() == currentJob.get.getKey.getName()) {
+                                class="list-group-item active"
+                            } else {
+                                class="list-group-item"
+                            }
+                            data-toggle="tooltip" data-placement="auto right"title="@jobKey.getName()">
+                                @jobKey.getName()
+                            </a>
+                        }
+                        </div>
+                    </div>
+                </div>
+            </div>
+            }
+        </div>
+    </div>
+    <div class="col-md-9">
+        @detailsContent
+    </div>
+</div>
+}

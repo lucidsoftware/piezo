@@ -42,3 +42,19 @@ div.jobs-list a[data-toggle="collapse"] {
 div.jobs-list a.list-group-item {
     font-size: 12px;
 }
+
+.job-details {
+    width: auto;
+}
+
+.job-details td:first-child {
+    white-space: nowrap;
+}
+
+.job-details td:nth-child(2) {
+    width: 100%;
+}
+
+.job-data td:first-child {
+    width: 33%;
+}

@@ -6,7 +6,8 @@
 GET     /                           com.lucidchart.piezo.admin.controllers.Application.index
 GET     /jobs                       com.lucidchart.piezo.admin.controllers.Jobs.getIndex
 GET     /jobs/:group/:name          com.lucidchart.piezo.admin.controllers.Jobs.getJob(group: String, name: String)
-GET     /triggers                   com.lucidchart.piezo.admin.controllers.Triggers.index
+GET     /triggers                   com.lucidchart.piezo.admin.controllers.Triggers.getIndex
+GET     /triggers/:group/:name      com.lucidchart.piezo.admin.controllers.Triggers.getTrigger(group: String, name: String)
 
 GET     /favicon.ico                com.lucidchart.piezo.admin.controllers.Application.favicon
 

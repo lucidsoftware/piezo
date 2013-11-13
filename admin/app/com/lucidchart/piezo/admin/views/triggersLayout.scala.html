@@ -1,0 +1,58 @@
+@(
+triggersByGroup: scala.collection.mutable.Buffer[(String, scala.collection.immutable.List[org.quartz.TriggerKey])],
+currentTrigger: Option[org.quartz.Trigger]
+)(
+detailsContent: Html
+)(
+implicit
+request: play.api.mvc.Request[AnyContent]
+)
+@import com.lucidchart.piezo.admin.controllers.{routes=>piezoRoutes}
+@import com.lucidchart.piezo.admin.views
+@import java.net.URLEncoder
+
+@com.lucidchart.piezo.admin.views.html.main("Piezo Triggers") {
+<div class="row">
+    <div class="col-md-3">
+        <h3>Trigger groups</h3>
+        <div class="panel-group jobs-list" id="accordion">
+            @triggersByGroup.map { triggerGroup =>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h5 class="title">
+                        <a data-toggle="collapse" data-parent="#accordion" href="#collapse@triggerGroup._1">
+                            @triggerGroup._1
+                        </a>
+                    </h5>
+                </div>
+                <div id="collapse@triggerGroup._1"
+                @if(!currentTrigger.isEmpty && triggerGroup._1 == currentTrigger.get.getKey().getGroup()) {
+                class="panel-collapse collapse in">
+                } else {
+                class="panel-collapse collapse ">
+                }
+                <div class="panel-body">
+                    <div class="list-group">
+                        @triggerGroup._2.map { triggerKey =>
+                        <a href="@piezoRoutes.Triggers.getTrigger(triggerKey.getGroup(), triggerKey.getName())"
+                        @if(!currentTrigger.isEmpty && triggerGroup._1 == currentTrigger.get.getKey.getGroup() && triggerKey.getName() == currentTrigger.get.getKey.getName()) {
+                        class="list-group-item active"
+                        } else {
+                        class="list-group-item"
+                        }
+                        data-toggle="tooltip" data-placement="auto right"title="@triggerKey.getName()">
+                        @triggerKey.getName()
+                        </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+        }
+    </div>
+</div>
+<div class="col-md-9">
+    @detailsContent
+</div>
+</div>
+}

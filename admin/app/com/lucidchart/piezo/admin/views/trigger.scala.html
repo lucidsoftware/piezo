@@ -11,5 +11,18 @@ request: play.api.mvc.Request[AnyContent]
 @import java.net.URLEncoder
 
 @com.lucidchart.piezo.admin.views.html.triggersLayout(triggersByGroup, currentTrigger) {
-<h3>Select a trigger</h3>
+    @if(!errorMessage.isEmpty) {
+    <h3 class="text-danger">@errorMessage.get</h3>
+    }
+    @if(!currentTrigger.isEmpty) {
+    <h3>@currentTrigger.get.getKey.getGroup() @currentTrigger.get.getKey.getName()</h3>
+    <table class="table table-condensed">
+        <tbody>
+        <tr>
+            <td class="text-right">Description</td>
+            <td>@currentTrigger.get.getDescription()</td>
+        </tr>
+        </tbody>
+    </table>
+    }
 }
