@@ -5,6 +5,15 @@ import java.sql.Timestamp
 import org.slf4j.LoggerFactory
 import java.util.{Properties, Date}
 
+case class TriggerRecord(
+  name:String,
+  group:String,
+  scheduled_start:Date,
+  actual_start:Date,
+  finish:Date,
+  misfire:Int
+)
+
 class TriggerHistoryModel(props: Properties) {
   val logger = LoggerFactory.getLogger(this.getClass)
   val connectionProvider = new ConnectionProvider(props)
@@ -41,4 +50,34 @@ class TriggerHistoryModel(props: Properties) {
       connection.close()
     }
   }
+
+  def getTrigger(name: String, group: String): List[TriggerRecord] = {
+    val connection = connectionProvider.getConnection
+
+    try {
+      val prepared = connection.prepareStatement("""SELECT * FROM trigger_history WHERE trigger_name=? AND trigger_group=? ORDER BY actual_start DESC LIMIT 100""")
+      prepared.setString(1, name)
+      prepared.setString(2, group)
+      val rs = prepared.executeQuery();
+
+      var result = List[TriggerRecord]()
+      while(rs.next()) {
+        result :+= new TriggerRecord(
+          rs.getString("trigger_name"),
+          rs.getString("trigger_group"),
+          rs.getTimestamp("scheduled_start"),
+          rs.getTimestamp("actual_start"),
+          rs.getTimestamp("finish"),
+          rs.getInt("misfire")
+        )
+      }
+      result
+    } catch {
+      case e:Exception => logger.error("error in retrieving triggers")
+      List()
+    } finally {
+      connection.close()
+    }
+  }
 }
+

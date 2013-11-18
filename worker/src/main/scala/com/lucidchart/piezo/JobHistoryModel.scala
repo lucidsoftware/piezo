@@ -3,7 +3,17 @@ package com.lucidchart.piezo
 import org.quartz.JobExecutionContext
 import java.sql.Timestamp
 import org.slf4j.LoggerFactory
-import java.util.Properties
+import java.util.{Properties, Date}
+
+case class JobRecord(
+name:String,
+group:String,
+trigger_name:String,
+trigger_group:String,
+success:Int,
+start:Date,
+finish:Date
+)
 
 class JobHistoryModel(props: Properties) {
   val logger = LoggerFactory.getLogger(this.getClass)
@@ -40,6 +50,36 @@ class JobHistoryModel(props: Properties) {
       case e:Exception =>
         logger.error("error deleting job histories",e)
         0
+    } finally {
+      connection.close()
+    }
+  }
+
+  def getJob(name: String, group: String): List[JobRecord] = {
+    val connection = connectionProvider.getConnection
+
+    try {
+      val prepared = connection.prepareStatement("""SELECT * FROM job_history WHERE job_name=? AND job_group=? ORDER BY start DESC LIMIT 100""")
+      prepared.setString(1, name)
+      prepared.setString(2, group)
+      val rs = prepared.executeQuery();
+
+      var result = List[JobRecord]()
+      while(rs.next()) {
+        result :+= new JobRecord(
+          rs.getString("job_name"),
+          rs.getString("job_group"),
+          rs.getString("trigger_name"),
+          rs.getString("trigger_group"),
+          rs.getInt("success"),
+          rs.getTimestamp("start"),
+          rs.getTimestamp("finish")
+        )
+      }
+      result
+    } catch {
+      case e:Exception => logger.error("error in retrieving triggers")
+      List()
     } finally {
       connection.close()
     }

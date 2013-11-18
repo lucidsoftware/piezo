@@ -1,28 +1,136 @@
 @(
 triggersByGroup: scala.collection.mutable.Buffer[(String, scala.collection.immutable.List[org.quartz.TriggerKey])],
 currentTrigger: Option[org.quartz.Trigger],
+triggerHistory: Option[List[com.lucidchart.piezo.TriggerRecord]],
 errorMessage: Option[String] = None
 )(
 implicit
 request: play.api.mvc.Request[AnyContent]
 )
+
 @import com.lucidchart.piezo.admin.controllers.{routes=>piezoRoutes}
 @import com.lucidchart.piezo.admin.views
 @import java.net.URLEncoder
+@import org.quartz._
 
 @com.lucidchart.piezo.admin.views.html.triggersLayout(triggersByGroup, currentTrigger) {
     @if(!errorMessage.isEmpty) {
-    <h3 class="text-danger">@errorMessage.get</h3>
+        <h3 class="text-danger">@errorMessage.get</h3>
     }
     @if(!currentTrigger.isEmpty) {
-    <h3>@currentTrigger.get.getKey.getGroup() @currentTrigger.get.getKey.getName()</h3>
-    <table class="table table-condensed">
-        <tbody>
-        <tr>
-            <td class="text-right">Description</td>
-            <td>@currentTrigger.get.getDescription()</td>
-        </tr>
-        </tbody>
-    </table>
+        <h3>@currentTrigger.get.getKey.getGroup() &raquo; <span class="text-info">@currentTrigger.get.getKey.getName()</span></h3>
+        <table class="table table-condensed table-bordered table-striped table-hover">
+            <tbody>
+            <tr>
+                <td class="text-right">Class Name:</td>
+                <td>@currentTrigger.get.getClass()</td>
+            </tr>
+            @currentTrigger.get match {
+                case c: CronTrigger => {
+                    <tr>
+                        <td class="text-right">Cron Expression:</td>
+                        <td>@c.getCronExpression()</td>
+                    </tr>
+                    <tr>
+                        <td class="text-right">Expression Summary:</td>
+                        <td>@c.getExpressionSummary()</td>
+                    </tr>
+                    <tr>
+                        <td class="text-right">Time Zone:</td>
+                        <td>@c.getTimeZone().getDisplayName()</td>
+                    </tr>
+                }
+                case s: SimpleTrigger => {
+                    <tr>
+                        <td class="text-right">Repeat Count:</td>
+                        <td>@s.getRepeatCount()</td>
+                    </tr>
+                    <tr>
+                        <td class="text-right">Repeat Interval:</td>
+                        <td>@s.getRepeatInterval()</td>
+                    </tr>
+                    <tr>
+                        <td class="text-right">Times triggered:</td>
+                        <td>@s.getTimesTriggered()</td>
+                    </tr>
+                }
+                case _ => { }
+            }
+            <tr>
+                <td class="text-right">Description:</td>
+                <td>@currentTrigger.get.getDescription()</td>
+            </tr>
+            <tr>
+                <td class="text-right small">End Time:</td>
+                <td class="small">@currentTrigger.get.getEndTime()</td>
+            </tr>
+            <tr>
+                <td class="text-right small">Final Fire Time:</td>
+                <td class="small">@currentTrigger.get.getFinalFireTime()</td>
+            </tr>
+            <tr>
+                <td class="text-right small">Misfire Instruction:</td>
+                <td class="small">@currentTrigger.get.getMisfireInstruction()</td>
+            </tr>
+            <tr>
+                <td class="text-right small">Next Fire Time:</td>
+                <td class="small">@currentTrigger.get.getNextFireTime()</td>
+            </tr>
+            <tr>
+                <td class="text-right small">Previous Fire Time:</td>
+                <td class="small">@currentTrigger.get.getPreviousFireTime()</td>
+            </tr>
+            <tr>
+                <td class="text-right small">Start Time:</td>
+                <td class="small">@currentTrigger.get.getStartTime()</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <hr />
+
+        <h4>Trigger Data Map</h4>
+        <table class="table table-bordered table-striped table-hover table-condensed">
+            <thead>
+                <tr>
+                    <th class="text-right">Key</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+            @currentTrigger.get.getJobDataMap.getKeys.map { triggerDataKey =>
+                <tr>
+                    <td class="text-right">triggerDataKey</td>
+                    <td>@currentTrigger.get.getJobDataMap.getString(triggerDataKey)</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+
+        <hr />
+
+        @if(triggerHistory.isDefined) {
+            <h4>Trigger History</h4>
+            <table class="table table-bordered table-striped table-hover table-condensed">
+                <thead>
+                <tr>
+                    <th>Scheduled Start</th>
+                    <th>Actual Start</th>
+                    <th>Finish</th>
+                    <th>Misfire</th>
+                </tr>
+                </thead>
+                <tbody>
+                @triggerHistory.get.map { record =>
+                    <tr>
+                        <td>@record.scheduled_start</td>
+                        <td>@record.actual_start</td>
+                        <td>@record.finish</td>
+                        <td>@record.misfire</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
     }
 }

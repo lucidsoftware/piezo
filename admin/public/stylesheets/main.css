@@ -58,3 +58,7 @@ div.jobs-list a.list-group-item {
 .job-data td:first-child {
     width: 33%;
 }
+
+table > tbody > tr > td {
+    min-width: 150px;
+}

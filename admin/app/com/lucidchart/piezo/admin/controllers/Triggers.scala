@@ -2,9 +2,12 @@ package com.lucidchart.piezo.admin.controllers
 
 import play.api._
 import play.api.mvc._
-import com.lucidchart.piezo.WorkerSchedulerFactory
-import org.quartz.{TriggerKey, Trigger}
+import com.lucidchart.piezo.{TriggerHistoryModel, WorkerSchedulerFactory, TriggerRecord}
+import org.quartz._
+import impl.matchers.GroupMatcher
+import scala.collection.JavaConverters._
 import scala.collection.mutable
+import com.lucidchart.piezo.jobs.monitoring.HeartBeat
 
 object Triggers extends Controller {
   implicit val logger = Logger(this.getClass())
@@ -12,8 +15,18 @@ object Triggers extends Controller {
   val schedulerFactory: WorkerSchedulerFactory = new WorkerSchedulerFactory()
   val scheduler = logExceptions(schedulerFactory.getScheduler())
 
+  def getTriggersByGroup(): mutable.Buffer[(String, List[TriggerKey])] = {
+    val triggersByGroup =
+      for (groupName <- scheduler.getTriggerGroupNames().asScala) yield {
+        val triggers: List[TriggerKey] = scheduler.getTriggerKeys(GroupMatcher.triggerGroupEquals(groupName)).asScala.toList
+        val sortedTriggers: List[TriggerKey] = triggers.sortBy(triggerKey => triggerKey.getName())
+        (groupName, sortedTriggers)
+      }
+    triggersByGroup.sortBy(groupList => groupList._1)
+  }
+
    def getIndex = Action { implicit request =>
-     Ok(com.lucidchart.piezo.admin.views.html.triggers(mutable.Buffer(), None)(request))
+     Ok(com.lucidchart.piezo.admin.views.html.triggers(getTriggersByGroup(), None)(request))
    }
 
   def getTrigger(group: String, name: String) = Action { implicit request =>
@@ -21,17 +34,29 @@ object Triggers extends Controller {
     val triggerExists = scheduler.checkExists(triggerKey)
     if (!triggerExists) {
       val errorMsg = Some("Trigger " + group + " " + name + " not found")
-      NotFound(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, errorMsg)(request))
+      NotFound(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, None, errorMsg)(request))
     } else {
       try {
         val triggerDetail: Option[Trigger] = Some(scheduler.getTrigger(triggerKey))
-        triggerDetail.get.getJobDataMap.getKeys
-        Ok(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), triggerDetail)(request))
+
+        val history = {
+          try {
+            val triggerHistoryModel = new TriggerHistoryModel(schedulerFactory.props)
+            Some(triggerHistoryModel.getTrigger(name, group))
+          } catch {
+            case e:Exception => {
+              logger.error("Failed to get trigger history")
+              None
+            }
+          }
+        }
+
+        Ok(com.lucidchart.piezo.admin.views.html.trigger(getTriggersByGroup(), triggerDetail, history)(request))
       } catch {
         case e: Exception => {
           val errorMsg = "Exception caught getting trigger " + group + " " + name + ". -- " + e.getLocalizedMessage()
           logger.error(errorMsg, e)
-          NotFound(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, Some(errorMsg))(request))
+          NotFound(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, None, Some(errorMsg))(request))
         }
       }
     }

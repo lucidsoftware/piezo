@@ -4,7 +4,6 @@ import org.specs2.mutable._
 
 import play.api.test._
 import play.api.test.Helpers._
-import com.lucidchart.piezo.jobs.monitoring.HeartBeat
 import com.lucidchart.piezo.WorkerSchedulerFactory
 import play.api.test.FakeApplication
 import TestUtil._
@@ -37,7 +36,8 @@ class TriggersSpec extends Specification {
 
          status(missingJob) must equalTo(OK)
          contentType(missingJob) must beSome.which(_ == "text/html")
-         contentAsString(missingJob) must contain (triggerGroup + " " + triggerName)
+         contentAsString(missingJob) must contain (triggerGroup)
+         contentAsString(missingJob) must contain (triggerName)
        }
      }
    }
