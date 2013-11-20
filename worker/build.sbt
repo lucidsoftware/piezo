@@ -47,15 +47,42 @@ mappings in (Compile, packageBin) ~= { (ms: Seq[(File, String)]) =>
   }
 }
 
-credentials += Credentials(Path.userHome / ".ivy2" / ".credentials")
+pomExtra := (
+  <url>http://jsuereth.com/scala-arm</url>
+  <licenses>
+    <license>
+      <name>Apache License</name>
+      <url>http://www.apache.org/licenses/</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+    <url>git@github.com:lucidsoftware/piezo.git</url>
+    <connection>scm:git:git@github.com:lucidsoftware/piezo.git</connection>
+  </scm>
+  <developers>
+    <developer>
+      <id>draperp</id>
+      <name>Paul Draper</name>
+      <url>http://about.me/pauldraper</url>
+    </developer>
+  </developers>
+)
 
-publishTo <<= (version) {
-	version: String =>
-		val lucidRepo = "http://repo.lucidchart.com:8081/artifactory/"
-		if (version.trim.endsWith("SNAPSHOT")) {
-			Some("snapshots" at lucidRepo + "libs-snapshot-local/")
-		}
-		else {
-			Some("releases" at lucidRepo + "libs-release-local/")
-		}
+pomIncludeRepository := { _ => false }
+
+useGpg := true
+
+pgpReadOnly := false
+
+publishMavenStyle := true
+
+credentials += Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", System.getenv("SONATYPE_USERNAME"), System.getenv("SONATYPE_PASSWORD"))
+
+publishTo <<= version { (v: String) =>
+  val nexus = "https://oss.sonatype.org/"
+  if (v.trim.endsWith("SNAPSHOT"))
+    Some("snapshots" at nexus + "content/repositories/snapshots")
+  else
+    Some("releases"  at nexus + "service/local/staging/deploy/maven2")
 }
