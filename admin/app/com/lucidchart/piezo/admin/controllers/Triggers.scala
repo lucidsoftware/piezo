@@ -56,7 +56,7 @@ object Triggers extends Controller {
         case e: Exception => {
           val errorMsg = "Exception caught getting trigger " + group + " " + name + ". -- " + e.getLocalizedMessage()
           logger.error(errorMsg, e)
-          NotFound(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, None, Some(errorMsg))(request))
+          InternalServerError(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, None, Some(errorMsg))(request))
         }
       }
     }
