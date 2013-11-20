@@ -16,7 +16,6 @@ object ApplicationBuild extends Build {
 
 
   val main = play.Project(appName, appVersion, appDependencies).settings(
-    // Add your own project settings here
     javacOptions in Compile ++= Seq("-source", "1.6", "-target", "1.6"),
     scalaVersion := "2.10.1",
     resolvers ++= List(

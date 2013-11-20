@@ -23,6 +23,10 @@ stage:
 publish:
 	sbt publish
 
+.PHONY: publish-signed
+publish-signed:
+	sbt publish-signed
+
 .PHONY: fullbuild
 fullbuild:
 	sbt clean compile "test" package publish
