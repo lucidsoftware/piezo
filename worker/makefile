@@ -27,9 +27,9 @@ publish:
 publish-signed:
 	sbt publish-signed
 
-.PHONY: fullbuild
-fullbuild:
-	sbt clean compile "test" package publish
+.PHONY: cleanpackage
+cleanpackage:
+	sbt clean compile "test" package
 
 .PHONY: %
 %:
