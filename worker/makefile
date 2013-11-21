@@ -25,6 +25,8 @@ publish:
 
 .PHONY: publish-signed
 publish-signed:
+	@echo GPG_AGENT_INFO: $(value GPG_AGENT_INFO)
+	@echo SONATYPE_USERNAME: $(value SONATYPE_USERNAME)
 	sbt publish-signed
 
 .PHONY: cleanpackage
