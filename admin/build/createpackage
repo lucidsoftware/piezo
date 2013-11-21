@@ -1,0 +1,79 @@
+#!/bin/bash
+
+VERSION_PREFIX=$1
+
+if [ -z $VERSION_PREFIX ]; then
+    echo "usage: $0 <VERSION_PREFIX>"
+    echo "got: $0 $VERSION_PREFIX"
+    exit 1;
+fi
+
+if [ -z "$SERVER_HOME" ]
+then
+   SERVER_HOME=`pwd`
+fi
+
+#create a directory to use for building the .deb
+DIST_DIR=$SERVER_HOME/dist;
+if [ -d "$DIST_DIR" ]; then
+	if [ "$(ls -A $DIST_DIR)" ]; then 
+		echo "$DIST_DIR exists and is not empty"; 
+		exit 1;
+	fi
+else
+	mkdir $DIST_DIR
+fi
+
+DEB_NAME=lucid-piezo-admin-service
+PACKAGING_DIR=$DIST_DIR/$DEB_NAME
+
+#create the control file
+mkdir -p $PACKAGING_DIR/DEBIAN
+
+#BUILD_NUMBER and JOB_NAME  set by jenkins
+if [ $VERSION_PREFIX = "master"  ];then
+	VERSION=1.0-$BUILD_NUMBER
+else
+	VERSION=1.0-$VERSION_PREFIX$BUILD_NUMBER
+fi
+
+echo "Creating deb package for job $JOB_NAME.  Version: $VERSION";
+
+#create the control file
+echo "Package: $DEB_NAME-$VERSION
+Version: 1
+Section: devel
+Priority: optional
+Architecture: all
+Maintainer: Lucid Software Team <ops@lucidchart.com>
+Description: Installs Lucid Software Piezo Admin Play server." >> $PACKAGING_DIR/DEBIAN/control
+
+#pull in the postinst script
+cp $SERVER_HOME/build/postinst $PACKAGING_DIR/DEBIAN
+
+chmod -R 755 $PACKAGING_DIR/DEBIAN
+
+INSTALL_DIR=$PACKAGING_DIR/srv/lucid-piezo-admin-service/bin
+mkdir -p $INSTALL_DIR
+
+cp -r $SERVER_HOME/target/staged  $INSTALL_DIR/staged-$VERSION
+echo $VERSION > $INSTALL_DIR/staged-version
+cp $SERVER_HOME/target/start  $INSTALL_DIR
+
+#build the .deb
+fakeroot dpkg-deb --build $PACKAGING_DIR
+FINAL_DEB=${DIST_DIR}/${DEB_NAME}_${VERSION}.deb
+cp ${DIST_DIR}/$DEB_NAME.deb $FINAL_DEB
+
+/srv/lucid/add-package.sh $FINAL_DEB
+if [ ! $? -eq 0 ]; then
+        rm -rf $DIST_DIR
+	echo "failed to put ${packaging_dir} in repository"
+	exit 1;
+fi
+
+rm -rf $DIST_DIR
+
+echo "creating git tag: $VERSION"
+/srv/lucid/add-git-tag.sh $JOB_NAME $VERSION
+exit $?
