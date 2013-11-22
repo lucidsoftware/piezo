@@ -2,12 +2,11 @@ package com.lucidchart.piezo.admin.controllers
 
 import play.api._
 import play.api.mvc._
-import com.lucidchart.piezo.{TriggerHistoryModel, WorkerSchedulerFactory, TriggerRecord}
+import com.lucidchart.piezo.{TriggerHistoryModel, WorkerSchedulerFactory}
 import org.quartz._
 import impl.matchers.GroupMatcher
 import scala.collection.JavaConverters._
 import scala.collection.mutable
-import com.lucidchart.piezo.jobs.monitoring.HeartBeat
 
 object Triggers extends Controller {
   implicit val logger = Logger(this.getClass())
