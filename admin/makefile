@@ -9,7 +9,7 @@ SHELL := /bin/bash -e
 default: all
 
 .PHONY: all
-all : clean compile version test code-coverage stage
+all : clean compile version test stage
 
 .PHONY: package
 package:
@@ -22,10 +22,6 @@ deploy:
 .PHONY: test
 test:
 	play test
-
-.PHONY: code-coverage
-code-coverage:
-	play scct:test
 
 .PHONY: version
 version: clean-version conf/version.conf
