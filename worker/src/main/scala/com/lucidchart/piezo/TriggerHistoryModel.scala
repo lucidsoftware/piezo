@@ -55,10 +55,10 @@ class TriggerHistoryModel(props: Properties) {
     val connection = connectionProvider.getConnection
 
     try {
-      val prepared = connection.prepareStatement("""SELECT * FROM trigger_history WHERE trigger_name=? AND trigger_group=? ORDER BY actual_start DESC LIMIT 100""")
+      val prepared = connection.prepareStatement("""SELECT * FROM trigger_history WHERE trigger_name=? AND trigger_group=? ORDER BY schedule_start DESC LIMIT 100""")
       prepared.setString(1, name)
       prepared.setString(2, group)
-      val rs = prepared.executeQuery();
+      val rs = prepared.executeQuery()
 
       var result = List[TriggerRecord]()
       while(rs.next()) {
