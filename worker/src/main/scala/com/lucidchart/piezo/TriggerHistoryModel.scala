@@ -55,7 +55,7 @@ class TriggerHistoryModel(props: Properties) {
     val connection = connectionProvider.getConnection
 
     try {
-      val prepared = connection.prepareStatement("""SELECT * FROM trigger_history WHERE trigger_name=? AND trigger_group=? ORDER BY schedule_start DESC LIMIT 100""")
+      val prepared = connection.prepareStatement("""SELECT * FROM trigger_history WHERE trigger_name=? AND trigger_group=? ORDER BY scheduled_start DESC LIMIT 100""")
       prepared.setString(1, name)
       prepared.setString(2, group)
       val rs = prepared.executeQuery()
@@ -73,7 +73,7 @@ class TriggerHistoryModel(props: Properties) {
       }
       result
     } catch {
-      case e:Exception => logger.error("error in retrieving triggers")
+      case e: Exception => logger.error("error in retrieving triggers", e)
       List()
     } finally {
       connection.close()

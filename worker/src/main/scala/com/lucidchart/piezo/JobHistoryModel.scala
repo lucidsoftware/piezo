@@ -78,7 +78,7 @@ class JobHistoryModel(props: Properties) {
       }
       result
     } catch {
-      case e:Exception => logger.error("error in retrieving triggers")
+      case e: Exception => logger.error("error in retrieving jobs", e)
       List()
     } finally {
       connection.close()
