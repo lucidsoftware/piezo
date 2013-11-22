@@ -74,6 +74,4 @@ fi
 
 rm -rf $DIST_DIR
 
-echo "creating git tag: $VERSION"
-/srv/lucid/add-git-tag.sh $JOB_NAME $VERSION
 exit $?
