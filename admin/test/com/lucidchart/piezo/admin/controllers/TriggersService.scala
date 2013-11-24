@@ -4,9 +4,7 @@ import org.specs2.mutable._
 
 import play.api.test._
 import play.api.test.Helpers._
-import com.lucidchart.piezo.jobs.monitoring.HeartBeat
 import com.lucidchart.piezo.WorkerSchedulerFactory
-import org.quartz._
 import play.api.test.FakeApplication
 import TestUtil._
 
@@ -15,30 +13,31 @@ import TestUtil._
   * You can mock out a whole application including requests, plugins etc.
   * For more information, consult the wiki.
   */
-class JobsSpec extends Specification {
-   "Application" should {
+class TriggersService extends Specification {
+   "Triggers" should {
 
-     "send 404 on a non-existent job request" in {
+     "send 404 on a non-existent trigger request" in {
        running(FakeApplication()) {
-         val missingJob = route(FakeRequest(GET, "/jobs/missinggroup/missingname")).get
+         val missingJob = route(FakeRequest(GET, "/triggers/missinggroup/missingname")).get
 
          status(missingJob) must equalTo(NOT_FOUND)
          contentType(missingJob) must beSome.which(_ == "text/html")
-         contentAsString(missingJob) must contain ("Job missinggroup missingname not found")
+         contentAsString(missingJob) must contain ("Trigger missinggroup missingname not found")
        }
      }
 
-     "send valid job details" in {
+     "send valid trigger details" in {
        val schedulerFactory: WorkerSchedulerFactory = new WorkerSchedulerFactory()
        val scheduler = schedulerFactory.getScheduler()
        createJob(scheduler)
 
        running(FakeApplication()) {
-         val validJob = route(FakeRequest(GET, "/jobs/" + jobGroup + "/" + jobName)).get
+         val missingJob = route(FakeRequest(GET, "/triggers/" + triggerGroup + "/" + triggerName)).get
 
-         status(validJob) must equalTo(OK)
-         contentType(validJob) must beSome.which(_ == "text/html")
-         contentAsString(validJob) must contain (classOf[HeartBeat].getName())
+         status(missingJob) must equalTo(OK)
+         contentType(missingJob) must beSome.which(_ == "text/html")
+         contentAsString(missingJob) must contain (triggerGroup)
+         contentAsString(missingJob) must contain (triggerName)
        }
      }
    }

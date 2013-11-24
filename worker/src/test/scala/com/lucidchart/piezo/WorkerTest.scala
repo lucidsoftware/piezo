@@ -25,7 +25,7 @@ class WorkerTest extends Specification{
     "stop" in {
       val job = newJob((new WorkerStopJob).getClass)
         .withIdentity("job1", "group1")
-        .build();
+        .build()
 
       val trigger = newTrigger()
         .withIdentity("trigger1", "group1")
@@ -33,7 +33,7 @@ class WorkerTest extends Specification{
         .withSchedule(simpleSchedule()
         .withIntervalInSeconds(5)
         .repeatForever())
-        .build();
+        .build()
 
       val propertiesStream = getClass().getResourceAsStream("/quartz_test.properties")
       val properties = new Properties
