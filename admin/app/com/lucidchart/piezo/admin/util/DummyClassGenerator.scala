@@ -10,7 +10,7 @@ import java.io.File
 class DummyClassGenerator {
   val logger = Logger(this.getClass)
 
-  val outputPath = "/tmp"
+  val outputPath = "/tmp" //TODO: change this to a platform independent tmp folder
   val compiler = ToolProvider.getSystemJavaCompiler()
   val diagnostics: DiagnosticCollector[JavaFileObject] = new DiagnosticCollector[JavaFileObject]()
 
