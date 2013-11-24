@@ -60,7 +60,7 @@ request: play.api.mvc.Request[AnyContent]
             @currentJob.get.getJobDataMap.getKeys.map { jobDataKey =>
                 <tr>
                     <td class="text-right">jobDataKey</td>
-                    <td>@currentJob.get.getJobDataMap.getString(jobDataKey)</td>
+                    <td>@currentJob.get.getJobDataMap.get(jobDataKey)</td>
                 </tr>
             }
             </tbody>
