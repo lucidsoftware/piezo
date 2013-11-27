@@ -1,0 +1,14 @@
+@(
+message: Option[String] = None
+)(
+implicit
+request: RequestHeader
+)
+@import com.lucidchart.piezo.admin.views
+
+@com.lucidchart.piezo.admin.views.html.main("Piezo Error") {
+<div>
+  <h1 class="text-danger">Page Not Found</h1>
+  <p class="large">@message.getOrElse("The page you requested could not be located.")</p>
+</div>
+}

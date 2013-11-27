@@ -1,0 +1,14 @@
+@(
+errorMessage: Option[String] = None
+)(
+implicit
+request: RequestHeader
+)
+@import com.lucidchart.piezo.admin.views
+
+@com.lucidchart.piezo.admin.views.html.main("Piezo Error") {
+  <div>
+    <h1 class="text-danger">Error</h1>
+    <p class="large">@errorMessage.getOrElse("Unknown Error")</p>
+  </div>
+}
