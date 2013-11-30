@@ -20,12 +20,12 @@ request: play.api.mvc.Request[AnyContent]
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <h5 class="title">
-                        <a data-toggle="collapse" data-parent="#accordion" href="#collapse@triggerGroup._1">
+                        <a data-toggle="collapse" data-parent="#accordion" href="#collapse@{triggerGroup._1.replaceAll("\\W+", "_")}">
                             @triggerGroup._1
                         </a>
                     </h5>
                 </div>
-                <div id="collapse@triggerGroup._1"
+                <div id="collapse@{triggerGroup._1.replaceAll("\\W+", "_")}"
                 @if(!currentTrigger.isEmpty && triggerGroup._1 == currentTrigger.get.getKey().getGroup()) {
                 class="panel-collapse collapse in">
                 } else {
