@@ -44,7 +44,7 @@ object Triggers extends Controller {
           try {
             Some(triggerHistoryModel.getTrigger(name, group))
           } catch {
-            case e:Exception => {
+            case e: Exception => {
               logger.error("Failed to get trigger history")
               None
             }

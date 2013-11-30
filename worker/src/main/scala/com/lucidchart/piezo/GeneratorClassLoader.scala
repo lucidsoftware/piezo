@@ -35,10 +35,9 @@ class GeneratorClassLoader extends CascadingClassLoadHelper{
     }
     catch {
       case e: ClassNotFoundException => {
-        logger.info("Could not find job class " + e.getMessage + ". Trying to generate dummy class now.")
+        logger.info("Could not find job class " + e.getMessage + ". Trying to use dummy class now.")
         val source = getDummyJobSource(e.getMessage) //TODO: check how often this is called for a single class
         val job = dummyClassGenerator.generate(e.getMessage, source)
-        job.map(jobValue => logger.info("Generated class " + jobValue.getName))
         if (job.isDefined) job.get else null
       }
     }

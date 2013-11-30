@@ -32,21 +32,6 @@ object Jobs extends Controller {
     Ok(com.lucidchart.piezo.admin.views.html.jobs(getJobsByGroup(), None)(request))
   }
 
-  private[controllers] def getRealOrDummyJob(jobKey: JobKey): Option[JobDetail] = {
-    try {
-      Some(scheduler.getJobDetail(jobKey))
-    }
-    catch {
-      case e: JobPersistenceException => {
-        e.getCause() match {
-          case e: ClassNotFoundException => {
-            Some(scheduler.getJobDetail(jobKey))
-          }
-        }
-      }
-    }
-  }
-
   def getJob(group: String, name: String) = Action { implicit request =>
     val jobKey = new JobKey(name, group)
     val jobExists = scheduler.checkExists(jobKey)
@@ -55,13 +40,13 @@ object Jobs extends Controller {
       NotFound(com.lucidchart.piezo.admin.views.html.job(getJobsByGroup(), None, None, errorMsg)(request))
     } else {
       try {
-        val jobDetail: Option[JobDetail] = getRealOrDummyJob(jobKey)
+        val jobDetail: Option[JobDetail] = Some(scheduler.getJobDetail(jobKey))
 
         val history = {
           try {
             Some(jobHistoryModel.getJob(name, group))
           } catch {
-            case e:Exception => {
+            case e: Exception => {
               logger.error("Failed to get job history")
               None
             }
