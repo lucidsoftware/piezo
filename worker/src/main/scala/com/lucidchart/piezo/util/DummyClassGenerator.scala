@@ -1,14 +1,14 @@
-package com.lucidchart.piezo.admin.util
+package com.lucidchart.piezo.util
 
 import javax.tools.{Diagnostic, JavaFileObject, DiagnosticCollector, ToolProvider}
 import scala.collection.JavaConversions._
-import play.api.Logger
 import java.net.{URL, URLClassLoader}
 import java.io.File
+import org.slf4j.LoggerFactory
 
 
 class DummyClassGenerator {
-  val logger = Logger(this.getClass)
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   val outputPath = "/tmp" //TODO: change this to a platform independent tmp folder
   val compiler = ToolProvider.getSystemJavaCompiler()

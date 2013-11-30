@@ -8,7 +8,6 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 import org.quartz._
 import scala.Some
-import com.lucidchart.piezo.admin.util.DummyClassGenerator
 import java.io.{PrintWriter, StringWriter}
 
 object Jobs extends Controller {
@@ -16,7 +15,6 @@ object Jobs extends Controller {
 
   val schedulerFactory: WorkerSchedulerFactory = new WorkerSchedulerFactory()
   val scheduler = logExceptions(schedulerFactory.getScheduler())
-  val dummyClassGenerator = new DummyClassGenerator()
 
   def getJobsByGroup(): mutable.Buffer[(String, List[JobKey])] = {
     val jobsByGroup =
@@ -32,25 +30,6 @@ object Jobs extends Controller {
     Ok(com.lucidchart.piezo.admin.views.html.jobs(getJobsByGroup(), None)(request))
   }
 
-  private[controllers] def getDummyJobSource(name: String): String = {
-    val writer = new StringWriter()
-    val printWriter = new PrintWriter(writer)
-
-    val classNameParts = name.split('.')
-    if (classNameParts.length > 1) {
-      printWriter.println("package " + classNameParts.clone.dropRight(1).mkString(".") + ";")
-    }
-    printWriter.println("import org.quartz.Job;")
-    printWriter.println("import org.quartz.JobExecutionContext;")
-    printWriter.println("import org.quartz.JobExecutionException;")
-    printWriter.println("public class " + classNameParts.last + " implements Job {")
-    printWriter.println(" public void execute(JobExecutionContext context) throws JobExecutionException {")
-    printWriter.println("  }")
-    printWriter.println("}")
-    printWriter.close()
-    writer.toString()
-  }
-
   private[controllers] def getRealOrDummyJob(jobKey: JobKey): Option[JobDetail] = {
     try {
       Some(scheduler.getJobDetail(jobKey))
@@ -59,10 +38,6 @@ object Jobs extends Controller {
       case e: JobPersistenceException => {
         e.getCause() match {
           case e: ClassNotFoundException => {
-            logger.info("Could not find job class " + e.getMessage + ". Trying to generate dummy class now.")
-            val source = getDummyJobSource(e.getMessage) //TODO: check how often this is called for a single class
-            val job = dummyClassGenerator.generate(e.getMessage, source)
-            job.map(jobValue => logger.info("Generated class " + jobValue.getName))
             Some(scheduler.getJobDetail(jobKey))
           }
         }

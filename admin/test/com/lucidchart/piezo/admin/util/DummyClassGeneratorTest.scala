@@ -7,6 +7,7 @@ import scala.util.Random
 import org.slf4j.LoggerFactory
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
+import com.lucidchart.piezo.util.DummyClassGenerator
 
 
 class DummyClassGeneratorTest extends Specification{

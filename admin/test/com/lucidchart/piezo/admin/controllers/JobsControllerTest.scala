@@ -10,8 +10,8 @@ import play.api.test.FakeApplication
 import TestUtil._
 import ch.qos.logback.classic.{Level, Logger}
 import org.slf4j.LoggerFactory
-import com.lucidchart.piezo.admin.util.DummyClassGenerator
 import org.quartz.Job
+import com.lucidchart.piezo.util.DummyClassGenerator
 
 /**
   * Add your spec here.

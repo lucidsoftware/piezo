@@ -1,4 +1,4 @@
-package com.lucidchart.piezo.admin.util
+package com.lucidchart.piezo.util
 
 import javax.tools.SimpleJavaFileObject
 import java.net.URI
