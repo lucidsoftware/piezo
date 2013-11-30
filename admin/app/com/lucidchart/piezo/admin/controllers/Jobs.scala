@@ -15,6 +15,8 @@ object Jobs extends Controller {
 
   val schedulerFactory: WorkerSchedulerFactory = new WorkerSchedulerFactory()
   val scheduler = logExceptions(schedulerFactory.getScheduler())
+  val properties = schedulerFactory.props
+  val jobHistoryModel = logExceptions(new JobHistoryModel(properties))
 
   def getJobsByGroup(): mutable.Buffer[(String, List[JobKey])] = {
     val jobsByGroup =
@@ -57,7 +59,6 @@ object Jobs extends Controller {
 
         val history = {
           try {
-            val jobHistoryModel = new JobHistoryModel(schedulerFactory.props)
             Some(jobHistoryModel.getJob(name, group))
           } catch {
             case e:Exception => {

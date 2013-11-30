@@ -62,6 +62,11 @@ pomExtra := (
   </scm>
   <developers>
     <developer>
+      <id>disaacson</id>
+      <name>Derrick Isaacson</name>
+      <url>http://derrickisaacson.com/</url>
+    </developer>
+    <developer>
       <id>draperp</id>
       <name>Paul Draper</name>
       <url>http://about.me/pauldraper</url>

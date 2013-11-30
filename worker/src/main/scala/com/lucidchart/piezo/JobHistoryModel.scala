@@ -17,8 +17,7 @@ finish:Date
 
 class JobHistoryModel(props: Properties) {
   val logger = LoggerFactory.getLogger(this.getClass)
-  val pwd = props.getProperty("org.quartz.dataSource.jobs.password")
-  val connectionProvider = new ConnectionProvider(props) //TODO: Stop creating new connection providers
+  val connectionProvider = new ConnectionProvider(props)
 
   def addJob(context: JobExecutionContext, success:Boolean) {
     val connection = connectionProvider.getConnection
@@ -37,7 +36,7 @@ class JobHistoryModel(props: Properties) {
       case e:Exception => logger.error("error in recording start of job",e)
     } finally {
       connection.close()
-    } //TODO: close statement and not collection?
+    } //TODO: close statement?
   }
 
   def deleteJobs(minStart: Long): Int = {

@@ -13,6 +13,8 @@ object Triggers extends Controller {
 
   val schedulerFactory: WorkerSchedulerFactory = new WorkerSchedulerFactory()
   val scheduler = logExceptions(schedulerFactory.getScheduler())
+  val properties = schedulerFactory.props
+  val triggerHistoryModel = logExceptions(new TriggerHistoryModel(properties))
 
   def getTriggersByGroup(): mutable.Buffer[(String, List[TriggerKey])] = {
     val triggersByGroup =
@@ -40,7 +42,6 @@ object Triggers extends Controller {
 
         val history = {
           try {
-            val triggerHistoryModel = new TriggerHistoryModel(schedulerFactory.props)
             Some(triggerHistoryModel.getTrigger(name, group))
           } catch {
             case e:Exception => {
