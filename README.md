@@ -64,6 +64,40 @@ It also stores historical job execution data in a pair of database tables define
 
 
 ##Admin
---Coming soon--
 
 Web interface for viewing and managing the scheduled jobs.
+
+###Setup
+1. Follow the steps for the Worker [Setup](#setup) above.
+
+###Building
+You must have [play](http://www.playframework.com/) version 2.1.1 or higher to build the admin project.
+
+To compile the project run
+
+`play compile`.
+
+To collect all dependencies into a single folder (target/staged) run
+
+`make stage`
+
+###Configuration
+####JVM properties
+* `org.quartz.properties` - [Quartz scheduler library config file](http://quartz-scheduler.org/documentation/quartz-2.2.x/configuration/)
+* `logback.configurationFile` - [Logback config file](http://logback.qos.ch/manual/configuration.html)
+* `pidfile.path` - path to file where PID should be written on startup
+* `http.port\[s\]` - [Play Framework production configuration](http://www.playframework.com/documentation/2.1.1/ProductionConfiguration)
+
+###Running
+The project includes a sample script for running a worker process. It launches with the [sample quartz.properties file](worker/src/main/resources/quartz.properties) included in the project.
+
+```
+./admin/bin/run.sh
+```
+
+Here also is a sample java command for running a single admin instance:
+
+```
+java -Dlogback.configurationFile=<path to logback config> -Dorg.quartz.properties=<path to quartz properties> -Dpidfile.path=<path to pid file> -Dnetworkaddress.cache.ttl=10 -Dnetworkaddress.cache.negative.ttl=10 -Dhttp.port=<port> -cp <path to jars> play.core.server.NettyServer
+```
+
