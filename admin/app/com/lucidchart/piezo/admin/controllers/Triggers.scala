@@ -27,7 +27,7 @@ object Triggers extends Controller {
   }
 
    def getIndex = Action { implicit request =>
-     Ok(com.lucidchart.piezo.admin.views.html.triggers(getTriggersByGroup(), None)(request))
+     Ok(com.lucidchart.piezo.admin.views.html.triggers(getTriggersByGroup(), None, scheduler.getMetaData)(request))
    }
 
   def getTrigger(group: String, name: String) = Action { implicit request =>

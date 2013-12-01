@@ -1,6 +1,7 @@
 @(
 triggersByGroup: scala.collection.mutable.Buffer[(String, scala.collection.immutable.List[org.quartz.TriggerKey])],
 currentTrigger: Option[org.quartz.Trigger],
+schedulerMetadata: org.quartz.SchedulerMetaData,
 errorMessage: Option[String] = None
 )(
 implicit
@@ -12,4 +13,16 @@ request: play.api.mvc.Request[AnyContent]
 
 @com.lucidchart.piezo.admin.views.html.triggersLayout(triggersByGroup, currentTrigger) {
 <h3>Select a trigger</h3>
+<table class="table table-condensed table-fixed-first-col table-bordered table-striped table-hover">
+    <tbody>
+    <tr>
+        <td class="text-right">Scheduler name</td>
+        <td>@schedulerMetadata.getSchedulerName()</td>
+    </tr>
+    <tr>
+        <td class="text-right">Total triggers</td>
+        <td>@{triggersByGroup.foldLeft(0)((a, b) => a + b._2.length)}</td>
+    </tr>
+    </tbody>
+</table>
 }

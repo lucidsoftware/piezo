@@ -17,7 +17,7 @@ request: play.api.mvc.Request[AnyContent]
     }
     @if(!currentJob.isEmpty) {
         <h3>@currentJob.get.getKey.getGroup() &raquo; <span class="text-info">@currentJob.get.getKey.getName()</span></h3>
-        <table class="table table-condensed job-details table-bordered table-striped table-hover">
+        <table class="table table-condensed table-fixed-first-col table-bordered table-striped table-hover">
             <tbody>
             <tr>
                 <td class="text-right">Class</td>

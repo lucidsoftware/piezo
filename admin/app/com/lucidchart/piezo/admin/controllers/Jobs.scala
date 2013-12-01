@@ -8,7 +8,6 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 import org.quartz._
 import scala.Some
-import java.io.{PrintWriter, StringWriter}
 
 object Jobs extends Controller {
   implicit val logger = Logger(this.getClass())
@@ -29,7 +28,7 @@ object Jobs extends Controller {
   }
 
   def getIndex = Action { implicit request =>
-    Ok(com.lucidchart.piezo.admin.views.html.jobs(getJobsByGroup(), None)(request))
+    Ok(com.lucidchart.piezo.admin.views.html.jobs(getJobsByGroup(), None, scheduler.getMetaData)(request))
   }
 
   def getJob(group: String, name: String) = Action { implicit request =>

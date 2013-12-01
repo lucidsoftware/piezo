@@ -43,15 +43,15 @@ div.jobs-list a.list-group-item {
     font-size: 12px;
 }
 
-.job-details {
+.table-fixed-first-col {
     width: auto;
 }
 
-.job-details td:first-child {
+.table-fixed-first-col td:first-child {
     white-space: nowrap;
 }
 
-.job-details td:nth-child(2) {
+.table-fixed-first-col td:nth-child(2) {
     width: 100%;
 }
 
