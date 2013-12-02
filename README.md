@@ -86,7 +86,7 @@ To collect all dependencies into a single folder (target/staged) run
 * `org.quartz.properties` - [Quartz scheduler library config file](http://quartz-scheduler.org/documentation/quartz-2.2.x/configuration/)
 * `logback.configurationFile` - [Logback config file](http://logback.qos.ch/manual/configuration.html)
 * `pidfile.path` - path to file where PID should be written on startup
-* `http.port\[s\]` - [Play Framework production configuration](http://www.playframework.com/documentation/2.1.1/ProductionConfiguration)
+* `http.port[s]` - [Play Framework production configuration](http://www.playframework.com/documentation/2.1.1/ProductionConfiguration)
 
 ###Running
 The project includes a sample script for running a worker process. It launches with the [sample quartz.properties file](worker/src/main/resources/quartz.properties) included in the project.
