@@ -23,7 +23,7 @@ libraryDependencies ++= Seq(
 	"mysql" % "mysql-connector-java" % "5.1.25",
 	"javax.transaction" % "jta" % "1.1",
 	"net.databinder" %% "dispatch-http" % "0.8.8",
-	"org.skife.com.typesafe.config" % "typesafe-config" % "0.3.0",
+	"com.typesafe" % "config" % "1.0.0",
 	"net.liftweb" %% "lift-json" % "2.5.1",
 	"com.typesafe.akka" %% "akka-actor" % "2.1.0"
 )
