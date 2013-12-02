@@ -94,6 +94,7 @@ The project includes a sample script for running a worker process. It launches w
 ```
 ./admin/bin/run.sh
 ```
+After running the above script, go to http://localhost:8001/ to view the admin tool.
 
 Here also is a sample java command for running a single admin instance:
 
