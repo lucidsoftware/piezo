@@ -20,7 +20,8 @@ object ApplicationBuild extends Build {
     scalaVersion := "2.10.1",
     resolvers ++= List(
       Resolver.file("local ivy repository", file(System.getenv("HOME") + "/.ivy2/local/"))(Resolver.ivyStylePatterns),
-      "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+      "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
+      "Staging Sonatype repository" at "https://oss.sonatype.org/content/groups/staging/"
     )
   )
 
