@@ -22,31 +22,49 @@ request: play.api.mvc.Request[AnyContent]
         <table class="table table-condensed table-bordered table-striped table-hover">
             <tbody>
             <tr>
-                <td class="text-right">Class Name:</td>
+                <td class="text-right">Class name:</td>
                 <td>@currentTrigger.get.getClass()</td>
             </tr>
+            <tr>
+                <td class="text-right">Trigger group:</td>
+                <td>@currentTrigger.get.getKey.getGroup()</td>
+            </tr>
+            <tr>
+                <td class="text-right">Trigger name:</td>
+                <td>@currentTrigger.get.getKey.getName()</td>
+            </tr>
+            @if(currentTrigger.get.getJobKey() != null) {
+            <tr>
+                <td class="text-right">Job group:</td>
+                <td>@currentTrigger.get.getJobKey.getGroup()</td>
+            </tr>
+            <tr>
+                <td class="text-right">Job name:</td>
+                <td>@currentTrigger.get.getJobKey.getName()</td>
+            </tr>
+            }
             @currentTrigger.get match {
                 case c: CronTrigger => {
                     <tr>
-                        <td class="text-right">Cron Expression:</td>
+                        <td class="text-right">Cron expression:</td>
                         <td>@c.getCronExpression()</td>
                     </tr>
                     <tr>
-                        <td class="text-right">Expression Summary:</td>
+                        <td class="text-right">Expression summary:</td>
                         <td>@c.getExpressionSummary()</td>
                     </tr>
                     <tr>
-                        <td class="text-right">Time Zone:</td>
+                        <td class="text-right">Time zone:</td>
                         <td>@c.getTimeZone().getDisplayName()</td>
                     </tr>
                 }
                 case s: SimpleTrigger => {
                     <tr>
-                        <td class="text-right">Repeat Count:</td>
+                        <td class="text-right">Repeat count:</td>
                         <td>@s.getRepeatCount()</td>
                     </tr>
                     <tr>
-                        <td class="text-right">Repeat Interval:</td>
+                        <td class="text-right">Repeat interval:</td>
                         <td>@s.getRepeatInterval()</td>
                     </tr>
                     <tr>
@@ -61,27 +79,27 @@ request: play.api.mvc.Request[AnyContent]
                 <td>@currentTrigger.get.getDescription()</td>
             </tr>
             <tr>
-                <td class="text-right small">End Time:</td>
+                <td class="text-right small">End time:</td>
                 <td class="small">@currentTrigger.get.getEndTime()</td>
             </tr>
             <tr>
-                <td class="text-right small">Final Fire Time:</td>
+                <td class="text-right small">Final fire time:</td>
                 <td class="small">@currentTrigger.get.getFinalFireTime()</td>
             </tr>
             <tr>
-                <td class="text-right small">Misfire Instruction:</td>
+                <td class="text-right small">Misfire instruction:</td>
                 <td class="small">@currentTrigger.get.getMisfireInstruction()</td>
             </tr>
             <tr>
-                <td class="text-right small">Next Fire Time:</td>
+                <td class="text-right small">Next fire time:</td>
                 <td class="small">@currentTrigger.get.getNextFireTime()</td>
             </tr>
             <tr>
-                <td class="text-right small">Previous Fire Time:</td>
+                <td class="text-right small">Previous fire time:</td>
                 <td class="small">@currentTrigger.get.getPreviousFireTime()</td>
             </tr>
             <tr>
-                <td class="text-right small">Start Time:</td>
+                <td class="text-right small">Start time:</td>
                 <td class="small">@currentTrigger.get.getStartTime()</td>
             </tr>
             </tbody>

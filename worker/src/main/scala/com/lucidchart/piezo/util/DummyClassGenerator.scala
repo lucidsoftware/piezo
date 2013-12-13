@@ -39,6 +39,7 @@ class DummyClassGenerator {
       Some(urlClassLoader.loadClass(name))
     } catch {
       case e: ClassNotFoundException => {
+        logger.debug("Generating class " + name)
         val file: JavaFileObject = new SourceFromString(name, source)
         val compilationUnits = List[JavaFileObject](file)
         val classpath = getClasspath()

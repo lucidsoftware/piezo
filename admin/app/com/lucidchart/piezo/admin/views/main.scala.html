@@ -16,7 +16,7 @@ implicit request: RequestHeader
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="shortcut icon" href="http://localhost:8008/img/favicon.ico" type="image/png">
+    <link rel="shortcut icon" href="/favicon.ico" type="image/png">
 
     <link rel="stylesheet" type="text/css" href="@routes.Assets.at("jquery-ui-1.10.3/core/themes/base/minified/jquery-ui.min.css")" />
     <link rel="stylesheet" type="text/css" href="@routes.Assets.at("bootstrap-3.0.2/css/bootstrap.min.css")" />
@@ -66,9 +66,7 @@ $('ul.nav a').filter(function() {
 <div class="container">
     <div class="flash-container">
         @if(!request.flash.isEmpty) {
-        <div id="flash-page" class="alert alert-@request.flash("level")">
-        <button type="button" class="close" data-dismiss="alert">&times;</button>
-        <strong>@request.flash("title")</strong>
+        <div id="flash-page" class="@request.flash("class")">
         @request.flash("message")
     </div>
     <script type="text/javascript">

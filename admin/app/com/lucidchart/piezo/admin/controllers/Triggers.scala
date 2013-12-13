@@ -7,6 +7,11 @@ import org.quartz._
 import impl.matchers.GroupMatcher
 import scala.collection.JavaConverters._
 import scala.collection.mutable
+import play.api.data.Form
+import play.api.data.Forms._
+import play.api.data.validation.Constraints._
+import java.util.{TimeZone, Date}
+import org.quartz.impl.triggers.{SimpleTriggerImpl, CronTriggerImpl}
 
 object Triggers extends Controller {
   implicit val logger = Logger(this.getClass())
@@ -61,4 +66,99 @@ object Triggers extends Controller {
       }
     }
   }
- }
+
+  private def simpleScheduleFormApply(repeatCount: Int, repeatInterval: Int): SimpleScheduleBuilder = {
+    SimpleScheduleBuilder.simpleSchedule()
+    .withRepeatCount(repeatCount)
+    .withIntervalInSeconds(repeatInterval)
+  }
+
+  private def simpleScheduleFormUnapply(simple: SimpleScheduleBuilder) = {
+    val simpleTrigger = simple.build().asInstanceOf[SimpleTrigger]
+    Some((simpleTrigger.getRepeatCount, simpleTrigger.getRepeatInterval.toInt))
+  }
+
+  private def cronScheduleFormApply(cronExpression: String): CronScheduleBuilder = {
+    CronScheduleBuilder.cronSchedule(cronExpression)
+  }
+
+  private def cronScheduleFormUnapply(cron: CronScheduleBuilder) = {
+    val cronTrigger = cron.build().asInstanceOf[CronTrigger]
+    Some((cronTrigger.getCronExpression()))
+  }
+
+  private def triggerFormApply(triggerType: String, group: String, name: String, jobGroup: String, jobName: String, description: String,
+                               simple: Option[SimpleScheduleBuilder], cron: Option[CronScheduleBuilder]): Trigger = {
+    val newTrigger: Trigger = TriggerBuilder.newTrigger()
+      .withIdentity(group, name)
+      .withDescription(description)
+      .withSchedule(
+      triggerType match {
+        case "cron" => cron.get
+        case "simple" => simple.get
+      })
+      .forJob(jobName, jobGroup)
+      .build()
+    newTrigger
+  }
+
+  private def triggerFormUnapply(trigger: Trigger):
+  Option[(String, String, String, String, String, String, Option[SimpleScheduleBuilder], Option[CronScheduleBuilder])] = {
+    val (triggerType: String, simple, cron: Option[TriggerBuilder[CronTrigger]]) = trigger match {
+      case cron: CronTrigger => ("cron", Some(SimpleScheduleBuilder.simpleSchedule()), None)
+      case simple: SimpleTrigger => ("simple", Some(simple.getScheduleBuilder), None)
+    }
+    Some((triggerType, trigger.getKey.getGroup(), trigger.getKey.getName(),
+      trigger.getJobKey.getGroup(), trigger.getJobKey.getName(), trigger.getDescription(),
+      simple.asInstanceOf[Option[SimpleScheduleBuilder]], cron.asInstanceOf[Option[CronScheduleBuilder]]))
+  }
+
+  private def buildTriggerForm() = Form[Trigger](
+    mapping(
+      "triggerType" -> nonEmptyText(),
+      "group" -> nonEmptyText(),
+      "name" -> nonEmptyText(),
+      "jobGroup" -> nonEmptyText(),
+      "jobName" -> nonEmptyText(),
+      "description" -> text(),
+      "simple" -> optional(mapping(
+        "repeatCount" -> number(),
+        "repeatInterval" -> number()
+      )(simpleScheduleFormApply)(simpleScheduleFormUnapply)),
+      "cron" -> optional(mapping(
+        "cronExpression" -> nonEmptyText()
+      )(cronScheduleFormApply)(cronScheduleFormUnapply))
+    )(triggerFormApply)(triggerFormUnapply)
+  )
+
+  def getNewTriggerForm(triggerType: String = "cron") = Action { implicit request =>
+    val dummyTrigger = triggerType match {
+      case "cron" => new DummyCronTrigger()
+      case "simple" => new DummySimpleTrigger()
+    }
+    val newTriggerForm = buildTriggerForm().fill(dummyTrigger)
+    Ok(com.lucidchart.piezo.admin.views.html.newTrigger(getTriggersByGroup(), newTriggerForm)(request))
+  }
+
+  def postTrigger() = Action { implicit request =>
+    buildTriggerForm.bindFromRequest.fold(
+      formWithErrors =>
+        BadRequest(com.lucidchart.piezo.admin.views.html.newTrigger(getTriggersByGroup(), formWithErrors)),
+      value => {
+        scheduler.scheduleJob(value)
+        Redirect(routes.Triggers.getTrigger(value.getKey.getGroup(), value.getKey.getName()))
+          .flashing("message" -> "Successfully added trigger.", "class" -> "text-danger")
+      }
+    )
+  }
+
+  private trait DummyTrigger extends Trigger {
+    override def getKey() = { new TriggerKey("", "") }
+
+    override def getJobKey() = { new JobKey("", "") }
+  }
+
+  private class DummyCronTrigger extends CronTriggerImpl with DummyTrigger {}
+
+  private class DummySimpleTrigger extends SimpleTriggerImpl with DummyTrigger {}
+}

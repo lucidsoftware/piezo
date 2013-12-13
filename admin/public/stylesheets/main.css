@@ -62,3 +62,8 @@ div.jobs-list a.list-group-item {
 table > tbody > tr > td {
     min-width: 150px;
 }
+
+.form-inline-control-half {
+    width: 400px;
+    margin-bottom: 6px;
+}
