@@ -63,7 +63,31 @@ table > tbody > tr > td {
     min-width: 150px;
 }
 
-.form-inline-control-half {
-    width: 400px;
+.form-inline-control {
+    display: inline-block;
+    margin: 3px 2px;
     margin-bottom: 6px;
+}
+
+.form-inline-control-half {
+    width: 408px;
+}
+
+.form-horizontal-inline {
+    margin-bottom: 0px;
+}
+
+.piezo-button {
+    padding: 4px 5px;
+    font-size: 18px;
+    line-height: 1.33;
+    color: #29aae1 !important;
+}
+
+.piezo-label {
+    font-weight: normal;
+}
+
+.submit-btn {
+    margin-top: 10px;
 }

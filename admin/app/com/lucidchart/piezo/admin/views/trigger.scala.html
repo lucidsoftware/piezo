@@ -19,11 +19,9 @@ request: play.api.mvc.Request[AnyContent]
     }
     @if(!currentTrigger.isEmpty) {
         <h3 class="pull-left">@currentTrigger.get.getKey.getGroup() &raquo; <span class="text-info">@currentTrigger.get.getKey.getName()</span></h3>
-        <button type="button" class="btn btn-default pull-right">
-            <a href="@piezoRoutes.Triggers.getEditTrigger(currentTrigger.get.getKey.getGroup(), currentTrigger.get.getKey.getName())" data-toggle="tooltip" title="Edit trigger">
-                <span class="glyphicon glyphicon-pencil"></span>
-            </a>
-        </button>
+        <a class="piezo-button pull-right" href="@piezoRoutes.Triggers.getEditTrigger(currentTrigger.get.getKey.getGroup(), currentTrigger.get.getKey.getName())" data-toggle="tooltip" title="Edit trigger">
+            <span class="glyphicon glyphicon-pencil"></span>
+        </a>
         <table class="table table-condensed table-bordered table-striped table-hover">
             <tbody>
             <tr>
