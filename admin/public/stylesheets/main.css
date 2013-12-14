@@ -7,8 +7,12 @@ body {
     margin-top: 10px;
 }
 
-a:link.piezoicon, a:visited.piezoicon, a:hover.piezoicon, a:active.piezoicon {
+a:link.piezoicon, a:visited.piezoicon {
     color: #29aae1 !important;
+}
+
+a.piezoicon:hover, a.piezoicon:active, a.piezoicon:focus {
+    color: #2083AE;
 }
 
 div.jobs-list .list-group {
@@ -81,7 +85,11 @@ table > tbody > tr > td {
     padding: 4px 5px;
     font-size: 18px;
     line-height: 1.33;
-    color: #29aae1 !important;
+    color: #29aae1;
+}
+
+a.piezo-button:hover, a.piezo-button:focus {
+    color: #2083AE;
 }
 
 .piezo-label {

@@ -6,12 +6,14 @@
 GET     /                             com.lucidchart.piezo.admin.controllers.Application.index
 GET     /jobs                         com.lucidchart.piezo.admin.controllers.Jobs.getIndex
 GET     /jobs/:group/:name            com.lucidchart.piezo.admin.controllers.Jobs.getJob(group: String, name: String)
+
 GET     /triggers                     com.lucidchart.piezo.admin.controllers.Triggers.getIndex
 GET     /triggers/new/:triggerType    com.lucidchart.piezo.admin.controllers.Triggers.getNewTriggerForm(triggerType)
 GET     /triggers/:group/:name        com.lucidchart.piezo.admin.controllers.Triggers.getTrigger(group: String, name: String)
+POST    /triggers/:group/:name        com.lucidchart.piezo.admin.controllers.Triggers.putTrigger(group: String, name: String)
+DELETE  /triggers/:group/:name        com.lucidchart.piezo.admin.controllers.Triggers.deleteTrigger(group: String, name: String)
 GET     /triggers/:group/:name/editor com.lucidchart.piezo.admin.controllers.Triggers.getEditTrigger(group: String, name: String)
 POST    /triggers                     com.lucidchart.piezo.admin.controllers.Triggers.postTrigger()
-POST    /triggers/:group/:name        com.lucidchart.piezo.admin.controllers.Triggers.putTrigger(group: String, name: String)
 
 GET     /favicon.ico                  com.lucidchart.piezo.admin.controllers.Application.favicon
 

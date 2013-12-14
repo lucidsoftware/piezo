@@ -67,6 +67,26 @@ object Triggers extends Controller {
     }
   }
 
+  def deleteTrigger(group: String, name: String) = Action { implicit request =>
+    val triggerKey = new TriggerKey(name, group)
+    val triggerExists = scheduler.checkExists(triggerKey)
+    if (!triggerExists) {
+      val errorMsg = Some("Trigger " + group + " " + name + " not found")
+      NotFound(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, None, errorMsg)(request))
+    } else {
+      try {
+        scheduler.unscheduleJob(triggerKey)
+        Ok(com.lucidchart.piezo.admin.views.html.trigger(getTriggersByGroup(), None, None)(request))
+      } catch {
+        case e: Exception => {
+          val errorMsg = "Exception caught deleting trigger " + group + " " + name + ". -- " + e.getLocalizedMessage()
+          logger.error(errorMsg, e)
+          InternalServerError(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, None, Some(errorMsg))(request))
+        }
+      }
+    }
+  }
+
   private def simpleScheduleFormApply(repeatCount: Int, repeatInterval: Int): SimpleScheduleBuilder = {
     SimpleScheduleBuilder.simpleSchedule()
     .withRepeatCount(repeatCount)

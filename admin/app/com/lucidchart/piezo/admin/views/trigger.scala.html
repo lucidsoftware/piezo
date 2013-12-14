@@ -22,6 +22,37 @@ request: play.api.mvc.Request[AnyContent]
         <a class="piezo-button pull-right" href="@piezoRoutes.Triggers.getEditTrigger(currentTrigger.get.getKey.getGroup(), currentTrigger.get.getKey.getName())" data-toggle="tooltip" title="Edit trigger">
             <span class="glyphicon glyphicon-pencil"></span>
         </a>
+        <a id="deleteTrigger" class="piezo-button pull-right" data-toggle="tooltip" title="Delete trigger" onclick="$('#deleteConfirm').show()">
+            <span class="glyphicon glyphicon-remove"></span>
+        </a>
+        <div class="clearfix"></div>
+        <div id="deleteError" class="alert alert-danger">
+            <p>Failed to delete trigger.</p>
+        </div>
+        <div id="deleteConfirm" class="alert alert-warning fade in">
+          <h4>This will permanently delete the trigger!</h4>
+            <button type="button" class="btn btn-danger" onclick="deleteTrigger()">Delete</button>
+            <button type="button" class="btn btn-default" onclick="$('#deleteConfirm').hide()">Cancel</button>
+        </div>
+        <script>
+            $('#deleteError').hide();
+            $('#deleteConfirm').hide();
+            function deleteTrigger() {
+                var triggerUrl = "@piezoRoutes.Triggers.deleteTrigger(currentTrigger.get.getKey.getGroup(), currentTrigger.get.getKey.getName())";
+                var deleteRequest = new XMLHttpRequest();
+                deleteRequest.onreadystatechange = function() {
+                    if (deleteRequest.readyState === 4) {
+                        if (deleteRequest.status === 200) {
+                            window.location.assign("@piezoRoutes.Triggers.getIndex()");
+                        } else {
+                            $('#deleteError').show();
+                        }
+                    }
+                };
+                deleteRequest.open("DELETE", triggerUrl, true);
+                deleteRequest.send(null);
+            }
+        </script>
         <table class="table table-condensed table-bordered table-striped table-hover">
             <tbody>
             <tr>
