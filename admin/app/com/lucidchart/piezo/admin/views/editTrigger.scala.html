@@ -1,6 +1,8 @@
 @(
 triggersByGroup: scala.collection.mutable.Buffer[(String, scala.collection.immutable.List[org.quartz.TriggerKey])],
 triggerForm: Form[org.quartz.Trigger],
+submitValue: String,
+formAction: play.api.mvc.Call,
 errorMessage: Option[String] = None
 )(
 implicit
@@ -29,20 +31,20 @@ request: play.api.mvc.Request[AnyContent]
   </div>
   <br/>
 
-  <form class="form-inline" role="form" action="@piezoRoutes.Triggers.postTrigger()" method="POST">
-    @helper.input(triggerForm("group"), '_label -> "Group", 'labelClass -> "sr-only", 'placeholder -> "Group") { (id, name, value, args) =>
+  <form class="form-inline" role="form" action="@formAction" method="POST">
+    @helper.input(triggerForm("group"), '_label -> "Group", 'labelClass -> "sr-only", 'placeholder -> "Group", 'value-> triggerForm.data.get("group").getOrElse("")) { (id, name, value, args) =>
       <input type="text" class="form-control form-inline-control-half form-inline-control-half" name="@name" id="@id" @toHtmlArgs(args)>
     }
-    @helper.input(triggerForm("name"), '_label -> "Name", 'labelClass -> "sr-only", 'placeholder -> "Name") { (id, name, value, args) =>
+    @helper.input(triggerForm("name"), '_label -> "Name", 'labelClass -> "sr-only", 'placeholder -> "Name", 'value-> triggerForm.data.get("name").getOrElse("")) { (id, name, value, args) =>
       <input type="text" class="form-control form-inline-control-half" name="@name" id="@id" @toHtmlArgs(args)>
     }
-    @helper.input(triggerForm("jobGroup"), '_label -> "Job group", 'labelClass -> "sr-only", 'placeholder -> "Job group") { (id, name, value, args) =>
+    @helper.input(triggerForm("jobGroup"), '_label -> "Job group", 'labelClass -> "sr-only", 'placeholder -> "Job group", 'value-> triggerForm.data.get("jobGroup").getOrElse("")) { (id, name, value, args) =>
       <input type="text" class="form-control form-inline-control-half" name="@name" id="@id" @toHtmlArgs(args)>
     }
-    @helper.input(triggerForm("jobName"), '_label -> "Job name", 'labelClass -> "sr-only", 'placeholder -> "Job name") { (id, name, value, args) =>
+    @helper.input(triggerForm("jobName"), '_label -> "Job name", 'labelClass -> "sr-only", 'placeholder -> "Job name", 'value-> triggerForm.data.get("jobName").getOrElse("")) { (id, name, value, args) =>
       <input type="text" class="form-control form-inline-control-half" name="@name" id="@id" @toHtmlArgs(args)>
     }
-    @helper.input(triggerForm("description"), '_label -> "Description", 'labelClass -> "sr-only", 'placeholder -> "Description") { (id, name, value, args) =>
+    @helper.input(triggerForm("description"), '_label -> "Description", 'labelClass -> "sr-only", 'placeholder -> "Description", 'value-> triggerForm.data.get("description").getOrElse("")) { (id, name, value, args) =>
       <input type="text" class="form-control form-inline-control-half" name="@name" id="@id" @toHtmlArgs(args)>
     }
     <input type="hidden" name="triggerType" id="triggerType" value="@triggerForm.data.get("triggerType")"/>
@@ -50,15 +52,15 @@ request: play.api.mvc.Request[AnyContent]
     <div class="clearfix"/>
     @triggerForm.value.get match {
       case c: SimpleTrigger => {
-        @helper.input(triggerForm("simple.repeatCount"), '_label -> "Repeat count", 'labelClass -> "sr-only", 'placeholder -> "Repeat count") { (id, name, value, args) =>
+        @helper.input(triggerForm("simple.repeatCount"), '_label -> "Repeat count", 'labelClass -> "sr-only", 'placeholder -> "Repeat count", 'value-> triggerForm.data.get("simple.repeatCount").getOrElse("")) { (id, name, value, args) =>
           <input type="text" class="form-control form-inline-control-half" name="@name" id="@id" @toHtmlArgs(args)>
         }
-        @helper.input(triggerForm("simple.repeatInterval"), '_label -> "Repeat interval (seconds)", 'labelClass -> "sr-only", 'placeholder -> "Repeat interval (seconds)") { (id, name, value, args) =>
+        @helper.input(triggerForm("simple.repeatInterval"), '_label -> "Repeat interval (seconds)", 'labelClass -> "sr-only", 'placeholder -> "Repeat interval (seconds)", 'value-> triggerForm.data.get("simple.repeatInterval").getOrElse("")) { (id, name, value, args) =>
           <input type="text" class="form-control form-inline-control-half" name="@name" id="@id" @toHtmlArgs(args)>
         }
       }
       case s: CronTrigger => {
-        @helper.input(triggerForm("cron.cronExpression"), '_label -> "Cron Expression", 'labelClass -> "sr-only", 'placeholder -> "Cron expression") { (id, name, value, args) =>
+        @helper.input(triggerForm("cron.cronExpression"), '_label -> "Cron Expression", 'labelClass -> "sr-only", 'placeholder -> "Cron expression", 'value-> triggerForm.data.get("cron.cronExpression").getOrElse("")) { (id, name, value, args) =>
           <input type="text" class="form-control form-inline-control-half" name="@name" id="@id" @toHtmlArgs(args)>
         }
       }
@@ -67,6 +69,6 @@ request: play.api.mvc.Request[AnyContent]
       }
     }
     <div class="clearfix"/>
-    <button type="submit" class="btn btn-default">Create</button>
+    <button type="submit" class="btn btn-default">@submitValue</button>
   </form>
 }

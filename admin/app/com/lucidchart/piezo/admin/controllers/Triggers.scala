@@ -90,7 +90,7 @@ object Triggers extends Controller {
   private def triggerFormApply(triggerType: String, group: String, name: String, jobGroup: String, jobName: String, description: String,
                                simple: Option[SimpleScheduleBuilder], cron: Option[CronScheduleBuilder]): Trigger = {
     val newTrigger: Trigger = TriggerBuilder.newTrigger()
-      .withIdentity(group, name)
+      .withIdentity(name, group)
       .withDescription(description)
       .withSchedule(
       triggerType match {
@@ -104,8 +104,8 @@ object Triggers extends Controller {
 
   private def triggerFormUnapply(trigger: Trigger):
   Option[(String, String, String, String, String, String, Option[SimpleScheduleBuilder], Option[CronScheduleBuilder])] = {
-    val (triggerType: String, simple, cron: Option[TriggerBuilder[CronTrigger]]) = trigger match {
-      case cron: CronTrigger => ("cron", Some(SimpleScheduleBuilder.simpleSchedule()), None)
+    val (triggerType: String, simple, cron) = trigger match {
+      case cron: CronTrigger => ("cron", None, Some(cron.getScheduleBuilder))
       case simple: SimpleTrigger => ("simple", Some(simple.getScheduleBuilder), None)
     }
     Some((triggerType, trigger.getKey.getGroup(), trigger.getKey.getName(),
@@ -131,23 +131,53 @@ object Triggers extends Controller {
     )(triggerFormApply)(triggerFormUnapply)
   )
 
+  val submitNewMessage = "Create"
+  val formNewAction = routes.Triggers.postTrigger()
+  val submitEditMessage = "Save"
+  def formEditAction(group: String, name: String): Call = routes.Triggers.putTrigger(group, name)
+
   def getNewTriggerForm(triggerType: String = "cron") = Action { implicit request =>
     val dummyTrigger = triggerType match {
       case "cron" => new DummyCronTrigger()
       case "simple" => new DummySimpleTrigger()
     }
     val newTriggerForm = buildTriggerForm().fill(dummyTrigger)
-    Ok(com.lucidchart.piezo.admin.views.html.newTrigger(getTriggersByGroup(), newTriggerForm)(request))
+    Ok(com.lucidchart.piezo.admin.views.html.editTrigger(getTriggersByGroup(), newTriggerForm, submitNewMessage, formNewAction)(request))
+  }
+
+  def getEditTrigger(group: String, name: String) = Action { implicit request =>
+    val triggerKey = new TriggerKey(name, group)
+    val triggerExists = scheduler.checkExists(triggerKey)
+    if (!triggerExists) {
+      val errorMsg = Some("Trigger " + group + " " + name + " not found")
+      NotFound(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, None, errorMsg)(request))
+    } else {
+      val triggerDetail: Trigger = scheduler.getTrigger(triggerKey)
+      val editTriggerForm = buildTriggerForm().fill(triggerDetail)
+      Ok(com.lucidchart.piezo.admin.views.html.editTrigger(getTriggersByGroup(), editTriggerForm, submitEditMessage, formEditAction(group, name))(request))
+    }
+  }
+
+  def putTrigger(group: String, name: String) = Action { implicit request =>
+    buildTriggerForm.bindFromRequest.fold(
+      formWithErrors =>
+        BadRequest(com.lucidchart.piezo.admin.views.html.editTrigger(getTriggersByGroup(), formWithErrors, submitEditMessage, formEditAction(group, name))),
+      value => {
+        scheduler.rescheduleJob(value.getKey(), value)
+        Redirect(routes.Triggers.getTrigger(value.getKey.getGroup(), value.getKey.getName()))
+          .flashing("message" -> "Successfully added trigger.", "class" -> "")
+      }
+    )
   }
 
   def postTrigger() = Action { implicit request =>
     buildTriggerForm.bindFromRequest.fold(
       formWithErrors =>
-        BadRequest(com.lucidchart.piezo.admin.views.html.newTrigger(getTriggersByGroup(), formWithErrors)),
+        BadRequest(com.lucidchart.piezo.admin.views.html.editTrigger(getTriggersByGroup(), formWithErrors, submitNewMessage, formNewAction)),
       value => {
         scheduler.scheduleJob(value)
         Redirect(routes.Triggers.getTrigger(value.getKey.getGroup(), value.getKey.getName()))
-          .flashing("message" -> "Successfully added trigger.", "class" -> "text-danger")
+          .flashing("message" -> "Successfully added trigger.", "class" -> "")
       }
     )
   }
@@ -156,9 +186,13 @@ object Triggers extends Controller {
     override def getKey() = { new TriggerKey("", "") }
 
     override def getJobKey() = { new JobKey("", "") }
+
+    override def getDescription() = ""
   }
 
-  private class DummyCronTrigger extends CronTriggerImpl with DummyTrigger {}
+  private class DummyCronTrigger extends CronTriggerImpl with DummyTrigger {
+    override def getCronExpression() = "7 7 7 * * ?"
+  }
 
   private class DummySimpleTrigger extends SimpleTriggerImpl with DummyTrigger {}
 }
