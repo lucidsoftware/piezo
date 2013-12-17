@@ -21,61 +21,57 @@ request: play.api.mvc.Request[AnyContent]
   }
   <h3>New Trigger</h3>
 
-  <div class="form-inline">
+  <div class="form-horizontal">
       <div class="form-group">
-          <select class="form-control form-inline-control form-inline-control-half" onchange="window.location = this.options[this.selectedIndex].value;">
-              <option value="@piezoRoutes.Triggers.getNewTriggerForm("cron")" @if(triggerForm.data.get("triggerType")==Some("cron")) {selected} else {}>Cron</option>
-              <option value="@piezoRoutes.Triggers.getNewTriggerForm("simple")" @if(triggerForm.data.get("triggerType")==Some("simple")) {selected} else {}>Simple</option>
-          </select>
-          @triggerForm.value.get match {
-          case c: SimpleTrigger => {
-          <a class="piezo-button" href="http://quartz-scheduler.org/documentation/quartz-2.x/tutorials/tutorial-lesson-05" target="_blank"><span class="glyphicon glyphicon-question-sign"/></a>
-          }
-          case s: CronTrigger => {
-          <a class="piezo-button" href="http://quartz-scheduler.org/documentation/quartz-2.x/tutorials/tutorial-lesson-06" target="_blank"><span class="glyphicon glyphicon-question-sign"/></a>
-          }
-          }
+          <div class="col-sm-2">
+              <select class="form-control col-sm-2" onchange="window.location = this.options[this.selectedIndex].value;">
+                  <option value="@piezoRoutes.Triggers.getNewTriggerForm("cron")" @if(triggerForm.data.get("triggerType")==Some("cron")) {selected} else {}>Cron</option>
+                  <option value="@piezoRoutes.Triggers.getNewTriggerForm("simple")" @if(triggerForm.data.get("triggerType")==Some("simple")) {selected} else {}>Simple</option>
+              </select>
+          </div>
+          <div class="col-sm-2">
+              @if(triggerForm.data.get("triggerType").getOrElse("") == "simple") {
+              <a class="piezo-button" href="http://quartz-scheduler.org/documentation/quartz-2.x/tutorials/tutorial-lesson-05" target="_blank"><span class="glyphicon glyphicon-question-sign"/></a>
+              } else {
+              <a class="piezo-button" href="http://quartz-scheduler.org/documentation/quartz-2.x/tutorials/tutorial-lesson-06" target="_blank"><span class="glyphicon glyphicon-question-sign"/></a>
+              }
+          </div>
       </div>
   </div>
   <br/>
 
+  <h4 class="text-danger">@triggerForm.errors.filter(_.key == "").map(_.message).mkString(", ")</h4>
   <form role="form" action="@formAction" method="POST">
-    <div class="form-inline">
-    @helper.input(triggerForm("group"), '_label -> "Group", 'labelClass -> "sr-only", 'placeholder -> "Group", 'value-> triggerForm.data.get("group").getOrElse("")) { (id, name, value, args) =>
-      <input type="text" class="form-control form-inline-control form-inline-control-half" name="@name" id="@id" @toHtmlArgs(args)>
+    <div class="form-horizontal">
+    @helper.input(triggerForm("group"), '_label -> "Group", 'labelClass -> "col-sm-2 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Group", 'value-> triggerForm.data.get("group").getOrElse("")) { (id, name, value, args) =>
+      <input type="text" class="form-control form-inline-control" name="@name" id="@id" @toHtmlArgs(args)>
     }
-    @helper.input(triggerForm("name"), '_label -> "Name", 'labelClass -> "sr-only", 'placeholder -> "Name", 'value-> triggerForm.data.get("name").getOrElse("")) { (id, name, value, args) =>
-      <input type="text" class="form-control form-inline-control  form-inline-control-half" name="@name" id="@id" @toHtmlArgs(args)>
+    @helper.input(triggerForm("name"), '_label -> "Name", 'labelClass -> "col-sm-2 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Name", 'value-> triggerForm.data.get("name").getOrElse("")) { (id, name, value, args) =>
+      <input type="text" class="form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
     }
-    @helper.input(triggerForm("jobGroup"), '_label -> "Job group", 'labelClass -> "sr-only", 'placeholder -> "Job group", 'value-> triggerForm.data.get("jobGroup").getOrElse("")) { (id, name, value, args) =>
-      <input type="text" class="form-control form-inline-control  form-inline-control-half" name="@name" id="@id" @toHtmlArgs(args)>
+    @helper.input(triggerForm("jobGroup"), '_label -> "Job group", 'labelClass -> "col-sm-2 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Job group", 'value-> triggerForm.data.get("jobGroup").getOrElse("")) { (id, name, value, args) =>
+      <input type="text" class="form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
     }
-    @helper.input(triggerForm("jobName"), '_label -> "Job name", 'labelClass -> "sr-only", 'placeholder -> "Job name", 'value-> triggerForm.data.get("jobName").getOrElse("")) { (id, name, value, args) =>
-      <input type="text" class="form-control form-inline-control  form-inline-control-half" name="@name" id="@id" @toHtmlArgs(args)>
+    @helper.input(triggerForm("jobName"), '_label -> "Job name", 'labelClass -> "col-sm-2 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Job name", 'value-> triggerForm.data.get("jobName").getOrElse("")) { (id, name, value, args) =>
+      <input type="text" class="form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
     }
-    @helper.input(triggerForm("description"), '_label -> "Description", 'labelClass -> "sr-only", 'placeholder -> "Description", 'value-> triggerForm.data.get("description").getOrElse("")) { (id, name, value, args) =>
-      <input type="text" class="form-control form-inline-control  form-inline-control-half" name="@name" id="@id" @toHtmlArgs(args)>
+    @helper.input(triggerForm("description"), '_label -> "Description", 'labelClass -> "col-sm-2 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Description", 'value-> triggerForm.data.get("description").getOrElse("")) { (id, name, value, args) =>
+      <input type="text" class="form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
     }
     <input type="hidden" name="triggerType" id="triggerType" value="@triggerForm.data.get("triggerType")"/>
     </div>
     <div class="clearfix"></div>
     <div class="form-horizontal">
-    @triggerForm.value.get match {
-      case c: SimpleTrigger => {
-        @helper.input(triggerForm("simple.repeatCount"), '_label -> "Repeat count", 'labelClass -> "col-sm-2", '_class -> "form-horizontal-inline", 'inputDivClass -> "col-sm-2", 'placeholder -> "Repeat count", 'value-> triggerForm.data.get("simple.repeatCount").getOrElse("")) { (id, name, value, args) =>
-          <input type="text" class="form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
-        }
-        @helper.input(triggerForm("simple.repeatInterval"), '_label -> "Repeat interval (seconds)", 'labelClass -> "col-sm-2", '_class -> "form-horizontal-inline", 'inputDivClass -> "col-sm-2", 'placeholder -> "Repeat interval (seconds)", 'value-> triggerForm.data.get("simple.repeatInterval").getOrElse("")) { (id, name, value, args) =>
-          <input type="text" class="form-control form-inline-control" name="@name" id="@id" @toHtmlArgs(args)>
-        }
+    @if(triggerForm.data.get("triggerType").getOrElse("") == "simple") {
+      @helper.input(triggerForm("simple.repeatCount"), '_label -> "Repeat count", 'labelClass -> "col-sm-2 text-right", '_class -> "form-horizontal-inline", 'inputDivClass -> "col-sm-2", 'placeholder -> "Repeat count", 'value-> triggerForm.data.get("simple.repeatCount").getOrElse("")) { (id, name, value, args) =>
+        <input type="text" class="form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
       }
-      case s: CronTrigger => {
-        @helper.input(triggerForm("cron.cronExpression"), '_label -> "Cron Expression", 'labelClass -> "col-sm-2", '_class -> "form-horizontal-inline", 'inputDivClass -> "col-sm-4", 'placeholder -> "Cron expression", 'value-> triggerForm.data.get("cron.cronExpression").getOrElse("")) { (id, name, value, args) =>
-          <input type="text" class="form-control form-inline-control" name="@name" id="@id" @toHtmlArgs(args)>
-        }
+      @helper.input(triggerForm("simple.repeatInterval"), '_label -> "Repeat interval (seconds)", 'labelClass -> "col-sm-2 text-right", '_class -> "form-horizontal-inline", 'inputDivClass -> "col-sm-2", 'placeholder -> "Repeat interval (seconds)", 'value-> triggerForm.data.get("simple.repeatInterval").getOrElse("")) { (id, name, value, args) =>
+        <input type="text" class="form-control form-inline-control" name="@name" id="@id" @toHtmlArgs(args)>
       }
-      case _ => {
-        <h5 class="text-danger">Unsupported trigger type @triggerForm.value.getClass.getName()</h5>
+    } else {
+      @helper.input(triggerForm("cron.cronExpression"), '_label -> "Cron Expression", 'labelClass -> "col-sm-2 text-right", '_class -> "form-horizontal-inline", 'inputDivClass -> "col-sm-4", 'placeholder -> "Cron expression", 'value-> triggerForm.data.get("cron.cronExpression").getOrElse("")) { (id, name, value, args) =>
+          <input type="text" class="form-control form-inline-control" name="@name" id="@id" @toHtmlArgs(args)>
       }
     }
     </div>

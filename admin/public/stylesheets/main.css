@@ -73,17 +73,13 @@ table > tbody > tr > td {
     margin-bottom: 6px;
 }
 
-.form-inline-control-half {
-    width: 408px;
-}
-
 .form-horizontal-inline {
     margin-bottom: 0px;
 }
 
 .piezo-button {
-    padding: 4px 5px;
-    font-size: 18px;
+    padding: 6px 8px;
+    font-size: 20px;
     line-height: 1.33;
     color: #29aae1;
 }

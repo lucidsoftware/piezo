@@ -128,8 +128,9 @@ object Triggers extends Controller {
       case cron: CronTrigger => ("cron", None, Some(cron.getScheduleBuilder))
       case simple: SimpleTrigger => ("simple", Some(simple.getScheduleBuilder), None)
     }
+    val description = if (trigger.getDescription() == null) "" else trigger.getDescription()
     Some((triggerType, trigger.getKey.getGroup(), trigger.getKey.getName(),
-      trigger.getJobKey.getGroup(), trigger.getJobKey.getName(), trigger.getDescription(),
+      trigger.getJobKey.getGroup(), trigger.getJobKey.getName(), description,
       simple.asInstanceOf[Option[SimpleScheduleBuilder]], cron.asInstanceOf[Option[CronScheduleBuilder]]))
   }
 
@@ -148,7 +149,9 @@ object Triggers extends Controller {
       "cron" -> optional(mapping(
         "cronExpression" -> nonEmptyText()
       )(cronScheduleFormApply)(cronScheduleFormUnapply))
-    )(triggerFormApply)(triggerFormUnapply)
+    )(triggerFormApply)(triggerFormUnapply) verifying("Job does not exist", trigger => {
+      scheduler.checkExists(trigger.getJobKey)
+    })
   )
 
   val submitNewMessage = "Create"
