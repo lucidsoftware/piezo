@@ -7,11 +7,14 @@ import org.quartz._
 import impl.matchers.GroupMatcher
 import scala.collection.JavaConverters._
 import scala.collection.mutable
-import play.api.data.Form
+import play.api.data.{FormError, Form}
 import play.api.data.Forms._
 import play.api.data.validation.Constraints._
 import java.util.{TimeZone, Date}
 import org.quartz.impl.triggers.{SimpleTriggerImpl, CronTriggerImpl}
+import play.api.data.format.Formatter
+import java.text.ParseException
+import play.api.data.validation.{Valid, ValidationError, Invalid, Constraint}
 
 object Triggers extends Controller {
   implicit val logger = Logger(this.getClass())
@@ -20,6 +23,7 @@ object Triggers extends Controller {
   val scheduler = logExceptions(schedulerFactory.getScheduler())
   val properties = schedulerFactory.props
   val triggerHistoryModel = logExceptions(new TriggerHistoryModel(properties))
+  val triggerFormHelper = new TriggerFormHelper(scheduler)
 
   def getTriggersByGroup(): mutable.Buffer[(String, List[TriggerKey])] = {
     val triggersByGroup =
@@ -87,73 +91,6 @@ object Triggers extends Controller {
     }
   }
 
-  private def simpleScheduleFormApply(repeatCount: Int, repeatInterval: Int): SimpleScheduleBuilder = {
-    SimpleScheduleBuilder.simpleSchedule()
-    .withRepeatCount(repeatCount)
-    .withIntervalInSeconds(repeatInterval)
-  }
-
-  private def simpleScheduleFormUnapply(simple: SimpleScheduleBuilder) = {
-    val simpleTrigger = simple.build().asInstanceOf[SimpleTrigger]
-    Some((simpleTrigger.getRepeatCount, simpleTrigger.getRepeatInterval.toInt))
-  }
-
-  private def cronScheduleFormApply(cronExpression: String): CronScheduleBuilder = {
-    CronScheduleBuilder.cronSchedule(cronExpression)
-  }
-
-  private def cronScheduleFormUnapply(cron: CronScheduleBuilder) = {
-    val cronTrigger = cron.build().asInstanceOf[CronTrigger]
-    Some((cronTrigger.getCronExpression()))
-  }
-
-  private def triggerFormApply(triggerType: String, group: String, name: String, jobGroup: String, jobName: String, description: String,
-                               simple: Option[SimpleScheduleBuilder], cron: Option[CronScheduleBuilder]): Trigger = {
-    val newTrigger: Trigger = TriggerBuilder.newTrigger()
-      .withIdentity(name, group)
-      .withDescription(description)
-      .withSchedule(
-      triggerType match {
-        case "cron" => cron.get
-        case "simple" => simple.get
-      })
-      .forJob(jobName, jobGroup)
-      .build()
-    newTrigger
-  }
-
-  private def triggerFormUnapply(trigger: Trigger):
-  Option[(String, String, String, String, String, String, Option[SimpleScheduleBuilder], Option[CronScheduleBuilder])] = {
-    val (triggerType: String, simple, cron) = trigger match {
-      case cron: CronTrigger => ("cron", None, Some(cron.getScheduleBuilder))
-      case simple: SimpleTrigger => ("simple", Some(simple.getScheduleBuilder), None)
-    }
-    val description = if (trigger.getDescription() == null) "" else trigger.getDescription()
-    Some((triggerType, trigger.getKey.getGroup(), trigger.getKey.getName(),
-      trigger.getJobKey.getGroup(), trigger.getJobKey.getName(), description,
-      simple.asInstanceOf[Option[SimpleScheduleBuilder]], cron.asInstanceOf[Option[CronScheduleBuilder]]))
-  }
-
-  private def buildTriggerForm() = Form[Trigger](
-    mapping(
-      "triggerType" -> nonEmptyText(),
-      "group" -> nonEmptyText(),
-      "name" -> nonEmptyText(),
-      "jobGroup" -> nonEmptyText(),
-      "jobName" -> nonEmptyText(),
-      "description" -> text(),
-      "simple" -> optional(mapping(
-        "repeatCount" -> number(),
-        "repeatInterval" -> number()
-      )(simpleScheduleFormApply)(simpleScheduleFormUnapply)),
-      "cron" -> optional(mapping(
-        "cronExpression" -> nonEmptyText()
-      )(cronScheduleFormApply)(cronScheduleFormUnapply))
-    )(triggerFormApply)(triggerFormUnapply) verifying("Job does not exist", trigger => {
-      scheduler.checkExists(trigger.getJobKey)
-    })
-  )
-
   val submitNewMessage = "Create"
   val formNewAction = routes.Triggers.postTrigger()
   val submitEditMessage = "Save"
@@ -164,8 +101,8 @@ object Triggers extends Controller {
       case "cron" => new DummyCronTrigger()
       case "simple" => new DummySimpleTrigger()
     }
-    val newTriggerForm = buildTriggerForm().fill(dummyTrigger)
-    Ok(com.lucidchart.piezo.admin.views.html.editTrigger(getTriggersByGroup(), newTriggerForm, submitNewMessage, formNewAction)(request))
+    val newTriggerForm = triggerFormHelper.buildTriggerForm().fill(dummyTrigger)
+    Ok(com.lucidchart.piezo.admin.views.html.editTrigger(getTriggersByGroup(), newTriggerForm, submitNewMessage, formNewAction, false)(request))
   }
 
   def getEditTrigger(group: String, name: String) = Action { implicit request =>
@@ -176,15 +113,15 @@ object Triggers extends Controller {
       NotFound(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, None, errorMsg)(request))
     } else {
       val triggerDetail: Trigger = scheduler.getTrigger(triggerKey)
-      val editTriggerForm = buildTriggerForm().fill(triggerDetail)
-      Ok(com.lucidchart.piezo.admin.views.html.editTrigger(getTriggersByGroup(), editTriggerForm, submitEditMessage, formEditAction(group, name))(request))
+      val editTriggerForm = triggerFormHelper.buildTriggerForm().fill(triggerDetail)
+      Ok(com.lucidchart.piezo.admin.views.html.editTrigger(getTriggersByGroup(), editTriggerForm, submitEditMessage, formEditAction(group, name), true)(request))
     }
   }
 
   def putTrigger(group: String, name: String) = Action { implicit request =>
-    buildTriggerForm.bindFromRequest.fold(
+    triggerFormHelper.buildTriggerForm.bindFromRequest.fold(
       formWithErrors =>
-        BadRequest(com.lucidchart.piezo.admin.views.html.editTrigger(getTriggersByGroup(), formWithErrors, submitEditMessage, formEditAction(group, name))),
+        BadRequest(com.lucidchart.piezo.admin.views.html.editTrigger(getTriggersByGroup(), formWithErrors, submitEditMessage, formEditAction(group, name), true)),
       value => {
         scheduler.rescheduleJob(value.getKey(), value)
         Redirect(routes.Triggers.getTrigger(value.getKey.getGroup(), value.getKey.getName()))
@@ -194,9 +131,9 @@ object Triggers extends Controller {
   }
 
   def postTrigger() = Action { implicit request =>
-    buildTriggerForm.bindFromRequest.fold(
+    triggerFormHelper.buildTriggerForm.bindFromRequest.fold(
       formWithErrors =>
-        BadRequest(com.lucidchart.piezo.admin.views.html.editTrigger(getTriggersByGroup(), formWithErrors, submitNewMessage, formNewAction)),
+        BadRequest(com.lucidchart.piezo.admin.views.html.editTrigger(getTriggersByGroup(), formWithErrors, submitNewMessage, formNewAction, false)),
       value => {
         scheduler.scheduleJob(value)
         Redirect(routes.Triggers.getTrigger(value.getKey.getGroup(), value.getKey.getName()))
