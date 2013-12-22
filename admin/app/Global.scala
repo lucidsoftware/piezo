@@ -1,9 +1,10 @@
+import com.lucidchart.piezo.admin.RequestStatCollector
 import play.api._
 import play.api.mvc._
 import play.api.mvc.Results._
 import play.api.Play.current
 
-object Global extends GlobalSettings
+object Global extends WithFilters(RequestStatCollector)
 {
   val logger = Logger("com.lucidchart.piezo.Global")
 
