@@ -110,7 +110,9 @@ request: play.api.mvc.Request[AnyContent]
             }
             <tr>
                 <td class="text-right">Description:</td>
-                <td>@currentTrigger.get.getDescription()</td>
+                <td>
+                    @if(currentTrigger.get.getDescription() != null) {@currentTrigger.get.getDescription()} else {}
+                </td>
             </tr>
             <tr>
                 <td class="text-right small">End time:</td>

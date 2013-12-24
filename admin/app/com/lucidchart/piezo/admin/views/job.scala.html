@@ -25,7 +25,9 @@ request: play.api.mvc.Request[AnyContent]
             </tr>
             <tr>
                 <td class="text-right">Description</td>
-                <td>@currentJob.get.getDescription()</td>
+                <td>
+                    @if(currentJob.get.getDescription() != null) {@currentJob.get.getDescription()} else {}
+                </td>
             </tr>
             <tr>
                 <td class="text-right small">Durable</td>
