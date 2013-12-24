@@ -15,10 +15,12 @@ object TestUtil {
     val jobDetail = JobBuilder.newJob(classOf[HeartBeat]).withIdentity(jobName, jobGroup).build()
     val trigger = TriggerBuilder.newTrigger
       .withIdentity(triggerName, triggerGroup)
+      .withDescription("test job description")
       .withSchedule(
       SimpleScheduleBuilder.simpleSchedule
         .withIntervalInSeconds(5)
         .withRepeatCount(1))
+        .withDescription("test trigger description")
       .build()
     scheduler.deleteJob(jobDetail.getKey())
     scheduler.scheduleJob(jobDetail, trigger)
