@@ -47,6 +47,15 @@ div.jobs-list a.list-group-item {
     font-size: 12px;
 }
 
+h3.job-name {
+    max-width: 585px;
+}
+
+div.job-data-delete, div.job-data-add {
+    float: right;
+    margin-right: 240px;
+}
+
 .table-fixed-first-col {
     width: auto;
 }

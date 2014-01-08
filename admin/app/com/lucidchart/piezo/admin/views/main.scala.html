@@ -30,6 +30,10 @@ implicit request: RequestHeader
     <script type="text/javascript" src="@routes.Assets.at("jquery-ui-1.10.3/core/ui/minified/jquery-ui.min.js")"></script>
     <script type="text/javascript" src="@routes.Assets.at("bootstrap-3.0.2/js/bootstrap.min.js")"></script>
 
+    @for(script <- scripts) {
+      <script type="text/javascript" src="@routes.Assets.at(script)"></script>
+    }
+
 </head>
 <body>
 

@@ -4,7 +4,8 @@ jobForm: Form[org.quartz.JobDetail],
 submitValue: String,
 formAction: play.api.mvc.Call,
 existing: Boolean,
-errorMessage: Option[String] = None
+errorMessage: Option[String] = None,
+scripts: List[String] = List[String]("js/editJob.js")
 )(
 implicit
 request: play.api.mvc.Request[AnyContent]
@@ -15,7 +16,7 @@ request: play.api.mvc.Request[AnyContent]
 @import org.quartz._
 @import com.lucidchart.piezo.admin.views.FormHelpers._
 
-@com.lucidchart.piezo.admin.views.html.jobsLayout(jobsByGroup, None) {
+@com.lucidchart.piezo.admin.views.html.jobsLayout(jobsByGroup, None, scripts) {
   @if(!errorMessage.isEmpty) {
     <h3 class="text-danger">@errorMessage.get</h3>
   }
@@ -28,24 +29,32 @@ request: play.api.mvc.Request[AnyContent]
       
         @helper.inputText(jobForm("group"), '_label -> "Group", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Group", newEditOnly -> None, 'class -> "form-control form-inline-control")
         @helper.inputText(jobForm("name"), '_label -> "Name", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Name", newEditOnly -> None, 'class -> "form-control form-inline-control")
-        @helper.inputText(jobForm("class"), '_label -> "Class", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Name", newEditOnly -> None, 'class -> "form-control form-inline-control")
-        @helper.inputText(jobForm("description"), '_label -> "Description", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Description", newEditOnly -> None, 'class -> "form-control form-inline-control")
+        @helper.inputText(jobForm("class"), '_label -> "Class", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Name", 'class -> "form-control form-inline-control")
+        @helper.inputText(jobForm("description"), '_label -> "Description", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Description", 'class -> "form-control form-inline-control")
         @helper.checkbox(jobForm("durable"), '_label -> "Durable", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'readonly -> None, 'class -> "form-control form-inline-control", 'checked -> true, 'disabled -> true, 'id -> "durable-placeholder")
         
         <input type="hidden" id="durable" name="durable" value="true" readonly="true" />
 
-        @helper.checkbox(jobForm("requests-recovery"), '_label -> "Requests recovery", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", newEditOnly -> None, 'class -> "form-control form-inline-control")
-
-        
+        @helper.checkbox(jobForm("requests-recovery"), '_label -> "Requests recovery", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'class -> "form-control form-inline-control")
 
         <h4>Job Data Map</h4>
 
-        @helper.repeat(jobForm("job-data-map"), min = jobForm("job-data-map").indexes.length + 1) { dataMap =>
+        <div class="job-data-map">
+          @helper.repeat(jobForm("job-data-map"), min = jobForm("job-data-map").indexes.length + 1) { dataMap =>
 
-          @helper.inputText(dataMap.apply("key"), '_label -> "Key", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Key", newEditOnly -> None, 'class -> "form-control form-inline-control")
-          @helper.inputText(dataMap.apply("value"), '_label -> "Value", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Value", newEditOnly -> None, 'class -> "form-control form-inline-control")
-          
-        }
+            @dataMap("key").value.map { _ =>
+              @dataMap("value").value.map { _ =>
+                <div class="job-data-delete text-right"><a href="#">delete</a></div>
+              }
+            }
+
+            @helper.inputText(dataMap("key"), '_label -> "Key", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Key", 'class -> "job-data-key form-control form-inline-control")
+            @helper.inputText(dataMap("value"), '_label -> "Value", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Value", 'class -> "job-data-value form-control form-inline-control")
+
+          }
+
+          <div class="job-data-add text-right"><a href="#">add</a></div>
+        </div>
       }
 
     </div>

@@ -16,7 +16,7 @@ request: play.api.mvc.Request[AnyContent]
         <h3 class="text-danger">@errorMessage.get</h3>
     }
     @if(!currentJob.isEmpty) {
-      <h3 class="pull-left" style="max-width: 585px">@currentJob.get.getKey.getGroup() &raquo; <span class="text-info">@currentJob.get.getKey.getName()</span></h3>
+      <h3 class="pull-left job-name">@currentJob.get.getKey.getGroup() &raquo; <span class="text-info">@currentJob.get.getKey.getName()</span></h3>
       <a class="piezo-button pull-right" href="@piezoRoutes.Jobs.getEditJob(currentJob.get.getKey.getGroup(), currentJob.get.getKey.getName())" data-toggle="tooltip" title="Edit job">
         <span class="glyphicon glyphicon-pencil"></span>
       </a>

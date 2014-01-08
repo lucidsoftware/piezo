@@ -1,6 +1,7 @@
 @(
 jobsByGroup: scala.collection.mutable.Buffer[(String, scala.collection.immutable.List[org.quartz.JobKey])],
-currentJob: Option[org.quartz.JobDetail]
+currentJob: Option[org.quartz.JobDetail],
+scripts: List[String] = List[String]()
 )(
 detailsContent: Html
 )(
@@ -11,7 +12,7 @@ request: play.api.mvc.Request[AnyContent]
 @import com.lucidchart.piezo.admin.views
 @import java.net.URLEncoder
 
-@com.lucidchart.piezo.admin.views.html.main("Piezo Jobs") {
+@com.lucidchart.piezo.admin.views.html.main("Piezo Jobs", scripts) {
 <div class="row">
     <div class="col-md-3">
         <h3>Job groups</h3>
