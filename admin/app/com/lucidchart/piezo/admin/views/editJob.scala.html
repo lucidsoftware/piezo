@@ -1,0 +1,56 @@
+@(
+jobsByGroup: scala.collection.mutable.Buffer[(String, scala.collection.immutable.List[org.quartz.JobKey])],
+jobForm: Form[org.quartz.JobDetail],
+submitValue: String,
+formAction: play.api.mvc.Call,
+existing: Boolean,
+errorMessage: Option[String] = None
+)(
+implicit
+request: play.api.mvc.Request[AnyContent]
+)
+
+@import com.lucidchart.piezo.admin.controllers.{routes=>piezoRoutes}
+@import com.lucidchart.piezo.admin.views
+@import org.quartz._
+@import com.lucidchart.piezo.admin.views.FormHelpers._
+
+@com.lucidchart.piezo.admin.views.html.jobsLayout(jobsByGroup, None) {
+  @if(!errorMessage.isEmpty) {
+    <h3 class="text-danger">@errorMessage.get</h3>
+  }
+  <h3>New Job</h3>
+
+  <h4 class="text-danger">@jobForm.errors.filter(_.key == "").map(_.message).mkString(", ")</h4>
+  <form role="form" action="@formAction" method="POST">
+    <div class="form-horizontal">
+      @defining(if(existing) {'readonly} else {'none}) { newEditOnly =>
+      
+        @helper.inputText(jobForm("group"), '_label -> "Group", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Group", newEditOnly -> None, 'class -> "form-control form-inline-control")
+        @helper.inputText(jobForm("name"), '_label -> "Name", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Name", newEditOnly -> None, 'class -> "form-control form-inline-control")
+        @helper.inputText(jobForm("class"), '_label -> "Class", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Name", newEditOnly -> None, 'class -> "form-control form-inline-control")
+        @helper.inputText(jobForm("description"), '_label -> "Description", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Description", newEditOnly -> None, 'class -> "form-control form-inline-control")
+        @helper.checkbox(jobForm("durable"), '_label -> "Durable", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'readonly -> None, 'class -> "form-control form-inline-control", 'checked -> true, 'disabled -> true, 'id -> "durable-placeholder")
+        
+        <input type="hidden" id="durable" name="durable" value="true" readonly="true" />
+
+        @helper.checkbox(jobForm("requests-recovery"), '_label -> "Requests recovery", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", newEditOnly -> None, 'class -> "form-control form-inline-control")
+
+        
+
+        <h4>Job Data Map</h4>
+
+        @helper.repeat(jobForm("job-data-map"), min = jobForm("job-data-map").indexes.length + 1) { dataMap =>
+
+          @helper.inputText(dataMap.apply("key"), '_label -> "Key", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Key", newEditOnly -> None, 'class -> "form-control form-inline-control")
+          @helper.inputText(dataMap.apply("value"), '_label -> "Value", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Value", newEditOnly -> None, 'class -> "form-control form-inline-control")
+          
+        }
+      }
+
+    </div>
+
+    <button type="submit" class="btn btn-default submit-btn">@submitValue</button>
+    <button type="button" class="btn btn-default submit-btn" onclick="history.back();" value="Cancel">Cancel</button>
+  </form>
+}

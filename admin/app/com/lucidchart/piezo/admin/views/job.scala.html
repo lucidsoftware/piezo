@@ -16,7 +16,42 @@ request: play.api.mvc.Request[AnyContent]
         <h3 class="text-danger">@errorMessage.get</h3>
     }
     @if(!currentJob.isEmpty) {
-        <h3>@currentJob.get.getKey.getGroup() &raquo; <span class="text-info">@currentJob.get.getKey.getName()</span></h3>
+      <h3 class="pull-left" style="max-width: 585px">@currentJob.get.getKey.getGroup() &raquo; <span class="text-info">@currentJob.get.getKey.getName()</span></h3>
+      <a class="piezo-button pull-right" href="@piezoRoutes.Jobs.getEditJob(currentJob.get.getKey.getGroup(), currentJob.get.getKey.getName())" data-toggle="tooltip" title="Edit job">
+        <span class="glyphicon glyphicon-pencil"></span>
+      </a>
+      <a id="deleteJob" class="piezo-button pull-right" data-toggle="tooltip" title="Delete job" onclick="$('#deleteConfirm').show()">
+        <span class="glyphicon glyphicon-remove"></span>
+      </a>
+      <div class="clearfix"></div>
+        <div id="deleteError" class="alert alert-danger">
+          <p>Failed to delete job.</p>
+        </div>
+        <div id="deleteConfirm" class="alert alert-warning fade in">
+          <h4>This will permanently delete the job!</h4>
+          <button type="button" class="btn btn-danger" onclick="deleteJob()">Delete</button>
+          <button type="button" class="btn btn-default" onclick="$('#deleteConfirm').hide()">Cancel</button>
+        </div>
+        <script>
+            $('#deleteError').hide();
+            $('#deleteConfirm').hide();
+            function deleteJob() {
+                var jobUrl = "@piezoRoutes.Jobs.deleteJob(currentJob.get.getKey.getGroup(), currentJob.get.getKey.getName())";
+                var deleteRequest = new XMLHttpRequest();
+                deleteRequest.onreadystatechange = function() {
+                    if (deleteRequest.readyState === 4) {
+                        if (deleteRequest.status === 200) {
+                            window.location.assign("@piezoRoutes.Jobs.getIndex()");
+                        } else {
+                            $('#deleteError').show();
+                        }
+                    }
+                };
+                deleteRequest.open("DELETE", jobUrl, true);
+                deleteRequest.send(null);
+            }
+        </script>
+        <div class="clearfix"></div>
         <table class="table table-condensed table-fixed-first-col table-bordered table-striped table-hover">
             <tbody>
             <tr>
@@ -61,7 +96,7 @@ request: play.api.mvc.Request[AnyContent]
             <tbody>
             @currentJob.get.getJobDataMap.getKeys.map { jobDataKey =>
                 <tr>
-                    <td class="text-right">jobDataKey</td>
+                    <td class="text-right">@jobDataKey</td>
                     <td>@currentJob.get.getJobDataMap.get(jobDataKey)</td>
                 </tr>
             }

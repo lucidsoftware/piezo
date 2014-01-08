@@ -8,6 +8,7 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 import org.quartz._
 import scala.Some
+import com.lucidchart.piezo.admin.views._
 
 object Jobs extends Controller {
   implicit val logger = Logger(this.getClass())
@@ -16,6 +17,7 @@ object Jobs extends Controller {
   val scheduler = logExceptions(schedulerFactory.getScheduler())
   val properties = schedulerFactory.props
   val jobHistoryModel = logExceptions(new JobHistoryModel(properties))
+  val jobFormHelper = new JobFormHelper()
 
   def getJobsByGroup(): mutable.Buffer[(String, List[JobKey])] = {
     val jobsByGroup =
@@ -62,4 +64,70 @@ object Jobs extends Controller {
       }
     }
   }
- }
+
+  def deleteJob(group: String, name: String) = Action { implicit request =>
+    val jobKey = new JobKey(name, group)
+    if (!scheduler.checkExists(jobKey)) {
+      val errorMsg = Some("Job %s $s not found".format(group, name))
+      NotFound(com.lucidchart.piezo.admin.views.html.job(mutable.Buffer(), None, None, errorMsg)(request))
+    } else {
+      try {
+        scheduler.deleteJob(jobKey)
+        Ok(com.lucidchart.piezo.admin.views.html.job(getJobsByGroup(), None, None)(request))
+      } catch {
+        case e: Exception => {
+          val errorMsg = "Exception caught deleting job %s %s. -- %s".format(group, name, e.getLocalizedMessage())
+          logger.error(errorMsg, e)
+          InternalServerError(com.lucidchart.piezo.admin.views.html.job(mutable.Buffer(), None, None, Some(errorMsg))(request))
+        }
+      }
+    }
+  }
+
+  val submitNewMessage = "Create"
+  val formNewAction = routes.Jobs.postJob()
+  val submitEditMessage = "Save"
+  def formEditAction(group: String, name: String): Call = routes.Jobs.putJob(group, name)
+
+  def getNewJobForm() = Action { implicit request =>
+    val newJobForm = jobFormHelper.buildJobForm
+    Ok(com.lucidchart.piezo.admin.views.html.editJob(getJobsByGroup(), newJobForm, submitNewMessage, formNewAction, false)(request))
+  }
+
+  def getEditJob(group: String, name: String) = Action { implicit request =>
+    val jobKey = new JobKey(name, group)
+
+    if (scheduler.checkExists(jobKey)) {
+      val jobDetail = scheduler.getJobDetail(jobKey)
+      val editJobForm = jobFormHelper.buildJobForm().fill(jobDetail)
+      Ok(com.lucidchart.piezo.admin.views.html.editJob(getJobsByGroup(), editJobForm, submitEditMessage, formEditAction(group, name), true)(request))
+    } else {
+      val errorMsg = Some("Job %s %s not found".format(group, name))
+      NotFound(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, None, errorMsg)(request))
+    }
+  }
+
+  def putJob(group: String, name: String) = Action { implicit request =>
+    jobFormHelper.buildJobForm.bindFromRequest.fold(
+      formWithErrors =>
+        BadRequest(html.editJob(getJobsByGroup(), formWithErrors, submitNewMessage, formNewAction, false)),
+      value => {
+        scheduler.addJob(value, true)
+        Redirect(routes.Jobs.getJob(value.getKey.getGroup(), value.getKey.getName()))
+          .flashing("message" -> "Successfully added job.", "class" -> "")
+      }
+    )
+  }
+
+  def postJob() = Action { implicit request =>
+    jobFormHelper.buildJobForm.bindFromRequest.fold(
+      formWithErrors =>
+        BadRequest(com.lucidchart.piezo.admin.views.html.editJob(getJobsByGroup(), formWithErrors, submitNewMessage, formNewAction, false)),
+      value => {
+        scheduler.addJob(value, false)
+        Redirect(routes.Jobs.getJob(value.getKey.getGroup(), value.getKey.getName()))
+          .flashing("message" -> "Successfully added job.", "class" -> "")
+      }
+    )
+  }
+}

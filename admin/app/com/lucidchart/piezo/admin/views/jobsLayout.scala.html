@@ -52,7 +52,8 @@ request: play.api.mvc.Request[AnyContent]
         </div>
     </div>
     <div class="col-md-9">
-        @detailsContent
+      <a class="piezo-button pull-right" href="@piezoRoutes.Jobs.getNewJobForm()" data-toggle="tooltip" title="Add job"><span class="glyphicon glyphicon-plus"></span></a>
+      @detailsContent
     </div>
 </div>
 }
