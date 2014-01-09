@@ -34,7 +34,7 @@ object Jobs extends Controller {
   }
 
   def getJob(group: String, name: String) = Action { implicit request =>
-    val jobKey = new JobKey(name.replace("+", " "), group.replace("+", " "))
+    val jobKey = new JobKey(name, group)
     val jobExists = scheduler.checkExists(jobKey)
     if (!jobExists) {
       val errorMsg = Some("Job " + group + " " + name + " not found")
@@ -66,7 +66,7 @@ object Jobs extends Controller {
   }
 
   def deleteJob(group: String, name: String) = Action { implicit request =>
-    val jobKey = new JobKey(name.replace("+", " "), group.replace("+", " "))
+    val jobKey = new JobKey(name, group)
     if (!scheduler.checkExists(jobKey)) {
       val errorMsg = Some("Job %s $s not found".format(group, name))
       NotFound(com.lucidchart.piezo.admin.views.html.job(mutable.Buffer(), None, None, errorMsg)(request))
@@ -95,7 +95,7 @@ object Jobs extends Controller {
   }
 
   def getEditJob(group: String, name: String) = Action { implicit request =>
-    val jobKey = new JobKey(name.replace("+", " "), group.replace("+", " "))
+    val jobKey = new JobKey(name, group)
 
     if (scheduler.checkExists(jobKey)) {
       val jobDetail = scheduler.getJobDetail(jobKey)
