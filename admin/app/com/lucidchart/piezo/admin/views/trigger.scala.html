@@ -74,7 +74,7 @@ request: play.api.mvc.Request[AnyContent]
             </tr>
             <tr>
                 <td class="text-right">Job name:</td>
-                <td>@currentTrigger.get.getJobKey.getName()</td>
+                <td><a href="@piezoRoutes.Jobs.getJob(currentTrigger.get.getJobKey.getGroup(), currentTrigger.get.getJobKey.getName())">@currentTrigger.get.getJobKey.getName()</a></td>
             </tr>
             }
             @currentTrigger.get match {
