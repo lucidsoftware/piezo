@@ -114,7 +114,7 @@ object Jobs extends Controller {
       value => {
         scheduler.addJob(value, true)
         Redirect(routes.Jobs.getJob(value.getKey.getGroup(), value.getKey.getName()))
-          .flashing("message" -> "Successfully added job.", "class" -> "")
+          .flashing("message" -> "Successfully edited job.", "class" -> "")
       }
     )
   }
