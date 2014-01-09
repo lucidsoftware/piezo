@@ -70,7 +70,7 @@ $('ul.nav a').filter(function() {
 </script>
 
 <div class="container">
-    <div class="flash-container">
+    <div class="flash-container alert-success">
         @if(!request.flash.isEmpty) {
         <div id="flash-page" class="@request.flash("class")">
         @request.flash("message")
