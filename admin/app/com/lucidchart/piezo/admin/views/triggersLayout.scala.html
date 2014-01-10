@@ -1,6 +1,7 @@
 @(
 triggersByGroup: scala.collection.mutable.Buffer[(String, scala.collection.immutable.List[org.quartz.TriggerKey])],
-currentTrigger: Option[org.quartz.Trigger]
+currentTrigger: Option[org.quartz.Trigger],
+scripts: List[String] = List[String]()
 )(
 detailsContent: Html
 )(
@@ -11,7 +12,7 @@ request: play.api.mvc.Request[AnyContent]
 @import com.lucidchart.piezo.admin.views
 @import java.net.URLEncoder
 
-@com.lucidchart.piezo.admin.views.html.main("Piezo Triggers") {
+@com.lucidchart.piezo.admin.views.html.main("Piezo Triggers", scripts) {
 <div class="row">
     <div class="col-md-3">
         <h3>Trigger groups</h3>

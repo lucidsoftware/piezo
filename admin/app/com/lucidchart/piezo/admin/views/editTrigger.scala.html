@@ -4,7 +4,8 @@ triggerForm: Form[org.quartz.Trigger],
 submitValue: String,
 formAction: play.api.mvc.Call,
 existing: Boolean,
-errorMessage: Option[String] = None
+errorMessage: Option[String] = None,
+scripts: List[String] = List[String]("js/typeAhead.js")
 )(
 implicit
 request: play.api.mvc.Request[AnyContent]
@@ -16,7 +17,7 @@ request: play.api.mvc.Request[AnyContent]
 @import org.quartz._
 @import com.lucidchart.piezo.admin.views.FormHelpers._
 
-@com.lucidchart.piezo.admin.views.html.triggersLayout(triggersByGroup, None) {
+@com.lucidchart.piezo.admin.views.html.triggersLayout(triggersByGroup, None, scripts) {
   @if(!errorMessage.isEmpty) {
     <h3 class="text-danger">@errorMessage.get</h3>
   }
