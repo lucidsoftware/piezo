@@ -110,15 +110,15 @@ request: play.api.mvc.Request[AnyContent]
         <table class="table table-bordered table-striped table-condensed">
           <thead>
             <tr>
-              <th class="text-right">Name</th>
-              <th>Description</th>
+              <th class="text-right">Group</th>
+              <th>Name</th>
             </tr>
           </thead>
           <tbody>
             @triggers.get.map { trigger =>
               <tr>
-                <td class="text-right"><a href="@piezoRoutes.Triggers.getTrigger(trigger.getKey.getGroup(), trigger.getKey.getName())">@trigger.getKey.getName()</a></td>
-                <td>@trigger.getDescription()</td>
+                <td class="text-right">@trigger.getKey.getGroup()</td>
+                <td><a href="@piezoRoutes.Triggers.getTrigger(trigger.getKey.getGroup(), trigger.getKey.getName())">@trigger.getKey.getName()</a></td>
               </tr>
             }
           </tbody>
