@@ -4,16 +4,13 @@
 	var triggerUrl = baseUrl + 'triggers/';
 
 	function sourceFunc(url, key, groupInput) {
-		var appender = groupInput && groupInput.val()?
-				function() { return groupInput.val() + '/'; } :
-				function() { return ''; };
-		
 		return function(request, response) {
-			var append = appender();
-
-			if (!append) {
+			if (groupInput && !groupInput.val()) {
 				response([]);
 			} else {
+				var append = (groupInput && groupInput.val()) ?
+						groupInput.val() + '/' : '';
+				
 				$.get(url + append + request.term, function(data) {
 					response(data[key]);
 				});
