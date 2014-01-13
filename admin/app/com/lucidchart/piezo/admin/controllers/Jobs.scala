@@ -8,6 +8,7 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable
 import org.quartz._
 import scala.Some
+import scala.collection.JavaConverters._
 import com.lucidchart.piezo.admin.views._
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
@@ -40,7 +41,7 @@ object Jobs extends Controller {
     val jobExists = scheduler.checkExists(jobKey)
     if (!jobExists) {
       val errorMsg = Some("Job " + group + " " + name + " not found")
-      NotFound(com.lucidchart.piezo.admin.views.html.job(getJobsByGroup(), None, None, errorMsg)(request))
+      NotFound(com.lucidchart.piezo.admin.views.html.job(getJobsByGroup(), None, None, None, errorMsg)(request))
     } else {
       try {
         val jobDetail: Option[JobDetail] = Some(scheduler.getJobDetail(jobKey))
@@ -56,12 +57,14 @@ object Jobs extends Controller {
           }
         }
 
-        Ok(com.lucidchart.piezo.admin.views.html.job(getJobsByGroup(), jobDetail, history)(request))
+        val triggers = Some(scheduler.getTriggersOfJob(jobKey).asScala.toList)
+
+        Ok(com.lucidchart.piezo.admin.views.html.job(getJobsByGroup(), jobDetail, history, triggers)(request))
       } catch {
         case e: Exception => {
           val errorMsg = "Exception caught getting job " + group + " " + name + ". -- " + e.getLocalizedMessage()
           logger.error(errorMsg, e)
-          InternalServerError(com.lucidchart.piezo.admin.views.html.job(getJobsByGroup(), None, None, Some(errorMsg))(request))
+          InternalServerError(com.lucidchart.piezo.admin.views.html.job(getJobsByGroup(), None, None, None, Some(errorMsg))(request))
         }
       }
     }
@@ -71,16 +74,16 @@ object Jobs extends Controller {
     val jobKey = new JobKey(name, group)
     if (!scheduler.checkExists(jobKey)) {
       val errorMsg = Some("Job %s $s not found".format(group, name))
-      NotFound(com.lucidchart.piezo.admin.views.html.job(mutable.Buffer(), None, None, errorMsg)(request))
+      NotFound(com.lucidchart.piezo.admin.views.html.job(mutable.Buffer(), None, None, None, errorMsg)(request))
     } else {
       try {
         scheduler.deleteJob(jobKey)
-        Ok(com.lucidchart.piezo.admin.views.html.job(getJobsByGroup(), None, None)(request))
+        Ok(com.lucidchart.piezo.admin.views.html.job(getJobsByGroup(), None, None, None)(request))
       } catch {
         case e: Exception => {
           val errorMsg = "Exception caught deleting job %s %s. -- %s".format(group, name, e.getLocalizedMessage())
           logger.error(errorMsg, e)
-          InternalServerError(com.lucidchart.piezo.admin.views.html.job(mutable.Buffer(), None, None, Some(errorMsg))(request))
+          InternalServerError(com.lucidchart.piezo.admin.views.html.job(mutable.Buffer(), None, None, None, Some(errorMsg))(request))
         }
       }
     }
