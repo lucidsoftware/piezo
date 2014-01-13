@@ -15,6 +15,7 @@ import org.quartz.impl.triggers.{SimpleTriggerImpl, CronTriggerImpl}
 import play.api.data.format.Formatter
 import java.text.ParseException
 import play.api.data.validation.{Valid, ValidationError, Invalid, Constraint}
+import play.api.libs.json._
 
 object Triggers extends Controller {
   implicit val logger = Logger(this.getClass())
@@ -140,6 +141,14 @@ object Triggers extends Controller {
           .flashing("message" -> "Successfully added trigger.", "class" -> "")
       }
     )
+  }
+
+  def triggerGroupTypeAhead(sofar: String) = Action { implicit request =>
+    val groups = scheduler.getTriggerGroupNames().asScala.toList
+
+    Ok(Json.obj("groups" -> groups.filter{ group =>
+      group.toLowerCase.contains(sofar.toLowerCase)
+    }))
   }
 
   private trait DummyTrigger extends Trigger {

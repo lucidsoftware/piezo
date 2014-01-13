@@ -12,6 +12,9 @@ DELETE  /jobs/:group/:name            com.lucidchart.piezo.admin.controllers.Job
 GET     /jobs/:group/:name/editor     com.lucidchart.piezo.admin.controllers.Jobs.getEditJob(group: String, name: String)
 POST    /jobs                         com.lucidchart.piezo.admin.controllers.Jobs.postJob
 
+GET     /typeahead/jobs/:sofar        com.lucidchart.piezo.admin.controllers.Jobs.jobGroupTypeAhead(sofar: String)
+GET     /typeahead/jobs/:group/:sofar com.lucidchart.piezo.admin.controllers.Jobs.jobNameTypeAhead(group: String, sofar: String)
+
 GET     /triggers                     com.lucidchart.piezo.admin.controllers.Triggers.getIndex
 GET     /triggers/new/:triggerType    com.lucidchart.piezo.admin.controllers.Triggers.getNewTriggerForm(triggerType)
 GET     /triggers/:group/:name        com.lucidchart.piezo.admin.controllers.Triggers.getTrigger(group: String, name: String)
@@ -19,6 +22,8 @@ POST    /triggers/:group/:name        com.lucidchart.piezo.admin.controllers.Tri
 DELETE  /triggers/:group/:name        com.lucidchart.piezo.admin.controllers.Triggers.deleteTrigger(group: String, name: String)
 GET     /triggers/:group/:name/editor com.lucidchart.piezo.admin.controllers.Triggers.getEditTrigger(group: String, name: String)
 POST    /triggers                     com.lucidchart.piezo.admin.controllers.Triggers.postTrigger()
+
+GET     /typeahead/triggers/:sofar    com.lucidchart.piezo.admin.controllers.Triggers.triggerGroupTypeAhead(sofar: String)
 
 GET     /favicon.ico                  com.lucidchart.piezo.admin.controllers.Application.favicon
 

@@ -4,7 +4,8 @@ triggerForm: Form[org.quartz.Trigger],
 submitValue: String,
 formAction: play.api.mvc.Call,
 existing: Boolean,
-errorMessage: Option[String] = None
+errorMessage: Option[String] = None,
+scripts: List[String] = List[String]("js/typeAhead.js")
 )(
 implicit
 request: play.api.mvc.Request[AnyContent]
@@ -16,7 +17,7 @@ request: play.api.mvc.Request[AnyContent]
 @import org.quartz._
 @import com.lucidchart.piezo.admin.views.FormHelpers._
 
-@com.lucidchart.piezo.admin.views.html.triggersLayout(triggersByGroup, None) {
+@com.lucidchart.piezo.admin.views.html.triggersLayout(triggersByGroup, None, scripts) {
   @if(!errorMessage.isEmpty) {
     <h3 class="text-danger">@errorMessage.get</h3>
   }
@@ -46,16 +47,16 @@ request: play.api.mvc.Request[AnyContent]
     <div class="form-horizontal">
     @defining(if(existing) {'readonly} else {'none}) { newEditOnly =>
     @helper.input(triggerForm("group"), '_label -> "Group", 'labelClass -> "col-sm-2 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Group", 'value-> triggerForm.data.get("group").getOrElse(""), newEditOnly -> None) { (id, name, value, args) =>
-      <input type="text" class="form-control form-inline-control" name="@name" id="@id" @toHtmlArgs(args)>
+      <input type="text" class="trigger-group-type-ahead form-control form-inline-control" name="@name" id="@id" @toHtmlArgs(args)>
     }
     @helper.input(triggerForm("name"), '_label -> "Name", 'labelClass -> "col-sm-2 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Name", 'value-> triggerForm.data.get("name").getOrElse(""), newEditOnly -> None) { (id, name, value, args) =>
       <input type="text" class="form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
     }
     @helper.input(triggerForm("jobGroup"), '_label -> "Job group", 'labelClass -> "col-sm-2 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Job group", 'value-> triggerForm.data.get("jobGroup").getOrElse(""), newEditOnly -> None) { (id, name, value, args) =>
-      <input type="text" class="form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
+      <input type="text" class="job-group-type-ahead form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
     }
     @helper.input(triggerForm("jobName"), '_label -> "Job name", 'labelClass -> "col-sm-2 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Job name", 'value-> triggerForm.data.get("jobName").getOrElse(""), newEditOnly -> None) { (id, name, value, args) =>
-      <input type="text" class="form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
+      <input type="text" class="job-name-type-ahead form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
     }
     }
     @helper.input(triggerForm("description"), '_label -> "Description", 'labelClass -> "col-sm-2 text-right", 'inputDivClass -> "col-sm-10", 'placeholder -> "Description", 'value-> triggerForm.data.get("description").getOrElse("")) { (id, name, value, args) =>

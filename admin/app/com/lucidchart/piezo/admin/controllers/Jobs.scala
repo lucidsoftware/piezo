@@ -9,6 +9,8 @@ import scala.collection.mutable
 import org.quartz._
 import scala.Some
 import com.lucidchart.piezo.admin.views._
+import play.api.libs.json._
+import play.api.libs.functional.syntax._
 
 object Jobs extends Controller {
   implicit val logger = Logger(this.getClass())
@@ -129,5 +131,19 @@ object Jobs extends Controller {
           .flashing("message" -> "Successfully added job.", "class" -> "")
       }
     )
+  }
+
+  def jobGroupTypeAhead(sofar: String) = Action { implicit request =>
+    val groups = scheduler.getJobGroupNames().asScala.toList
+
+    Ok(Json.obj("groups" -> groups.filter{ group =>
+      group.toLowerCase.contains(sofar.toLowerCase)
+    }))
+  }
+
+  def jobNameTypeAhead(group: String, sofar: String) = Action { implicit request =>
+    val jobs = scheduler.getJobKeys(GroupMatcher.jobGroupEquals(group)).asScala.toSet
+
+    Ok(Json.obj("jobs" -> jobs.filter(_.getName.toLowerCase.contains(sofar.toLowerCase)).map(_.getName)))
   }
 }
