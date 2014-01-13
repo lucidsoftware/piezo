@@ -1,7 +1,7 @@
 Piezo
 =====
 
-System to operate and manage a [Quartz Scheduler](http://quartz-scheduler.org/documentation/quartz-2.2.x/quick-start) cluster.
+Piezo is a system to operate and manage a [Quartz Scheduler](http://quartz-scheduler.org/documentation/quartz-2.2.x/quick-start) cluster. The first component is the Worker, which is a driver or main class for running a Quartz instance. The second is the Admin, which is a web interface for administrating a Quartz cluster, including managing which jobs run, and viewing a history of what processing the cluster has completed.
 
 
 ##Worker
@@ -65,7 +65,7 @@ It also stores historical job execution data in a pair of database tables define
 
 ##Admin
 
-Web interface for viewing and managing the scheduled jobs.
+Admin is a web interface for viewing and managing the scheduled jobs.
 
 ###Setup
 1. Follow the steps for the Worker [Setup](#setup) above.
