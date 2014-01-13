@@ -53,10 +53,10 @@ request: play.api.mvc.Request[AnyContent]
       <input type="text" class="form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
     }
     @helper.input(triggerForm("jobGroup"), '_label -> "Job group", 'labelClass -> "col-sm-2 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Job group", 'value-> triggerForm.data.get("jobGroup").getOrElse(""), newEditOnly -> None) { (id, name, value, args) =>
-      <input type="text" class="form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
+      <input type="text" class="job-group-type-ahead form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
     }
     @helper.input(triggerForm("jobName"), '_label -> "Job name", 'labelClass -> "col-sm-2 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Job name", 'value-> triggerForm.data.get("jobName").getOrElse(""), newEditOnly -> None) { (id, name, value, args) =>
-      <input type="text" class="form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
+      <input type="text" class="job-name-type-ahead form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
     }
     }
     @helper.input(triggerForm("description"), '_label -> "Description", 'labelClass -> "col-sm-2 text-right", 'inputDivClass -> "col-sm-10", 'placeholder -> "Description", 'value-> triggerForm.data.get("description").getOrElse("")) { (id, name, value, args) =>

@@ -5,7 +5,7 @@ submitValue: String,
 formAction: play.api.mvc.Call,
 existing: Boolean,
 errorMessage: Option[String] = None,
-scripts: List[String] = List[String]("js/editJob.js")
+scripts: List[String] = List[String]("js/editJob.js", "js/typeAhead.js")
 )(
 implicit
 request: play.api.mvc.Request[AnyContent]
@@ -27,7 +27,7 @@ request: play.api.mvc.Request[AnyContent]
     <div class="form-horizontal">
       @defining(if(existing) {'readonly} else {'none}) { newEditOnly =>
       
-        @helper.inputText(jobForm("group"), '_label -> "Group", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Group", newEditOnly -> None, 'class -> "form-control form-inline-control")
+        @helper.inputText(jobForm("group"), '_label -> "Group", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Group", newEditOnly -> None, 'class -> "job-group-type-ahead form-control form-inline-control")
         @helper.inputText(jobForm("name"), '_label -> "Name", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Name", newEditOnly -> None, 'class -> "form-control form-inline-control")
         @helper.inputText(jobForm("class"), '_label -> "Class", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Name", 'class -> "form-control form-inline-control")
         @helper.inputText(jobForm("description"), '_label -> "Description", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Description", 'class -> "form-control form-inline-control")

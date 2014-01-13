@@ -134,9 +134,9 @@ object Jobs extends Controller {
   }
 
   def jobGroupTypeAhead(sofar: String) = Action { implicit request =>
-    val group = scheduler.getJobGroupNames().asScala.toList
+    val groups = scheduler.getJobGroupNames().asScala.toList
 
-    Ok(Json.obj("groups" -> group.filter{ group =>
+    Ok(Json.obj("groups" -> groups.filter{ group =>
       group.toLowerCase.contains(sofar.toLowerCase)
     }))
   }

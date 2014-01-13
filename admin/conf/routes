@@ -23,6 +23,8 @@ DELETE  /triggers/:group/:name        com.lucidchart.piezo.admin.controllers.Tri
 GET     /triggers/:group/:name/editor com.lucidchart.piezo.admin.controllers.Triggers.getEditTrigger(group: String, name: String)
 POST    /triggers                     com.lucidchart.piezo.admin.controllers.Triggers.postTrigger()
 
+GET     /typeahead/triggers/:sofar    com.lucidchart.piezo.admin.controllers.Triggers.triggerGroupTypeAhead(sofar: String)
+
 GET     /favicon.ico                  com.lucidchart.piezo.admin.controllers.Application.favicon
 
 # Map static resources from the /public folder to the /assets URL path
