@@ -46,7 +46,7 @@ To collect all dependencies into a single folder (target/staged) run
 * `pidfile.path` - path to file where PID should be written on startup
 
 ###Running
-The project includes a sample script for running a worker process. It launches with the [sample quartz.properties file](worker/src/main/resources/quartz.properties) included in the project.
+The project includes a sample script for running a worker process. It depends on `make stage` having been run. It launches with the [sample worker quartz.properties file](worker/src/main/resources/quartz.properties) included in the project.
 
 ```
 ./worker/src/main/resources/run.sh
@@ -89,8 +89,12 @@ To collect all dependencies into a single folder (target/staged) run
 * `pidfile.path` - path to file where PID should be written on startup
 * `http.port[s]` - [Play Framework production configuration](http://www.playframework.com/documentation/2.1.1/ProductionConfiguration)
 
+####org.quartz.properties
+The [sample admin quartz.properties file](admin/conf/quartz.properties) includes the following property which needs to be included in the configured properties file that the admin is run with.
+`org.quartz.scheduler.classLoadHelper.class: com.lucidchart.piezo.GeneratorClassLoader`
+
 ###Running
-The project includes a sample script for running a worker process. It launches with the [sample quartz.properties file](worker/src/main/resources/quartz.properties) included in the project.
+The project includes a sample script for running a worker process. It depends on `make stage` having been run. It launches with the [sample admin quartz.properties file](admin/conf/quartz.properties) included in the project.
 
 ```
 ./admin/bin/run.sh
