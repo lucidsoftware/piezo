@@ -80,8 +80,6 @@ useGpg := true
 
 pgpReadOnly := false
 
-pgp-cmd send-key support@lucidchart.com hkp://pgp.mit.edu
-
 publishMavenStyle := true
 
 credentials += Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", System.getenv("SONATYPE_USERNAME"), System.getenv("SONATYPE_PASSWORD"))

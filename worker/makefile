@@ -23,6 +23,10 @@ stage:
 publish:
 	sbt publish
 
+.PHONY: send-key
+send-key:
+	sbt "pgp-cmd send-key support@lucidchart.com hkp://pgp.mit.edu"
+
 .PHONY: publish-signed
 publish-signed:
 	@echo GPG_AGENT_INFO: $(value GPG_AGENT_INFO)
