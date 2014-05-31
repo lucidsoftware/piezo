@@ -13,10 +13,11 @@ import com.lucidchart.piezo.admin.views._
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 
-object Jobs extends Controller {
+object Jobs extends Jobs(new WorkerSchedulerFactory())
+
+class Jobs(schedulerFactory: WorkerSchedulerFactory) extends Controller {
   implicit val logger = Logger(this.getClass())
 
-  val schedulerFactory: WorkerSchedulerFactory = new WorkerSchedulerFactory()
   val scheduler = logExceptions(schedulerFactory.getScheduler())
   val properties = schedulerFactory.props
   val jobHistoryModel = logExceptions(new JobHistoryModel(properties))

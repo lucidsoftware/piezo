@@ -17,10 +17,11 @@ import java.text.ParseException
 import play.api.data.validation.{Valid, ValidationError, Invalid, Constraint}
 import play.api.libs.json._
 
-object Triggers extends Controller {
+object Triggers extends Triggers(new WorkerSchedulerFactory())
+
+class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
   implicit val logger = Logger(this.getClass())
 
-  val schedulerFactory: WorkerSchedulerFactory = new WorkerSchedulerFactory()
   val scheduler = logExceptions(schedulerFactory.getScheduler())
   val properties = schedulerFactory.props
   val triggerHistoryModel = logExceptions(new TriggerHistoryModel(properties))

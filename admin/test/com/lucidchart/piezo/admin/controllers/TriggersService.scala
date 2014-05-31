@@ -7,6 +7,8 @@ import play.api.test.Helpers._
 import com.lucidchart.piezo.WorkerSchedulerFactory
 import play.api.test.FakeApplication
 import TestUtil._
+import java.util.Properties
+import play.api.mvc.{AnyContentAsEmpty, Result}
 
 /**
   * Add your spec here.
@@ -18,26 +20,41 @@ class TriggersService extends Specification {
 
      "send 404 on a non-existent trigger request" in {
        running(FakeApplication()) {
-         val missingJob = route(FakeRequest(GET, "/triggers/missinggroup/missingname")).get
+         val schedulerFactory: WorkerSchedulerFactory = new WorkerSchedulerFactory()
 
-         status(missingJob) must equalTo(NOT_FOUND)
-         contentType(missingJob) must beSome.which(_ == "text/html")
-         contentAsString(missingJob) must contain ("Trigger missinggroup missingname not found")
+         val propertiesStream = getClass().getResourceAsStream("/quartz_test.properties")
+         val properties = new Properties
+         properties.load(propertiesStream)
+         schedulerFactory.initialize(properties)
+
+         val triggersController = new Triggers(schedulerFactory)
+         val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/jobs/missinggroup/missingname")
+         val missingTrigger: Result = triggersController.getTrigger("missinggroup", "missingname")(request)
+
+         status(missingTrigger) must equalTo(NOT_FOUND)
+         contentType(missingTrigger) must beSome.which(_ == "text/html")
+         contentAsString(missingTrigger) must contain ("Trigger missinggroup missingname not found")
        }
      }
 
      "send valid trigger details" in {
        val schedulerFactory: WorkerSchedulerFactory = new WorkerSchedulerFactory()
+       val propertiesStream = getClass().getResourceAsStream("/quartz_test.properties")
+       val properties = new Properties
+       properties.load(propertiesStream)
+       schedulerFactory.initialize(properties)
        val scheduler = schedulerFactory.getScheduler()
        createJob(scheduler)
 
        running(FakeApplication()) {
-         val missingJob = route(FakeRequest(GET, "/triggers/" + triggerGroup + "/" + triggerName)).get
+         val triggersController = new Triggers(schedulerFactory)
+         val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/jobs/" + jobGroup + "/" + jobName)
+         val validTrigger: Result = triggersController.getTrigger(triggerGroup, triggerName)(request)
 
-         status(missingJob) must equalTo(OK)
-         contentType(missingJob) must beSome.which(_ == "text/html")
-         contentAsString(missingJob) must contain (triggerGroup)
-         contentAsString(missingJob) must contain (triggerName)
+         status(validTrigger) must equalTo(OK)
+         contentType(validTrigger) must beSome.which(_ == "text/html")
+         contentAsString(validTrigger) must contain (triggerGroup)
+         contentAsString(validTrigger) must contain (triggerName)
        }
      }
    }

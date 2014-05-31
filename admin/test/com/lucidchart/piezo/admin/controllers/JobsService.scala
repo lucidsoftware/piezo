@@ -12,6 +12,8 @@ import TestUtil._
 import ch.qos.logback.classic.{Level, Logger}
 import org.slf4j.LoggerFactory
 import com.lucidchart.piezo.util.DummyClassGenerator
+import play.api.mvc.{Result, AnyContentAsEmpty}
+import java.util.Properties
 
 /**
   * Add your spec here.
@@ -26,7 +28,16 @@ class JobsService extends Specification {
 
      "send 404 on a non-existent job request" in {
        running(FakeApplication()) {
-         val missingJob = route(FakeRequest(GET, "/jobs/missinggroup/missingname")).get
+         val schedulerFactory: WorkerSchedulerFactory = new WorkerSchedulerFactory()
+
+         val propertiesStream = getClass().getResourceAsStream("/quartz_test.properties")
+         val properties = new Properties
+         properties.load(propertiesStream)
+         schedulerFactory.initialize(properties)
+
+         val jobsController = new Jobs(schedulerFactory)
+         val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/jobs/missinggroup/missingname")
+         val missingJob: Result = jobsController.getJob("missinggroup", "missingname")(request)
 
          status(missingJob) must equalTo(NOT_FOUND)
          contentType(missingJob) must beSome.which(_ == "text/html")
@@ -36,11 +47,18 @@ class JobsService extends Specification {
 
      "send valid job details" in {
        val schedulerFactory: WorkerSchedulerFactory = new WorkerSchedulerFactory()
+       val propertiesStream = getClass().getResourceAsStream("/quartz_test.properties")
+       val properties = new Properties
+       properties.load(propertiesStream)
+       schedulerFactory.initialize(properties)
        val scheduler = schedulerFactory.getScheduler()
        createJob(scheduler)
 
        running(FakeApplication()) {
-         val validJob = route(FakeRequest(GET, "/jobs/" + jobGroup + "/" + jobName)).get
+
+         val jobsController = new Jobs(schedulerFactory)
+         val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/jobs/" + jobGroup + "/" + jobName)
+         val validJob: Result = jobsController.getJob(jobGroup, jobName)(request)
 
          status(validJob) must equalTo(OK)
          contentType(validJob) must beSome.which(_ == "text/html")
