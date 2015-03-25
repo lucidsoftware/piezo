@@ -18,8 +18,10 @@ class WorkerJobListener(props: Properties) extends JobListener {
 
   def jobWasExecuted(context: JobExecutionContext, jobException: JobExecutionException) {
     try {
-      jobHistoryModel.addJob(context, success=jobException == null)
-      val statsKey = "jobs." + context.getTrigger.getJobKey.getGroup + "." + context.getTrigger.getJobKey.getName + ".executed"
+      val success = jobException == null
+      jobHistoryModel.addJob(context, success=success)
+      val suffix = if (success) ".succeeded" else ".failed"
+      val statsKey = "jobs." + context.getTrigger.getJobKey.getGroup + "." + context.getTrigger.getJobKey.getName + suffix
       StatsD.increment(statsKey)
     } catch {
       case e: Exception => WorkerJobListener.logger.error("error in jobWasExecuted", e)

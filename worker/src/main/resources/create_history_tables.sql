@@ -7,9 +7,9 @@ CREATE TABLE job_history(
     success BOOLEAN NOT NULL,
     start DATETIME NOT NULL,
     finish DATETIME,
-    PRIMARY KEY(fire_instance_id, start),
-    KEY job_event(job_name(50), job_group(50), success),
-    KEY finish_key(finish)
+    PRIMARY KEY(fire_instance_id),
+    KEY job_key(job_group, job_name),
+    KEY start_key(start)
 );
 
 CREATE TABLE trigger_history(
@@ -19,5 +19,6 @@ CREATE TABLE trigger_history(
     actual_start DATETIME,
     finish DATETIME NOT NULL,
     misfire BOOLEAN NOT NULL,
-    KEY finished_success(finish, misfire)
+    PRIMARY KEY(trigger_group, trigger_name, scheduled_start),
+    KEY sched_start_key(scheduled_start)
 );
