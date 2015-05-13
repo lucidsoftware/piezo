@@ -2,7 +2,7 @@ name := "piezo-worker"
 
 organization := "com.lucidchart"
 
-version := "1.7-SNAPSHOT"
+version := "1.7"
 
 scalaVersion := "2.10.1"
 
@@ -18,7 +18,7 @@ mainClass := Some("com.lucidchart.piezo.Worker")
 
 libraryDependencies ++= Seq(
 	"org.specs2" %% "specs2" % "1.14" % "test",
-	"ch.qos.logback" % "logback-classic" % "1.0.1",
+	"ch.qos.logback" % "logback-classic" % "1.0.7",
 	"org.quartz-scheduler" % "quartz" % "2.1.7",
 	"mysql" % "mysql-connector-java" % "5.1.25",
 	"javax.transaction" % "jta" % "1.1",
