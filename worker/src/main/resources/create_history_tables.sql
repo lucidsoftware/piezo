@@ -19,6 +19,7 @@ CREATE TABLE trigger_history(
     actual_start DATETIME,
     finish DATETIME NOT NULL,
     misfire BOOLEAN NOT NULL,
-    PRIMARY KEY(trigger_group, trigger_name, scheduled_start),
+    fire_instance_id VARCHAR(120) NULL,
+    PRIMARY KEY(trigger_group, trigger_name, scheduled_start, fire_instance_id),
     KEY sched_start_key(scheduled_start)
 );
