@@ -5,6 +5,7 @@ organization := "com.lucidchart"
 version := "1.9-SNAPSHOT"
 
 scalaVersion := "2.10.1"
+crossScalaVersions := Seq(scalaVersion.value, "2.11.6")
 
 exportJars := true
 
@@ -17,15 +18,13 @@ retrieveManaged := true
 mainClass := Some("com.lucidchart.piezo.Worker")
 
 libraryDependencies ++= Seq(
-	"org.specs2" %% "specs2" % "1.14" % "test",
 	"ch.qos.logback" % "logback-classic" % "1.0.7",
+  "net.databinder" %% "dispatch-http" % "0.8.10",
 	"org.quartz-scheduler" % "quartz" % "2.1.7",
+  "org.specs2" %% "specs2" % "2.3.13" % Test,
 	"mysql" % "mysql-connector-java" % "5.1.25",
 	"javax.transaction" % "jta" % "1.1",
-	"net.databinder" %% "dispatch-http" % "0.8.8",
-	"com.typesafe" % "config" % "1.0.0",
-	"net.liftweb" %% "lift-json" % "2.5.1",
-	"com.typesafe.akka" %% "akka-actor" % "2.1.0"
+	"com.typesafe" % "config" % "1.0.0"
 )
 
 resolvers ++= List(
