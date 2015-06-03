@@ -1,0 +1,27 @@
+after_success:
+  - |
+    if [ -n "$TRAVIS_TAG" ]; then
+        mkdir ~/.pgp
+        echo $PGP_PUBLIC | base64 --decode > ~/.pgp/pubring
+        echo $PGP_SECRET | base64 --decode > ~/.pgp/secring
+        pushd worker && sbt +publishSigned +sonatypeRelease && popd
+    elif [ "$TRAVIS_PULL_REQUEST" == false ] && [ "$TRAVIS_BRANCH" == master ]; then
+        mkdir ~/.pgp
+        echo $PGP_PUBLIC | base64 --decode > ~/.pgp/pubring
+        echo $PGP_SECRET | base64 --decode > ~/.pgp/secring
+        pushd worker && sbt +publishSigned +sonatypeRelease && popd
+    fi
+deploy:
+  api_key: $GITHUB_AUTH
+  file: worker/target/**.jar
+  file_glob: true
+  on:
+    tags: true
+  provider: releases
+  skip_cleanup: true
+jdk:
+  - openjdk6
+language: scala
+script:
+  - pushd worker && sbt +test && popd
+  - pushd admin && sbt +test && popd
