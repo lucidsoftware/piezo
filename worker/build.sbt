@@ -2,7 +2,7 @@ name := "piezo-worker"
 
 organization := "com.lucidchart"
 
-version := "1.9-SNAPSHOT"
+version := "1.9"
 
 scalaVersion := "2.10.1"
 crossScalaVersions := Seq(scalaVersion.value, "2.11.6")
