@@ -75,9 +75,11 @@ pomExtra := (
 
 pomIncludeRepository := { _ => false }
 
-useGpg := true
+pgpPassphrase := Some(Array())
 
-pgpReadOnly := false
+pgpPublicRing := file(System.getProperty("user.home")) / ".pgp" / "pubring"
+
+pgpSecretRing := file(System.getProperty("user.home")) / ".pgp" / "secring"
 
 publishMavenStyle := true
 
