@@ -13,8 +13,6 @@ exportJars in Test := false
 
 autoScalaLibrary := true
 
-retrieveManaged := true
-
 mainClass := Some("com.lucidchart.piezo.Worker")
 
 libraryDependencies ++= Seq(
