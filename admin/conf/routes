@@ -27,6 +27,9 @@ GET     /typeahead/triggers/:sofar    com.lucidchart.piezo.admin.controllers.Tri
 
 GET     /favicon.ico                  com.lucidchart.piezo.admin.controllers.Application.favicon
 
+# Worker Health Check
+GET     /health                       com.lucidchart.piezo.admin.controllers.HealthCheckController.main()
+
 # Map static resources from the /public folder to the /assets URL path
 
 GET     /assets/*file                 controllers.Assets.at(path="/public", file)
