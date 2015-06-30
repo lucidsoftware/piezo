@@ -4,7 +4,8 @@ organization := "com.lucidchart"
 
 version := "1.10-SNAPSHOT"
 
-scalaVersion := "2.10.1"
+scalaVersion := "2.11.7"
+
 crossScalaVersions := Seq(scalaVersion.value, "2.11.6")
 
 exportJars := true
@@ -22,6 +23,8 @@ libraryDependencies ++= Seq(
   "org.specs2" %% "specs2" % "2.3.13" % Test,
 	"mysql" % "mysql-connector-java" % "5.1.25",
 	"javax.transaction" % "jta" % "1.1",
+  "joda-time" % "joda-time" % "2.8.1",
+  "org.joda" % "joda-convert" % "1.7",
 	"com.typesafe" % "config" % "1.0.0"
 )
 

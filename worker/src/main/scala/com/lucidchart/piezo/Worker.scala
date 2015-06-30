@@ -1,18 +1,23 @@
 package com.lucidchart.piezo
 
+import java.util.Properties
+
+import org.joda.time.DateTime
+import org.joda.time.format.ISODateTimeFormat
 import org.slf4j.LoggerFactory
 import org.quartz.Scheduler
 import java.util.concurrent.{TimeUnit, Semaphore}
-import java.io.FileOutputStream
-import java.io.File
+import java.io.{FileWriter, FileOutputStream, File}
 
-/**
-	*/
+import scala.util.control.NonFatal
+
+
 object Worker {
-  private val logger = LoggerFactory.getLogger(Worker.getClass)
+  private val logger = LoggerFactory.getLogger(this.getClass)
   private[piezo] val runSemaphore = new Semaphore(0)
+  private[piezo] val dtf = ISODateTimeFormat.dateTimeNoMillis().withZoneUTC()
 
-	def main(args: Array[String]) {
+  def main(args: Array[String]) {
     logger.info("worker starting")
 
     writePID()
@@ -23,21 +28,30 @@ object Worker {
     val props = schedulerFactory.props
     scheduler.getListenerManager.addJobListener(new WorkerJobListener(props))
     scheduler.getListenerManager.addTriggerListener(new WorkerTriggerListener(props))
-    run(scheduler)
+    run(scheduler, props)
 
     logger.info("exiting")
-	}
+  }
 
-  private[piezo] def run(scheduler: Scheduler) {
+  private[piezo] def run(scheduler: Scheduler, properties: Properties, heartbeatSeconds: Int = 60, semaphorePermitsToStop: Int = 1) {
+    val heartbeatFile = properties.getProperty("com.lucidchart.piezo.heartbeatFile")
+    if (heartbeatFile == null) {
+      logger.trace("No heartbeat file specified")
+    }
+
     try {
       scheduler.start()
       logger.info("scheduler started")
       var acquired = false
       while (!acquired) {
         try {
-          acquired = runSemaphore.tryAcquire(60, TimeUnit.SECONDS)
-          if (!acquired)
+          acquired = runSemaphore.tryAcquire(semaphorePermitsToStop, heartbeatSeconds, TimeUnit.SECONDS)
+          if (!acquired) {
+            if (heartbeatFile != null) {
+              writeHeartbeat(heartbeatFile)
+            }
             logger.info("worker heartbeat")
+          }
         }
         catch {
           case e: InterruptedException => logger.error("caught interruption exception: " + e)
@@ -49,6 +63,19 @@ object Worker {
     }
     catch {
       case e: Exception => logger.error("exception caught scheduling jobs: " + e)
+    }
+  }
+
+  private[piezo] def writeHeartbeat(filePath: String): Unit = {
+    try {
+      val file = new File(filePath)
+      file.getParentFile.mkdirs()
+      val fileWrite = new FileWriter(file)
+      val heartbeatTime = dtf.print(new DateTime(System.currentTimeMillis()))
+      fileWrite.write(heartbeatTime)
+      fileWrite.close()
+    } catch {
+      case NonFatal(e) => logger.warn(s"Exception caught writing heartbeat timestamp to file $filePath)", e)
     }
   }
 
