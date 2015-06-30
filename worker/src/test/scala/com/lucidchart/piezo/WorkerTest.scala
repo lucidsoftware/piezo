@@ -1,18 +1,25 @@
 package com.lucidchart.piezo
 
+import java.io.{BufferedReader, FileReader, File}
+import java.util.concurrent.Semaphore
+
 import org.specs2.mutable._
 import org.quartz._
 import org.quartz.JobBuilder._
 import org.quartz.TriggerBuilder._
 import org.quartz.SimpleScheduleBuilder._
 import org.quartz.impl.StdSchedulerFactory
-import java.util.Properties
+import java.util.{UUID, Date, Properties}
+import org.joda.time.DateTime
+
+import scala.util.Random
+
 
 object WorkerStopJob {
   var runCount = 0
 }
 
-class WorkerStopJob extends Job {
+class WorkerStopJob() extends Job {
   def execute(context: JobExecutionContext) {
     println("upping semaphore")
     WorkerStopJob.runCount += 1
@@ -20,9 +27,11 @@ class WorkerStopJob extends Job {
   }
 }
 
-class WorkerTest extends Specification{
+class WorkerTest extends Specification {
+  sequential
   "worker run" should {
     "stop" in {
+      Worker.runSemaphore.drainPermits()
       val job = newJob((new WorkerStopJob).getClass)
         .withIdentity("job1", "group1")
         .build()
@@ -38,12 +47,56 @@ class WorkerTest extends Specification{
       val propertiesStream = getClass().getResourceAsStream("/quartz_test.properties")
       val properties = new Properties
       properties.load(propertiesStream)
+      properties.setProperty("org.quartz.scheduler.instanceName", "testScheduler" + Random.nextInt)
       val schedulerFactory = new StdSchedulerFactory(properties)
       val scheduler = schedulerFactory.getScheduler
       scheduler.scheduleJob(job, trigger)
       Worker.run(scheduler)
       println("worker stopped")
       WorkerStopJob.runCount must equalTo(1)
+    }
+
+    "write heartbeat timestamp" in {
+      Worker.runSemaphore.drainPermits()
+      val job = newJob((new WorkerStopJob).getClass)
+        .withIdentity("job2", "group2")
+        .build()
+
+      val trigger = newTrigger()
+        .withIdentity("trigger2", "group2")
+        .startNow()
+        .withSchedule(simpleSchedule()
+        .withIntervalInSeconds(1)
+        .repeatForever())
+        .build()
+
+      val heartbeatFilePath = "/tmp/piezoHeartbeatTest" + Random.nextInt()
+      System.setProperty("com.lucidchart.piezo.heartbeatfile", heartbeatFilePath)
+
+      println("running worker")
+      val propertiesStream = getClass().getResourceAsStream("/quartz_test.properties")
+      val properties = new Properties
+      properties.load(propertiesStream)
+      properties.setProperty("org.quartz.scheduler.instanceName", "testScheduler" + Random.nextInt)
+      val schedulerFactory = new StdSchedulerFactory(properties)
+      val scheduler = schedulerFactory.getScheduler
+      scheduler.scheduleJob(job, trigger)
+      Worker.run(scheduler, 1, 3)
+      println("worker stopped")
+
+      val heartbeatFile = new File(heartbeatFilePath)
+      val exists = heartbeatFile.exists()
+      exists must equalTo(true)
+      println("heartbeat file exists")
+
+      val reader = new BufferedReader(new FileReader(heartbeatFile))
+      val heartbeat = reader.readLine()
+      reader.close()
+      println("heartbeat timestamp: " + heartbeat)
+      val heartbeatTime = Worker.dtf.parseDateTime(heartbeat.trim)
+      val inRange = heartbeatTime.isAfter(System.currentTimeMillis() - 5 * 1000)
+
+      inRange must equalTo(true)
     }
   }
 }

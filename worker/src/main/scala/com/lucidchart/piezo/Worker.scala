@@ -1,18 +1,21 @@
 package com.lucidchart.piezo
 
+import org.joda.time.DateTime
+import org.joda.time.format.ISODateTimeFormat
 import org.slf4j.LoggerFactory
 import org.quartz.Scheduler
 import java.util.concurrent.{TimeUnit, Semaphore}
-import java.io.FileOutputStream
-import java.io.File
+import java.io.{FileWriter, FileOutputStream, File}
 
-/**
-	*/
+import scala.util.control.NonFatal
+
+
 object Worker {
-  private val logger = LoggerFactory.getLogger(Worker.getClass)
-  private[piezo] val runSemaphore = new Semaphore(0)
+  protected val logger = LoggerFactory.getLogger(this.getClass)
+  protected[piezo] val runSemaphore = new Semaphore(0)
+  protected[piezo] val dtf = ISODateTimeFormat.dateTimeNoMillis().withZoneUTC()
 
-	def main(args: Array[String]) {
+  def main(args: Array[String]) {
     logger.info("worker starting")
 
     writePID()
@@ -26,18 +29,27 @@ object Worker {
     run(scheduler)
 
     logger.info("exiting")
-	}
+  }
 
-  private[piezo] def run(scheduler: Scheduler) {
+  protected[piezo] def run(scheduler: Scheduler, heartbeatSeconds: Int = 60, semaphorePermitsToStop: Int = 1) {
+    val heartbeatFile = System.getProperty("com.lucidchart.piezo.heartbeatfile")
+    if (heartbeatFile == null) {
+      logger.trace("No heartbeat file specified")
+    }
+
     try {
       scheduler.start()
       logger.info("scheduler started")
       var acquired = false
       while (!acquired) {
         try {
-          acquired = runSemaphore.tryAcquire(60, TimeUnit.SECONDS)
-          if (!acquired)
+          acquired = runSemaphore.tryAcquire(semaphorePermitsToStop, heartbeatSeconds, TimeUnit.SECONDS)
+          if (!acquired) {
+            if (heartbeatFile != null) {
+              writeHeartbeat(heartbeatFile)
+            }
             logger.info("worker heartbeat")
+          }
         }
         catch {
           case e: InterruptedException => logger.error("caught interruption exception: " + e)
@@ -52,7 +64,19 @@ object Worker {
     }
   }
 
-  private def writePID() = {
+  protected[piezo] def writeHeartbeat(filePath: String): Unit = {
+    try {
+      val file = new File(filePath)
+      val fileWrite = new FileWriter(file)
+      val heartbeatTime = dtf.print(new DateTime(System.currentTimeMillis()))
+      fileWrite.write(heartbeatTime)
+      fileWrite.close()
+    } catch {
+      case NonFatal(e) => logger.warn("Exception caught writing heartbeat timestamp")
+    }
+  }
+
+  protected def writePID() = {
     val location = getClass.getProtectionDomain.getCodeSource.getLocation
     val applicationPath = location.getFile()
     java.lang.management.ManagementFactory.getRuntimeMXBean.getName.split('@').headOption.map { pid =>
@@ -72,7 +96,7 @@ object Worker {
     }
   }
 
-  private def setupShutdownHandler() {
+  protected def setupShutdownHandler() {
     Runtime.getRuntime.addShutdownHook(new Thread() {
       override def run() {
         logger.info("received shutdown signal")
