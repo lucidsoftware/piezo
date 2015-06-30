@@ -8,7 +8,18 @@ import play.api.mvc._
 import scala.io.Source
 
 object HealthCheck extends Controller {
- def main = Action { implicit requests =>
+  implicit val logger = Logger(this.getClass())
+
+  val heartbeatFilename = configuration.getString("com.lucidchart.piezo.heartbeatFile").getOrElse {
+    logger.warn("heartbeat file not specified")
+    ""
+  }
+  val minutesBetweenBeats = configuration.getInt("healthCheck.worker.minutesBetween").getOrElse{
+    logger.warn("minutes between heartbeats not specified. Defaulting to 5")
+    5
+  }
+
+  def main = Action { implicit requests =>
    if(workersAreHealthy) {
      Ok
    } else {
@@ -17,11 +28,12 @@ object HealthCheck extends Controller {
 
  }
 
- def workersAreHealthy(): Boolean = {
-   val workerTimestamp = (Source.fromFile(configuration.getString("com.lucidchart.piezo.heartbeatFile").get).getLines.toList)(0)
-   val formatter = ISODateTimeFormat.dateTimeNoMillis().withZoneUTC()
-   val heartBeatTime = formatter.parseDateTime(workerTimestamp)
-   val currentTime = new DateTime
-   Minutes.minutesBetween(heartBeatTime, currentTime).getMinutes < configuration.getInt("healthCheck.worker.minutesBetween").getOrElse(0)
+  def workersAreHealthy(): Boolean = {
+    val heartbeatFile = Source.fromFile(heartbeatFilename).getLines.toList
+    val heartbeatTimestamp = heartbeatFile(0)
+    val formatter = ISODateTimeFormat.dateTimeNoMillis().withZoneUTC()
+    val heartbeatTime = formatter.parseDateTime(heartbeatTimestamp)
+    val currentTime = new DateTime
+    Minutes.minutesBetween(heartbeatTime, currentTime).getMinutes < minutesBetweenBeats
  }
 }
