@@ -51,7 +51,7 @@ class WorkerTest extends Specification {
       val schedulerFactory = new StdSchedulerFactory(properties)
       val scheduler = schedulerFactory.getScheduler
       scheduler.scheduleJob(job, trigger)
-      Worker.run(scheduler)
+      Worker.run(scheduler, properties)
       println("worker stopped")
       WorkerStopJob.runCount must equalTo(1)
     }
@@ -70,18 +70,19 @@ class WorkerTest extends Specification {
         .repeatForever())
         .build()
 
-      val heartbeatFilePath = "/tmp/piezoHeartbeatTest" + Random.nextInt()
-      System.setProperty("com.lucidchart.piezo.heartbeatfile", heartbeatFilePath)
-
-      println("running worker")
       val propertiesStream = getClass().getResourceAsStream("/quartz_test.properties")
       val properties = new Properties
       properties.load(propertiesStream)
+
+      val heartbeatFilePath = "/tmp/piezoHeartbeatTest" + Random.nextInt()
+      properties.setProperty("com.lucidchart.piezo.heartbeatFile", heartbeatFilePath)
+
+      println("running worker")
       properties.setProperty("org.quartz.scheduler.instanceName", "testScheduler" + Random.nextInt)
       val schedulerFactory = new StdSchedulerFactory(properties)
       val scheduler = schedulerFactory.getScheduler
       scheduler.scheduleJob(job, trigger)
-      Worker.run(scheduler, 1, 3)
+      Worker.run(scheduler, properties, 1, 3)
       println("worker stopped")
 
       val heartbeatFile = new File(heartbeatFilePath)

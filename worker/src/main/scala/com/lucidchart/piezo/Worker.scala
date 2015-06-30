@@ -1,5 +1,7 @@
 package com.lucidchart.piezo
 
+import java.util.Properties
+
 import org.joda.time.DateTime
 import org.joda.time.format.ISODateTimeFormat
 import org.slf4j.LoggerFactory
@@ -11,9 +13,9 @@ import scala.util.control.NonFatal
 
 
 object Worker {
-  protected val logger = LoggerFactory.getLogger(this.getClass)
-  protected[piezo] val runSemaphore = new Semaphore(0)
-  protected[piezo] val dtf = ISODateTimeFormat.dateTimeNoMillis().withZoneUTC()
+  private val logger = LoggerFactory.getLogger(this.getClass)
+  private[piezo] val runSemaphore = new Semaphore(0)
+  private[piezo] val dtf = ISODateTimeFormat.dateTimeNoMillis().withZoneUTC()
 
   def main(args: Array[String]) {
     logger.info("worker starting")
@@ -26,13 +28,13 @@ object Worker {
     val props = schedulerFactory.props
     scheduler.getListenerManager.addJobListener(new WorkerJobListener(props))
     scheduler.getListenerManager.addTriggerListener(new WorkerTriggerListener(props))
-    run(scheduler)
+    run(scheduler, props)
 
     logger.info("exiting")
   }
 
-  protected[piezo] def run(scheduler: Scheduler, heartbeatSeconds: Int = 60, semaphorePermitsToStop: Int = 1) {
-    val heartbeatFile = System.getProperty("com.lucidchart.piezo.heartbeatfile")
+  private[piezo] def run(scheduler: Scheduler, properties: Properties, heartbeatSeconds: Int = 60, semaphorePermitsToStop: Int = 1) {
+    val heartbeatFile = properties.getProperty("com.lucidchart.piezo.heartbeatFile")
     if (heartbeatFile == null) {
       logger.trace("No heartbeat file specified")
     }
@@ -64,7 +66,7 @@ object Worker {
     }
   }
 
-  protected[piezo] def writeHeartbeat(filePath: String): Unit = {
+  private[piezo] def writeHeartbeat(filePath: String): Unit = {
     try {
       val file = new File(filePath)
       val fileWrite = new FileWriter(file)
@@ -76,7 +78,7 @@ object Worker {
     }
   }
 
-  protected def writePID() = {
+  private def writePID() = {
     val location = getClass.getProtectionDomain.getCodeSource.getLocation
     val applicationPath = location.getFile()
     java.lang.management.ManagementFactory.getRuntimeMXBean.getName.split('@').headOption.map { pid =>
@@ -96,7 +98,7 @@ object Worker {
     }
   }
 
-  protected def setupShutdownHandler() {
+  private def setupShutdownHandler() {
     Runtime.getRuntime.addShutdownHook(new Thread() {
       override def run() {
         logger.info("received shutdown signal")
