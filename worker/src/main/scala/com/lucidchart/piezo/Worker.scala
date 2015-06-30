@@ -69,12 +69,13 @@ object Worker {
   private[piezo] def writeHeartbeat(filePath: String): Unit = {
     try {
       val file = new File(filePath)
+      file.getParentFile.mkdirs()
       val fileWrite = new FileWriter(file)
       val heartbeatTime = dtf.print(new DateTime(System.currentTimeMillis()))
       fileWrite.write(heartbeatTime)
       fileWrite.close()
     } catch {
-      case NonFatal(e) => logger.warn("Exception caught writing heartbeat timestamp")
+      case NonFatal(e) => logger.warn(s"Exception caught writing heartbeat timestamp to file $filePath)", e)
     }
   }
 

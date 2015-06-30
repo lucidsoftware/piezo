@@ -74,7 +74,7 @@ class WorkerTest extends Specification {
       val properties = new Properties
       properties.load(propertiesStream)
 
-      val heartbeatFilePath = "/tmp/piezoHeartbeatTest" + Random.nextInt()
+      val heartbeatFilePath = "/tmp/piezo/piezoHeartbeatTest" + Random.nextInt()
       properties.setProperty("com.lucidchart.piezo.heartbeatFile", heartbeatFilePath)
 
       println("running worker")
