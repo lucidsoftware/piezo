@@ -7,7 +7,7 @@ import play.api.Play.{current,configuration}
 import play.api.mvc._
 import scala.io.Source
 
-object HealthCheckController extends Controller {
+object HealthCheck extends Controller {
  def main = Action { implicit requests =>
    if(workersAreHealthy) {
      Ok
