@@ -2,7 +2,7 @@ name := "piezo-worker"
 
 organization := "com.lucidchart"
 
-version := "1.10-SNAPSHOT"
+version := "1.10"
 
 scalaVersion := "2.11.7"
 
