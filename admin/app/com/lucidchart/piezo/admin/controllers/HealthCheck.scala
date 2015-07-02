@@ -3,6 +3,7 @@ package com.lucidchart.piezo.admin.controllers
 import org.joda.time.{DateTime,Minutes}
 import org.joda.time.format.ISODateTimeFormat
 import play.api._
+import play.api.libs.json._
 import play.api.Play.{current,configuration}
 import play.api.mvc._
 import scala.io.Source
@@ -19,21 +20,23 @@ object HealthCheck extends Controller {
     5
   }
 
-  def main = Action { implicit requests =>
-   if(workersAreHealthy) {
-     Ok
-   } else {
-     ServiceUnavailable
-   }
-
+  def main = Action { implicit requests=>
+    val workerHealth = areWorkersHealthy()
+    val responseBody = Json.toJson(Map("HeartbeatTime" -> Json.toJson(workerHealth._2)))
+    if(workerHealth._1) {
+     Ok(responseBody)
+    } else {
+     ServiceUnavailable(responseBody)
+    }
  }
 
-  def workersAreHealthy(): Boolean = {
+  def areWorkersHealthy(): (Boolean, String) = {
     val heartbeatFile = Source.fromFile(heartbeatFilename).getLines.toList
     val heartbeatTimestamp = heartbeatFile(0)
     val formatter = ISODateTimeFormat.dateTimeNoMillis().withZoneUTC()
     val heartbeatTime = formatter.parseDateTime(heartbeatTimestamp)
     val currentTime = new DateTime
-    Minutes.minutesBetween(heartbeatTime, currentTime).getMinutes < minutesBetweenBeats
+    val isTimestampRecent = Minutes.minutesBetween(heartbeatTime, currentTime).getMinutes < minutesBetweenBeats
+    (isTimestampRecent, formatter.print(heartbeatTime))
  }
 }
