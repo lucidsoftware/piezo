@@ -31,7 +31,9 @@ class DummyClassGenerator {
     for (url <- urls) {
       buffer.append(separator).append(url.getFile)
     }
-    buffer.toString()
+    val classpath = buffer.toString()
+    logger.debug("Using classpath: " + classpath)
+    classpath
   }
 
   def generate(name: String, source: String): Option[Class[_]] = {
@@ -45,6 +47,7 @@ class DummyClassGenerator {
         val classpath = getClasspath()
         val options = List("-d", tempOutputDirName, "-classpath", classpath)
         val task = compiler.getTask(null, null, diagnostics, options, null, compilationUnits)
+        logger.debug(s"Compiling $name with options '$options'")
         val success = task.call()
         for (diagnostic <- diagnostics.getDiagnostics) {
           logger.debug("Result of compiling " + name)

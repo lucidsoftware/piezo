@@ -26,7 +26,9 @@ class GeneratorClassLoader extends CascadingClassLoadHelper{
     printWriter.println("  }")
     printWriter.println("}")
     printWriter.close()
-    writer.toString()
+    val source = writer.toString()
+    logger.debug("Source for " + name + "\n" + source)
+    source
   }
 
   override def loadClass(name: String): Class[_] = {

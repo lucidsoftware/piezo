@@ -12,7 +12,7 @@ object ApplicationBuild extends Build {
     jdbc,
     anorm,
     "org.quartz-scheduler" % "quartz" % "2.1.7",
-    "com.lucidchart" %% "piezo-worker" % "1.10"
+    "com.lucidchart" %% "piezo-worker" % "1.11-SNAPSHOT"
   )
 
 
