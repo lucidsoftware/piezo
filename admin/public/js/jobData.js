@@ -15,7 +15,7 @@
             return i;
         }, 0);
     }
-    
+
     $('.job-data-map').on('click', '.job-data-delete a', function () {
         $(this).parent().next().next().remove();
         $(this).parent().next().remove();
@@ -32,7 +32,7 @@
 
         key.find('input').val('');
         value.find('input').val('');
-        
+
         $(this).before(key);
         $(this).before(value);
 

@@ -154,7 +154,7 @@ request: play.api.mvc.Request[AnyContent]
             <tbody>
             @currentTrigger.get.getJobDataMap.getKeys.map { triggerDataKey =>
                 <tr>
-                    <td class="text-right">triggerDataKey</td>
+                    <td class="text-right">@triggerDataKey</td>
                     <td>@currentTrigger.get.getJobDataMap.getString(triggerDataKey)</td>
                 </tr>
             }
