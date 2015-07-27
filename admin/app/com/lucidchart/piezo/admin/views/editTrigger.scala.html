@@ -5,7 +5,7 @@ submitValue: String,
 formAction: play.api.mvc.Call,
 existing: Boolean,
 errorMessage: Option[String] = None,
-scripts: List[String] = List[String]("js/typeAhead.js")
+scripts: List[String] = List[String]("js/jobData.js", "js/typeAhead.js")
 )(
 implicit
 request: play.api.mvc.Request[AnyContent]
@@ -78,6 +78,26 @@ request: play.api.mvc.Request[AnyContent]
           <input type="text" class="form-control form-inline-control" name="@name" id="@id" @toHtmlArgs(args)>
       }
     }
+
+    <h4>Job Data Map</h4>
+
+    <div class="job-data-map">
+      @helper.repeat(triggerForm("job-data-map"), min = triggerForm("job-data-map").indexes.length + 1) { dataMap =>
+
+        @dataMap("key").value.map { _ =>
+          @dataMap("value").value.map { _ =>
+            <div class="job-data-delete text-right"><a href="#">delete</a></div>
+          }
+        }
+
+        @helper.inputText(dataMap("key"), '_label -> "Key", 'labelClass -> "col-sm-2 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Key", 'class -> "job-data-key form-control form-inline-control")
+        @helper.inputText(dataMap("value"), '_label -> "Value", 'labelClass -> "col-sm-2 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Value", 'class -> "job-data-value form-control form-inline-control")
+
+      }
+
+      <div class="job-data-add text-right"><a href="#">add</a></div>
+    </div>
+
     </div>
     <div class="clearfix"></div>
     <button type="submit" class="btn btn-default submit-btn">@submitValue</button>

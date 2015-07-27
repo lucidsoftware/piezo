@@ -12,7 +12,7 @@ import scala.Some
 import play.api.data.validation.ValidationError
 
 
-class TriggerFormHelper(scheduler: Scheduler) {
+class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
 
   private def simpleScheduleFormApply(repeatCount: Int, repeatInterval: Int): SimpleScheduleBuilder = {
     SimpleScheduleBuilder.simpleSchedule()
@@ -35,7 +35,7 @@ class TriggerFormHelper(scheduler: Scheduler) {
   }
 
   private def triggerFormApply(triggerType: String, group: String, name: String, jobGroup: String, jobName: String, description: String,
-                               simple: Option[SimpleScheduleBuilder], cron: Option[CronScheduleBuilder]): Trigger = {
+                               simple: Option[SimpleScheduleBuilder], cron: Option[CronScheduleBuilder], jobDataMap: Option[JobDataMap]): Trigger = {
     val newTrigger: Trigger = TriggerBuilder.newTrigger()
       .withIdentity(name, group)
       .withDescription(description)
@@ -45,12 +45,13 @@ class TriggerFormHelper(scheduler: Scheduler) {
         case "simple" => simple.get
       })
       .forJob(jobName, jobGroup)
+      .usingJobData(jobDataMap.getOrElse(new JobDataMap()))
       .build()
     newTrigger
   }
 
   private def triggerFormUnapply(trigger: Trigger):
-  Option[(String, String, String, String, String, String, Option[SimpleScheduleBuilder], Option[CronScheduleBuilder])] = {
+  Option[(String, String, String, String, String, String, Option[SimpleScheduleBuilder], Option[CronScheduleBuilder], Option[JobDataMap])] = {
     val (triggerType: String, simple, cron) = trigger match {
       case cron: CronTrigger => ("cron", None, Some(cron.getScheduleBuilder))
       case simple: SimpleTrigger => ("simple", Some(simple.getScheduleBuilder), None)
@@ -58,7 +59,7 @@ class TriggerFormHelper(scheduler: Scheduler) {
     val description = if (trigger.getDescription() == null) "" else trigger.getDescription()
     Some((triggerType, trigger.getKey.getGroup(), trigger.getKey.getName(),
       trigger.getJobKey.getGroup(), trigger.getJobKey.getName(), description,
-      simple.asInstanceOf[Option[SimpleScheduleBuilder]], cron.asInstanceOf[Option[CronScheduleBuilder]]))
+      simple.asInstanceOf[Option[SimpleScheduleBuilder]], cron.asInstanceOf[Option[CronScheduleBuilder]], Some(trigger.getJobDataMap)))
   }
 
   private def getCronParseError(cronExpression: String): String = {
@@ -100,7 +101,8 @@ class TriggerFormHelper(scheduler: Scheduler) {
       )(simpleScheduleFormApply)(simpleScheduleFormUnapply)),
       "cron" -> optional(mapping(
         "cronExpression" -> nonEmptyText().verifying(validCronExpression)
-      )(cronScheduleFormApply)(cronScheduleFormUnapply))
+      )(cronScheduleFormApply)(cronScheduleFormUnapply)),
+      "job-data-map" -> jobDataMap
     )(triggerFormApply)(triggerFormUnapply) verifying("Job does not exist", trigger => {
       scheduler.checkExists(trigger.getJobKey)
     })
