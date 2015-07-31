@@ -15,7 +15,7 @@ object RequestStatCollector extends EssentialFilter {
   }
 
   def apply(next: EssentialAction) = EssentialAction { request: RequestHeader =>
-    val start = System.nanoTime
+    val start = System.currentTimeMillis
     next(request).map { value =>
       recordStats(request, start)(value)
     }
