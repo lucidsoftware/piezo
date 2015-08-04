@@ -37,6 +37,7 @@ class JobsControllerTest extends Specification {
 //      val dummyClassGenerator2 = new DummyClassGenerator()
 //      val nonRootPackageDummyClass: Option[Class[_]] = dummyClassGenerator2.generate(nonRootPackageClassName, nonRootPackageClassSource)
 //      nonRootPackageDummyClass.get.getName() must equalTo(nonRootPackageClassName)
+      success
     }
   }
 }

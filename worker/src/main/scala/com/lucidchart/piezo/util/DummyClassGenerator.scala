@@ -1,11 +1,16 @@
 package com.lucidchart.piezo.util
 
 import javax.tools.{ JavaFileObject, DiagnosticCollector, ToolProvider}
+import org.quartz.{JobExecutionContext, Job}
+
 import scala.collection.JavaConversions._
 import java.net.{URLClassLoader}
 import org.slf4j.LoggerFactory
 import java.io.File
 
+object DummyClassGenerator {
+  var classLoader = Thread.currentThread().getContextClassLoader()
+}
 
 class DummyClassGenerator {
   private val logger = LoggerFactory.getLogger(this.getClass)
@@ -23,7 +28,10 @@ class DummyClassGenerator {
   val diagnostics: DiagnosticCollector[JavaFileObject] = new DiagnosticCollector[JavaFileObject]()
   
   private def getClasspath() = {
-    val classLoader = Thread.currentThread().getContextClassLoader()
+    val dummyJob = new Job() {
+      def execute(context: JobExecutionContext) {
+      }}
+    val classLoader = dummyJob.getClass.getClassLoader
     val urls = classLoader.asInstanceOf[URLClassLoader].getURLs()
     val buffer = new StringBuilder(1000)
     buffer.append(".")

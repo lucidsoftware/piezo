@@ -1,4 +1,5 @@
 import com.lucidchart.piezo.admin.RequestStatCollector
+import com.lucidchart.piezo.util.DummyClassGenerator
 import play.api._
 import play.api.mvc._
 import play.api.mvc.Results._

@@ -20,8 +20,9 @@ deploy:
   provider: releases
   skip_cleanup: true
 jdk:
-  - openjdk6
+  - openjdk7
 language: scala
 script:
-  - pushd worker && sbt +test && popd
-  - pushd admin && sbt +test && popd
+  - pushd worker && sbt test && popd
+  - pushd worker && sbt publish-local && popd
+  - pushd admin && sbt test && popd
