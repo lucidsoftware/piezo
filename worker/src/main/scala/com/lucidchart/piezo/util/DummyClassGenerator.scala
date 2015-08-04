@@ -1,11 +1,16 @@
 package com.lucidchart.piezo.util
 
 import javax.tools.{ JavaFileObject, DiagnosticCollector, ToolProvider}
+import org.quartz.{JobExecutionContext, Job}
+
 import scala.collection.JavaConversions._
 import java.net.{URLClassLoader}
 import org.slf4j.LoggerFactory
 import java.io.File
 
+object DummyClassGenerator {
+  var classLoader = Thread.currentThread().getContextClassLoader()
+}
 
 class DummyClassGenerator {
   private val logger = LoggerFactory.getLogger(this.getClass)
@@ -23,7 +28,10 @@ class DummyClassGenerator {
   val diagnostics: DiagnosticCollector[JavaFileObject] = new DiagnosticCollector[JavaFileObject]()
   
   private def getClasspath() = {
-    val classLoader = Thread.currentThread().getContextClassLoader()
+    val dummyJob = new Job() {
+      def execute(context: JobExecutionContext) {
+      }}
+    val classLoader = dummyJob.getClass.getClassLoader
     val urls = classLoader.asInstanceOf[URLClassLoader].getURLs()
     val buffer = new StringBuilder(1000)
     buffer.append(".")
@@ -31,7 +39,9 @@ class DummyClassGenerator {
     for (url <- urls) {
       buffer.append(separator).append(url.getFile)
     }
-    buffer.toString()
+    val classpath = buffer.toString()
+    logger.debug("Using classpath: " + classpath)
+    classpath
   }
 
   def generate(name: String, source: String): Option[Class[_]] = {
@@ -45,6 +55,7 @@ class DummyClassGenerator {
         val classpath = getClasspath()
         val options = List("-d", tempOutputDirName, "-classpath", classpath)
         val task = compiler.getTask(null, null, diagnostics, options, null, compilationUnits)
+        logger.debug(s"Compiling $name with options '$options'")
         val success = task.call()
         for (diagnostic <- diagnostics.getDiagnostics) {
           logger.debug("Result of compiling " + name)

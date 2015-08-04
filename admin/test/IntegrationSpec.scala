@@ -20,7 +20,8 @@ class IntegrationSpec extends Specification {
         // https://groups.google.com/forum/#!msg/play-framework/ueXtbcG1oIo/Gc9yKQ4gd10J
         //browser.goTo("http://localhost:3333/")
         //browser.pageSource must contain("was created by")
-       
+
+        success
       }
     }
     

@@ -15,6 +15,8 @@ import com.lucidchart.piezo.util.DummyClassGenerator
 import play.api.mvc.{Result, AnyContentAsEmpty}
 import java.util.Properties
 
+import scala.concurrent.Future
+
 /**
   * Add your spec here.
   * You can mock out a whole application including requests, plugins etc.
@@ -37,7 +39,7 @@ class JobsService extends Specification {
 
          val jobsController = new Jobs(schedulerFactory)
          val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/jobs/missinggroup/missingname")
-         val missingJob: Result = jobsController.getJob("missinggroup", "missingname")(request)
+         val missingJob: Future[Result] = jobsController.getJob("missinggroup", "missingname")(request)
 
          status(missingJob) must equalTo(NOT_FOUND)
          contentType(missingJob) must beSome.which(_ == "text/html")
@@ -58,7 +60,7 @@ class JobsService extends Specification {
 
          val jobsController = new Jobs(schedulerFactory)
          val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/jobs/" + jobGroup + "/" + jobName)
-         val validJob: Result = jobsController.getJob(jobGroup, jobName)(request)
+         val validJob: Future[Result] = jobsController.getJob(jobGroup, jobName)(request)
 
          status(validJob) must equalTo(OK)
          contentType(validJob) must beSome.which(_ == "text/html")

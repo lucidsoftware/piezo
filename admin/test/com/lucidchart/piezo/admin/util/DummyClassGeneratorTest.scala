@@ -37,6 +37,7 @@ class DummyClassGeneratorTest extends Specification{
 //      val echoParameter = random.nextInt()
 //      val result = dummyMethod.invoke(null, echoParameter: java.lang.Integer)
 //      result must equalTo(echoParameter)
+      success
     }
   }
 }
