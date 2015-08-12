@@ -24,7 +24,7 @@ Worker also expands the set of tables that quartz uses with additional tables to
 5. Run Piezo as specified in [Running](#running).
 
 ###Building
-You must have [sbt](http://www.scala-sbt.org/) version 0.12.0 or higher to build the worker project.
+You must have [sbt](http://www.scala-sbt.org/) version 0.13.0 or higher to build the worker project.
 
 To compile the project run
 
@@ -71,11 +71,11 @@ Admin is a web interface for viewing and managing the scheduled jobs.
 1. Follow the steps for the Worker [Setup](#setup) above.
 
 ###Building
-You must have [play](http://www.playframework.com/) version 2.1.1 or higher to build the admin project.
+You must have [play](http://www.playframework.com/) version 2.3 or higher to build the admin project.
 
 To compile the project run
 
-`play compile`.
+`sbt compile`.
 
 To collect all dependencies into a single folder (target/staged) run
 
