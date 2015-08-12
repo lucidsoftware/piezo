@@ -15,12 +15,14 @@ fi
 
 #create a directory to use for building the .deb
 DIST_DIR=$SERVER_HOME/dist;
+rm -rf $DIST_DIR
 if [ -d "$DIST_DIR" ]; then
 	if [ "$(ls -A $DIST_DIR)" ]; then 
 		echo "$DIST_DIR exists and is not empty"; 
 		exit 1;
 	fi
 else
+	echo "making dist dir $DIST_DIR"
 	mkdir $DIST_DIR
 fi
 
@@ -55,10 +57,15 @@ chmod -R 755 $PACKAGING_DIR/DEBIAN
 
 INSTALL_DIR=$PACKAGING_DIR/srv/lucid-piezo-admin-service/bin
 mkdir -p $INSTALL_DIR
+INSTALL_JAR_DIR=$INSTALL_DIR/staged-$VERSION
+mkdir -p $INSTALL_JAR_DIR
 
-cp -r $SERVER_HOME/target/staged  $INSTALL_DIR/staged-$VERSION
+#copy jars
+for JAR in `find $SERVER_HOME/lib_managed/ -name "*jar"`; do
+    cp $JAR $INSTALL_JAR_DIR/
+done
+cp $SERVER_HOME/target/scala-2.11/admin_*.jar $INSTALL_JAR_DIR/
 echo $VERSION > $INSTALL_DIR/staged-version
-cp $SERVER_HOME/target/start  $INSTALL_DIR
 
 #build the .deb
 fakeroot dpkg-deb --build $PACKAGING_DIR
@@ -67,11 +74,9 @@ cp ${DIST_DIR}/$DEB_NAME.deb $FINAL_DEB
 
 /srv/lucid/add-package.sh $FINAL_DEB
 if [ ! $? -eq 0 ]; then
-        rm -rf $DIST_DIR
-	echo "failed to put ${packaging_dir} in repository"
+    #rm -rf $DIST_DIR
+	echo "failed to put ${$PACKAGING_DIR} in repository"
 	exit 1;
 fi
-
-rm -rf $DIST_DIR
 
 exit $?
