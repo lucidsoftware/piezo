@@ -21,7 +21,7 @@ deploy:
 
 .PHONY: test
 test:
-	play test
+	sbt test
 
 .PHONY: version
 version: clean-version conf/version.conf
@@ -35,4 +35,4 @@ conf/version.conf:
 
 .PHONY: %
 %:
-	play $*
+	sbt $*
