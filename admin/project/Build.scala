@@ -15,8 +15,8 @@ object ApplicationBuild extends Build {
     "com.lucidchart" %% "piezo-worker" % "1.11"
   )
 
-
   val main = Project(appName, file(".")).enablePlugins(play.PlayScala).settings(
+    retrieveManaged := true,
     version := appVersion,
     libraryDependencies ++= appDependencies,
     scalaVersion := "2.11.7",

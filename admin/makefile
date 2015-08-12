@@ -9,7 +9,7 @@ SHELL := /bin/bash -e
 default: all
 
 .PHONY: all
-all : clean compile version test stage
+all : clean compile version test package
 
 .PHONY: package
 package:
