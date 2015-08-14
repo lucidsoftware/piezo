@@ -64,7 +64,10 @@ mkdir -p $INSTALL_JAR_DIR
 for JAR in `find $SERVER_HOME/lib_managed/ -name "*jar"`; do
     cp $JAR $INSTALL_JAR_DIR/
 done
+#copy classes jar
 cp $SERVER_HOME/target/scala-2.11/admin_*.jar $INSTALL_JAR_DIR/
+#copy assets jar
+cp $SERVER_HOME/target/admin-*.jar $INSTALL_JAR_DIR/
 echo $VERSION > $INSTALL_DIR/staged-version
 
 #build the .deb

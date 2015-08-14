@@ -13,7 +13,7 @@ all : clean compile version test package
 
 .PHONY: package
 package:
-	sbt package
+	sbt package playPackageAssets
 	build/createpackage $(VERSION_PREFIX)
 
 .PHONY: deploy
