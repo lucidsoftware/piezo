@@ -1,0 +1,5 @@
+# Add or override options for ${{app_name}} here
+#
+# JAVA_OPTS+=-Dconfig.file=/etc/piezo-admin/application-overrides.conf
+# JAVA_OPTS+=-Dhttp.port=80
+#
