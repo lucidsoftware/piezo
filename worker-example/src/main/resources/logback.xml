@@ -1,7 +1,5 @@
 <configuration debug="false">
 
-    <conversionRule conversionWord="coloredLevel" converterClass="play.api.Logger$ColoredLevel" />
-
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">
         <file>/tmp/worker.log</file>
         <encoder>
@@ -22,7 +20,6 @@
         </encoder>
     </appender>
 
-    <logger name="com.lucidchart" level="DEBUG" />
     <logger name="com.lucidchart.piezo.jobs.monitoring.HeartBeat" level="INFO">
         <appender-ref ref="BEAT" />
     </logger>

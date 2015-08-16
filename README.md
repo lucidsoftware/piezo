@@ -24,36 +24,29 @@ Worker also expands the set of tables that quartz uses with additional tables to
 5. Run Piezo as specified in [Running](#running).
 
 ###Building
-You must have [sbt](http://www.scala-sbt.org/) version 0.13.0 or higher to build the worker project.
+You must have [sbt](http://www.scala-sbt.org/) version 0.13.0 or higher installed.
 
-To compile the project run
+From the [worker](worker) directory,
 
-`make compile`.
+`sbt compile` compiles sources.
 
-To package the project into a jar run
-
-`make package`.
-
-To collect all dependencies into a single folder (target/staged) run
-
-`make stage`
+`sbt packageBin` creates a JAR.
 
 ###Configuration
 ####JVM properties
 * `org.quartz.properties` - [Quartz scheduler library config file](http://quartz-scheduler.org/documentation/quartz-2.2.x/configuration/)
-* `logback.configurationFile` - [Logback config file](http://logback.qos.ch/manual/configuration.html)
 * `pidfile.path` - path to file where PID should be written on startup
 
 ###Running
-The project includes a sample script for running a worker process. It depends on `make stage` having been run. It launches with the [sample worker quartz.properties file](worker/src/main/resources/quartz.properties) included in the project.
+There is an [example project](example-worker) for piezo-worker. From the [worker-example](worker-example) directory,
 
-```
-./worker/src/main/resources/run.sh
+```sh
+sbt run
 ```
 
 Here also is a sample java command for running a single worker instance:
 
-```
+```sh
 java -Dlogback.configurationFile=<path to logback config> -Dorg.quartz.properties=<path to quartz properties> -Dpidfile.path=<path to pid file> -Dnetworkaddress.cache.ttl=10 -Dnetworkaddress.cache.negative.ttl=10 -cp <path to jars> com.lucidchart.piezo.Worker
 ```
 
