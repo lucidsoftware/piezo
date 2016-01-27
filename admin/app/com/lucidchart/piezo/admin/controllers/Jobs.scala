@@ -150,4 +150,19 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory) extends Controller {
 
     Ok(Json.obj("jobs" -> jobs.filter(_.getName.toLowerCase.contains(sofar.toLowerCase)).map(_.getName)))
   }
+
+  def runJob(group: String, name: String) = Action { implicit request =>
+    val jobKey = new JobKey(name, group)
+
+    if (scheduler.checkExists(jobKey)) {
+      try {
+        scheduler.triggerJob(jobKey)
+        Ok("")
+      } catch {
+        case e: SchedulerException => InternalServerError
+      }
+    } else {
+      NotFound
+    }
+  }
 }
