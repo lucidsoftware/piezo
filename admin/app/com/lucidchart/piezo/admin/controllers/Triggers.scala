@@ -152,6 +152,24 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
     }))
   }
 
+  def triggerJob(group: String, name: String) = Action { implicit request =>
+    val jobKey = new JobKey(name, group)
+
+    if (scheduler.checkExists(jobKey)) {
+      try {
+        scheduler.triggerJob(jobKey)
+        Ok
+      } catch {
+        case e: SchedulerException => {
+          logger.error("Exception caught triggering job %s %s. -- %s".format(group, name, e.getLocalizedMessage), e)
+          InternalServerError
+        }
+      }
+    } else {
+      NotFound
+    }
+  }
+
   private trait DummyTrigger extends Trigger {
     override def getKey() = { new TriggerKey("", "") }
 

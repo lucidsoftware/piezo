@@ -28,10 +28,10 @@ request: play.api.mvc.Request[AnyContent]
         <span class="glyphicon glyphicon-play"></span>
       </a>
       <div class="clearfix"></div>
-        
+
         <!-- Run Job Alerts -->
         <div id="runSuccess" class="alert alert-success">
-          <p>The job is now running.</p>
+          <p>The job has been triggered, and will run once a thread becomes available.</p>
         </div>
         <div id="runError" class="alert alert-warning">
           <p>Failed to run job.</p>
@@ -87,7 +87,7 @@ request: play.api.mvc.Request[AnyContent]
 
             function runJob() {
                 runConfirm.hide();
-                var jobUrl = "@piezoRoutes.Jobs.runJob(currentJob.get.getKey.getGroup(), currentJob.get.getKey.getName())";
+                var jobUrl = "@piezoRoutes.Triggers.triggerJob(currentJob.get.getKey.getGroup(), currentJob.get.getKey.getName())";
                 var runRequest = new XMLHttpRequest();
                 runRequest.onreadystatechange = function() {
                     if (runRequest.readyState === 4) {
