@@ -150,4 +150,6 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory) extends Controller {
 
     Ok(Json.obj("jobs" -> jobs.filter(_.getName.toLowerCase.contains(sofar.toLowerCase)).map(_.getName)))
   }
+
+
 }

@@ -21,6 +21,7 @@ GET     /triggers/:group/:name        com.lucidchart.piezo.admin.controllers.Tri
 POST    /triggers/:group/:name        com.lucidchart.piezo.admin.controllers.Triggers.putTrigger(group: String, name: String)
 DELETE  /triggers/:group/:name        com.lucidchart.piezo.admin.controllers.Triggers.deleteTrigger(group: String, name: String)
 GET     /triggers/:group/:name/editor com.lucidchart.piezo.admin.controllers.Triggers.getEditTrigger(group: String, name: String)
+POST    /triggers/:group/:name/runner com.lucidchart.piezo.admin.controllers.Triggers.triggerJob(group: String, name: String)
 POST    /triggers                     com.lucidchart.piezo.admin.controllers.Triggers.postTrigger()
 
 GET     /typeahead/triggers/:sofar    com.lucidchart.piezo.admin.controllers.Triggers.triggerGroupTypeAhead(sofar: String)

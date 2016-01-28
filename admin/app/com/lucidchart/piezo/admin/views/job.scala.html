@@ -24,7 +24,25 @@ request: play.api.mvc.Request[AnyContent]
       <a id="deleteJob" class="piezo-button pull-right" data-toggle="tooltip" title="Delete job" onclick="$('#deleteConfirm').show()">
         <span class="glyphicon glyphicon-remove"></span>
       </a>
+      <a id="runJob" class="piezo-button pull-right" data-toggle="tooltip" title="Run job" onclick="$('#runConfirm').show()">
+        <span class="glyphicon glyphicon-play"></span>
+      </a>
       <div class="clearfix"></div>
+
+        <!-- Run Job Alerts -->
+        <div id="runSuccess" class="alert alert-success">
+          <p>The job has been triggered, and will run once a thread becomes available.</p>
+        </div>
+        <div id="runError" class="alert alert-warning">
+          <p>Failed to run job.</p>
+        </div>
+        <div id="runConfirm" class="alert alert-warning fade in">
+            <h4>Are you sure you want to run this job right now?</h4>
+            <button type="button" class="btn btn-success" onclick="runJob()">Run</button>
+            <button type="button" class="btn btn-default" onclick="$('#runConfirm').hide()">Cancel</button>
+        </div>
+
+        <!-- Delete Job Alerts -->
         <div id="deleteError" class="alert alert-danger">
           <p>Failed to delete job.</p>
         </div>
@@ -34,9 +52,21 @@ request: play.api.mvc.Request[AnyContent]
           <button type="button" class="btn btn-default" onclick="$('#deleteConfirm').hide()">Cancel</button>
         </div>
         <script>
-            $('#deleteError').hide();
-            $('#deleteConfirm').hide();
+            var deleteConfirm = $('#deleteError');
+            var deleteError = $('#deleteConfirm');
+            var runConfirm = $('#runConfirm');
+            var runSuccess = $('#runSuccess');
+            var runError = $('#runError');
+
+            runConfirm.hide();
+            runSuccess.hide();
+            runError.hide();
+
+            deleteError.hide();
+            deleteConfirm.hide();
+
             function deleteJob() {
+                deleteConfirm.hide();
                 var jobUrl = "@piezoRoutes.Jobs.deleteJob(currentJob.get.getKey.getGroup(), currentJob.get.getKey.getName())";
                 var deleteRequest = new XMLHttpRequest();
                 deleteRequest.onreadystatechange = function() {
@@ -44,12 +74,38 @@ request: play.api.mvc.Request[AnyContent]
                         if (deleteRequest.status === 200) {
                             window.location.assign("@piezoRoutes.Jobs.getIndex()");
                         } else {
-                            $('#deleteError').show();
+                            deleteError.show();
+                            setTimeout(function() {
+                                deleteError.fadeOut(1000);
+                            }, 5000);
                         }
                     }
                 };
                 deleteRequest.open("DELETE", jobUrl, true);
                 deleteRequest.send(null);
+            }
+
+            function runJob() {
+                runConfirm.hide();
+                var jobUrl = "@piezoRoutes.Triggers.triggerJob(currentJob.get.getKey.getGroup(), currentJob.get.getKey.getName())";
+                var runRequest = new XMLHttpRequest();
+                runRequest.onreadystatechange = function() {
+                    if (runRequest.readyState === 4) {
+                        if (runRequest.status === 200) {
+                            runSuccess.show();
+                            setTimeout(function() {
+                                runSuccess.fadeOut(1000);
+                            }, 5000);
+                        } else {
+                            runError.show();
+                            setTimeout(function() {
+                                runError.fadeOut(1000);
+                            }, 5000);
+                        }
+                    }
+                };
+                runRequest.open("POST", jobUrl, true);
+                runRequest.send(null);
             }
         </script>
         <div class="clearfix"></div>
