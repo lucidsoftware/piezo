@@ -14,7 +14,23 @@
 
             return i;
         }, 0);
-    }
+    };
+
+    var fixDataMapIndexes = function() {
+        $('[id*=job-data-map]').each(function(i, element){
+            if (i % 2 === 0) {
+                var itemNumber = i / 2;
+                element.id = 'job-data-map_' + itemNumber + '_key';
+                element.name = 'job-data-map[' + itemNumber + '].key';
+            }
+
+            if (i % 2 !== 0) {
+                var itemNumber = (i - 1) / 2;
+                element.id = 'job-data-map_' + itemNumber + '_value';
+                element.name = 'job-data-map[' + itemNumber + '].value';
+            }
+        })
+    };
 
     $('.job-data-map').on('click', '.job-data-delete a', function () {
         $(this).parent().next().next().remove();
@@ -40,17 +56,6 @@
     });
 
     $('form').submit(function () {
-        $('.job-data-map .form-group').each(function () {
-            var keyInput = $(this).find('input');
-            if (keyInput.attr('name').match(/.*key$/)) {
-                var valueInput = $(this).next().find('input');
-
-                if (keyInput.val() === '' && valueInput.val() === '') {
-                    $(this).next().remove();
-                    $(this).remove();
-                    renumberDataMap();
-                }
-            }
-        });
+        fixDataMapIndexes();
     });
 })();
