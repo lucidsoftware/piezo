@@ -1,21 +1,4 @@
 (function () {
-    var renumberDataMap = function() {
-        Array.prototype.reduce.call($('.job-data-map .form-group'), function (i, next) {
-            var label = $(next).children('label');
-            label.attr('for', label.attr('for').replace(/_\d+__/, '_' + i + '__'));
-
-            var input = $(next).find('input');
-            input.attr('id', input.attr('id').replace(/_\d+__/, '_' + i + '__'));
-            input.attr('name', input.attr('name').replace(/\[\d+\]/, '[' + i + ']'));
-
-            if (input.attr('id').match(/job-data-map_\d+__value/)) {
-                return i + 1;
-            }
-
-            return i;
-        }, 0);
-    };
-
     var fixDataMapIndexes = function() {
         $('[id*=job-data-map]').each(function(i, element){
             if (i % 2 === 0) {
@@ -37,7 +20,7 @@
         $(this).parent().next().remove();
         $(this).parent().remove();
 
-        renumberDataMap();
+        fixDataMapIndexes();
     });
 
     $('.job-data-add').click(function () {
@@ -52,7 +35,7 @@
         $(this).before(key);
         $(this).before(value);
 
-        renumberDataMap();
+        fixDataMapIndexes();
     });
 
     $('form').submit(function () {
