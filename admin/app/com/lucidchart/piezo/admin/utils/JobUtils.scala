@@ -4,7 +4,7 @@ import org.quartz.JobDetail
 
 object JobUtils {
 
-  def cleanup(job: JobDetail):JobDetail = {
+  def cleanup(job: JobDetail): JobDetail = {
     if (job.getJobDataMap.containsKey("")) {
       job.getJobDataMap.remove("")
     }
