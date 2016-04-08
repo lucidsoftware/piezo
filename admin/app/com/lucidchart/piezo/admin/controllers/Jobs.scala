@@ -1,5 +1,6 @@
 package com.lucidchart.piezo.admin.controllers
 
+import com.lucidchart.piezo.admin.utils.JobUtils
 import play.api._
 import play.api.mvc._
 import com.lucidchart.piezo.{JobHistoryModel, WorkerSchedulerFactory}
@@ -118,7 +119,8 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory) extends Controller {
       formWithErrors =>
         BadRequest(html.editJob(getJobsByGroup(), formWithErrors, submitNewMessage, formNewAction, false)),
       value => {
-        scheduler.addJob(value, true)
+        val jobDetail = JobUtils.cleanup(value)
+        scheduler.addJob(jobDetail, true)
         Redirect(routes.Jobs.getJob(value.getKey.getGroup(), value.getKey.getName()))
           .flashing("message" -> "Successfully edited job.", "class" -> "")
       }
@@ -130,7 +132,8 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory) extends Controller {
       formWithErrors =>
         BadRequest(com.lucidchart.piezo.admin.views.html.editJob(getJobsByGroup(), formWithErrors, submitNewMessage, formNewAction, false)),
       value => {
-        scheduler.addJob(value, false)
+        val jobDetail = JobUtils.cleanup(value)
+        scheduler.addJob(jobDetail, false)
         Redirect(routes.Jobs.getJob(value.getKey.getGroup(), value.getKey.getName()))
           .flashing("message" -> "Successfully added job.", "class" -> "")
       }
