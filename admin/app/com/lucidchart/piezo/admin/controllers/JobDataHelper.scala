@@ -17,10 +17,13 @@ trait JobDataHelper {
 
   private def jobDataToMap(jobData: JobDataMap) = {
     jobData.getKeys.foldLeft(List[DataMap]())((sofar, key) => {
-      sofar :+ DataMap(key, jobData.getString(key))
+      sofar :+ DataMap(key, jobData.get(key).toString)
     })
   }
 
-  implicit def jobDataMap = optional(list(mapping("key" -> text, "value" -> text)(DataMap.apply)(DataMap.unapply)).transform(mapToJobData, jobDataToMap))
+  implicit def jobDataMap = {
+    optional(list(mapping("key" -> text, "value" -> text)(DataMap.apply)(DataMap.unapply))
+      .transform(mapToJobData, jobDataToMap))
+  }
 
 }
