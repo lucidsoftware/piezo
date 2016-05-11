@@ -35,7 +35,12 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory) extends Controller {
   }
 
   def getIndex = Action { implicit request =>
-    Ok(com.lucidchart.piezo.admin.views.html.jobs(getJobsByGroup(), None, scheduler.getMetaData)(request))
+    val allJobs: List[JobKey] = getJobsByGroup().foldLeft(List[JobKey]())({(finalList, jobsForGroup) =>
+      finalList ::: jobsForGroup._2})
+    val jobHistories = allJobs.flatMap({ job =>
+      jobHistoryModel.getJob(job.getName, job.getGroup).headOption
+    })
+    Ok(com.lucidchart.piezo.admin.views.html.jobs(getJobsByGroup(), None, Some(jobHistories), scheduler.getMetaData)(request))
   }
 
   def getJob(group: String, name: String) = Action { implicit request =>

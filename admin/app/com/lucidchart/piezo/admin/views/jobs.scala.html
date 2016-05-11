@@ -1,6 +1,7 @@
 @(
 jobsByGroup: scala.collection.mutable.Buffer[(String, scala.collection.immutable.List[org.quartz.JobKey])],
 currentJob: Option[org.quartz.JobDetail],
+jobsHistory: Option[List[com.lucidchart.piezo.JobRecord]],
 schedulerMetadata: org.quartz.SchedulerMetaData,
 errorMessage: Option[String] = None
 )(
@@ -25,4 +26,35 @@ request: play.api.mvc.Request[AnyContent]
     </tr>
     </tbody>
 </table>
+
+
+    @if(jobsHistory.isDefined) {
+    <h4>Job History</h4>
+    <table class="table table-bordered table-striped table-hover table-condensed">
+        <thead>
+        <tr>
+            <th>Job Group</th>
+            <th>Job Name</th>
+            <th>Trigger Group</th>
+            <th>Trigger Name</th>
+            <th>Success</th>
+            <th>Start</th>
+            <th>Finish</th>
+        </tr>
+        </thead>
+        <tbody>
+        @jobsHistory.get.map { record =>
+        <tr>
+            <td>@record.group</td>
+            <td>@record.name</td>
+            <td>@record.trigger_group</td>
+            <td>@record.trigger_name</td>
+            <td>@record.success</td>
+            <td>@record.start</td>
+            <td>@record.finish</td>
+        </tr>
+        }
+        </tbody>
+    </table>
+    }
 }
