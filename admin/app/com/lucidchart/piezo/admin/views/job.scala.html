@@ -185,8 +185,8 @@ request: play.api.mvc.Request[AnyContent]
             <table class="table table-bordered table-striped table-hover table-condensed">
                 <thead>
                 <tr>
-                    <th>Trigger Name</th>
                     <th>Trigger Group</th>
+                    <th>Trigger Name</th>
                     <th>Success</th>
                     <th>Start</th>
                     <th>Finish</th>
@@ -195,8 +195,8 @@ request: play.api.mvc.Request[AnyContent]
                 <tbody>
                 @jobHistory.get.map { record =>
                 <tr>
-                    <td>@record.trigger_name</td>
                     <td>@record.trigger_group</td>
+                    <td>@record.trigger_name</td>
                     <td>@record.success</td>
                     <td>@record.start</td>
                     <td>@record.finish</td>

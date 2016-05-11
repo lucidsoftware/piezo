@@ -83,4 +83,32 @@ class JobHistoryModel(props: Properties) {
       connection.close()
     }
   }
+
+  def getJobs(): List[JobRecord] = {
+    val connection = connectionProvider.getConnection
+
+    try {
+      val prepared = connection.prepareStatement("""SELECT * FROM job_history ORDER BY start DESC LIMIT 100""")
+      val rs = prepared.executeQuery()
+
+      var result = List[JobRecord]()
+      while(rs.next()) {
+        result :+= new JobRecord(
+          rs.getString("job_name"),
+          rs.getString("job_group"),
+          rs.getString("trigger_name"),
+          rs.getString("trigger_group"),
+          rs.getInt("success"),
+          rs.getTimestamp("start"),
+          rs.getTimestamp("finish")
+        )
+      }
+      result
+    } catch {
+      case e: Exception => logger.error("error in retrieving jobs", e)
+        List()
+    } finally {
+      connection.close()
+    }
+  }
 }
