@@ -27,8 +27,8 @@ request: play.api.mvc.Request[AnyContent]
       <div class="form-group">
           <div class="col-sm-2">
               <select class="form-control col-sm-2" onchange="window.location = this.options[this.selectedIndex].value;">
-                  <option value="@piezoRoutes.Triggers.getNewTriggerForm("cron")" @if(triggerForm.data.get("triggerType")==Some("cron")) {selected} else {}>Cron</option>
-                  <option value="@piezoRoutes.Triggers.getNewTriggerForm("simple")" @if(triggerForm.data.get("triggerType")==Some("simple")) {selected} else {}>Simple</option>
+                  <option value="@piezoRoutes.Triggers.getNewTriggerForm("cron")?@request.rawQueryString" @if(triggerForm.data.get("triggerType")==Some("cron")) {selected} else {}>Cron</option>
+                  <option value="@piezoRoutes.Triggers.getNewTriggerForm("simple")?@request.rawQueryString" @if(triggerForm.data.get("triggerType")==Some("simple")) {selected} else {}>Simple</option>
               </select>
           </div>
           <div class="col-sm-2">

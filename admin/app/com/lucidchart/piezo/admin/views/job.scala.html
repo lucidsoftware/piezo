@@ -162,7 +162,8 @@ request: play.api.mvc.Request[AnyContent]
 
         <hr />
 
-        <h4>Triggers</h4>
+        <h4 class="inline-header">Triggers</h4>
+        <a class="piezo-button" href="@{piezoRoutes.Triggers.getNewTriggerForm("cron")}?jobGroup=@currentJob.get.getKey.getGroup()&jobName=@currentJob.get.getKey.getName()" data-toggle="tooltip" title="Add trigger for this job"><span class="glyphicon glyphicon-plus"></span></a>
         <table class="table table-bordered table-striped table-condensed">
           <thead>
             <tr>
