@@ -29,7 +29,7 @@ class TriggersService extends Specification {
          schedulerFactory.initialize(properties)
 
          val triggersController = new Triggers(schedulerFactory)
-         val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/jobs/missinggroup/missingname")
+         val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/triggers/missinggroup/missingname")
          val missingTrigger: Future[Result] = triggersController.getTrigger("missinggroup", "missingname")(request)
 
          status(missingTrigger) must equalTo(NOT_FOUND)
@@ -49,7 +49,7 @@ class TriggersService extends Specification {
 
        running(FakeApplication()) {
          val triggersController = new Triggers(schedulerFactory)
-         val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/jobs/" + jobGroup + "/" + jobName)
+         val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/triggers/" + jobGroup + "/" + jobName)
          val validTrigger: Future[Result] = triggersController.getTrigger(triggerGroup, triggerName)(request)
 
          status(validTrigger) must equalTo(OK)

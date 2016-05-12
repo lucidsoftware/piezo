@@ -98,10 +98,10 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
   val submitEditMessage = "Save"
   def formEditAction(group: String, name: String): Call = routes.Triggers.putTrigger(group, name)
 
-  def getNewTriggerForm(triggerType: String = "cron") = Action { implicit request =>
+  def getNewTriggerForm(triggerType: String = "cron", jobGroup: String = "", jobName: String = "") = Action { implicit request =>
     val dummyTrigger = triggerType match {
-      case "cron" => new DummyCronTrigger()
-      case "simple" => new DummySimpleTrigger()
+      case "cron" => new DummyCronTrigger(jobGroup, jobName)
+      case "simple" => new DummySimpleTrigger(jobGroup, jobName)
     }
     val newTriggerForm = triggerFormHelper.buildTriggerForm().fill(dummyTrigger)
     Ok(com.lucidchart.piezo.admin.views.html.editTrigger(getTriggersByGroup(), newTriggerForm, submitNewMessage, formNewAction, false)(request))
@@ -178,9 +178,12 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
     override def getDescription() = ""
   }
 
-  private class DummyCronTrigger extends CronTriggerImpl with DummyTrigger {
+  private class DummyCronTrigger(jobGroup: String, jobName: String) extends CronTriggerImpl with DummyTrigger {
     override def getCronExpression() = "7 7 7 * * ?"
+    override def getJobKey() = { new JobKey(jobName, jobGroup)}
   }
 
-  private class DummySimpleTrigger extends SimpleTriggerImpl with DummyTrigger {}
+  private class DummySimpleTrigger(jobGroup: String, jobName: String) extends SimpleTriggerImpl with DummyTrigger {
+    override def getJobKey() = { new JobKey(jobName, jobGroup)}
+  }
 }
