@@ -65,6 +65,7 @@ class JobsService extends Specification {
          status(validJob) must equalTo(OK)
          contentType(validJob) must beSome.which(_ == "text/html")
          contentAsString(validJob) must contain (classOf[HeartBeat].getName())
+         contentAsString(validJob) must contain (s"triggers/new/cron?jobGroup=$jobGroup&jobName=$jobName")
        }
      }
    }

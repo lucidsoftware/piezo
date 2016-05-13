@@ -109,3 +109,7 @@ a.piezo-button:hover, a.piezo-button:focus {
 .submit-btn {
     margin-top: 10px;
 }
+
+.inline-header {
+    display: inline-block;
+}
