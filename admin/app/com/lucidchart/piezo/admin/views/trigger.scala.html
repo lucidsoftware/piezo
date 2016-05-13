@@ -2,6 +2,7 @@
 triggersByGroup: scala.collection.mutable.Buffer[(String, scala.collection.immutable.List[org.quartz.TriggerKey])],
 currentTrigger: Option[org.quartz.Trigger],
 triggerHistory: Option[List[com.lucidchart.piezo.TriggerRecord]],
+triggerState: org.quartz.Trigger.TriggerState = org.quartz.Trigger.TriggerState.NONE,
 errorMessage: Option[String] = None
 )(
 implicit
@@ -34,9 +35,14 @@ request: play.api.mvc.Request[AnyContent]
             <button type="button" class="btn btn-danger" onclick="deleteTrigger()">Delete</button>
             <button type="button" class="btn btn-default" onclick="$('#deleteConfirm').hide()">Cancel</button>
         </div>
+        <div id="clearErrorState" class="alert alert-warning fade in">
+            <h4>Trigger is in an error state. Clear after resolving the issue.</h4>
+            <button type="button" class="btn btn-danger" onclick="clearTrigger()">Clear State</button>
+        </div>
         <script>
             $('#deleteError').hide();
             $('#deleteConfirm').hide();
+            $('#clearErrorState').hide();
             function deleteTrigger() {
                 var triggerUrl = "@piezoRoutes.Triggers.deleteTrigger(currentTrigger.get.getKey.getGroup(), currentTrigger.get.getKey.getName())";
                 var deleteRequest = new XMLHttpRequest();
@@ -51,6 +57,24 @@ request: play.api.mvc.Request[AnyContent]
                 };
                 deleteRequest.open("DELETE", triggerUrl, true);
                 deleteRequest.send(null);
+            }
+            function clearTrigger() {
+                var triggerUrl = "@piezoRoutes.Triggers.deleteTrigger(currentTrigger.get.getKey.getGroup(), currentTrigger.get.getKey.getName())";
+                var deleteRequest = new XMLHttpRequest();
+                deleteRequest.onreadystatechange = function() {
+                    if (deleteRequest.readyState === 4) {
+                        if (deleteRequest.status === 200) {
+                            window.location.assign("@piezoRoutes.Triggers.getIndex()");
+                        } else {
+                            $('#deleteError').show();
+                        }
+                    }
+                };
+                deleteRequest.open("DELETE", triggerUrl, true);
+                deleteRequest.send(null);
+            }
+            if (@{triggerState == org.quartz.Trigger.TriggerState.ERROR}) {
+                $('#clearErrorState').show();
             }
         </script>
         <table class="table table-condensed table-bordered table-striped table-hover">
@@ -113,6 +137,10 @@ request: play.api.mvc.Request[AnyContent]
                 <td>
                     @if(currentTrigger.get.getDescription() != null) {@currentTrigger.get.getDescription()} else {}
                 </td>
+            </tr>
+            <tr>
+                <td class="text-right small">State:</td>
+                <td class="small">@triggerState</td>
             </tr>
             <tr>
                 <td class="text-right small">End time:</td>

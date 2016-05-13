@@ -1,5 +1,6 @@
 package com.lucidchart.piezo.admin.controllers
 
+import org.quartz.Trigger.TriggerState
 import play.api._
 import play.api.mvc._
 import com.lucidchart.piezo.{TriggerHistoryModel, WorkerSchedulerFactory}
@@ -46,10 +47,11 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
     val triggerExists = scheduler.checkExists(triggerKey)
     if (!triggerExists) {
       val errorMsg = Some("Trigger " + group + " " + name + " not found")
-      NotFound(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, None, errorMsg)(request))
+      NotFound(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, None, errorMessage=errorMsg)(request))
     } else {
       try {
         val triggerDetail: Option[Trigger] = Some(scheduler.getTrigger(triggerKey))
+        val triggerState: TriggerState = scheduler.getTriggerState(triggerKey)
 
         val history = {
           try {
@@ -62,12 +64,12 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
           }
         }
 
-        Ok(com.lucidchart.piezo.admin.views.html.trigger(getTriggersByGroup(), triggerDetail, history)(request))
+        Ok(com.lucidchart.piezo.admin.views.html.trigger(getTriggersByGroup(), triggerDetail, history, triggerState)(request))
       } catch {
         case e: Exception => {
           val errorMsg = "Exception caught getting trigger " + group + " " + name + ". -- " + e.getLocalizedMessage()
           logger.error(errorMsg, e)
-          InternalServerError(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, None, Some(errorMsg))(request))
+          InternalServerError(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, None, errorMessage=Some(errorMsg))(request))
         }
       }
     }
@@ -78,7 +80,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
     val triggerExists = scheduler.checkExists(triggerKey)
     if (!triggerExists) {
       val errorMsg = Some("Trigger " + group + " " + name + " not found")
-      NotFound(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, None, errorMsg)(request))
+      NotFound(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, None, errorMessage=errorMsg)(request))
     } else {
       try {
         scheduler.unscheduleJob(triggerKey)
@@ -87,7 +89,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
         case e: Exception => {
           val errorMsg = "Exception caught deleting trigger " + group + " " + name + ". -- " + e.getLocalizedMessage()
           logger.error(errorMsg, e)
-          InternalServerError(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, None, Some(errorMsg))(request))
+          InternalServerError(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, None, errorMessage=Some(errorMsg))(request))
         }
       }
     }
@@ -112,7 +114,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
     val triggerExists = scheduler.checkExists(triggerKey)
     if (!triggerExists) {
       val errorMsg = Some("Trigger " + group + " " + name + " not found")
-      NotFound(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, None, errorMsg)(request))
+      NotFound(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, None, errorMessage=errorMsg)(request))
     } else {
       val triggerDetail: Trigger = scheduler.getTrigger(triggerKey)
       val editTriggerForm = triggerFormHelper.buildTriggerForm().fill(triggerDetail)

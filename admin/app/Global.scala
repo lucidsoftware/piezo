@@ -11,6 +11,13 @@ object Global extends WithFilters(RequestStatCollector)
 {
   val logger = Logger("com.lucidchart.piezo.Global")
 
+  override def onStart(app: Application) {
+    super.onStart(app)
+    val quartzPropertiesKey = "org.quartz.properties"
+    val quartzPropertiesValue = System.getProperty(quartzPropertiesKey)
+    logger.debug(s"$quartzPropertiesKey=$quartzPropertiesValue")
+  }
+
   override def onHandlerNotFound(request: RequestHeader): Future[Result] = {
     logger.error("Request handler not found for URL: " + request.uri)
     Future.successful(NotFound(com.lucidchart.piezo.admin.views.html.errors.notfound(None)(request)))

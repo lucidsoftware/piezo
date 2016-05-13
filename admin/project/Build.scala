@@ -15,16 +15,23 @@ object ApplicationBuild extends Build {
     "com.lucidchart" %% "piezo-worker" % "1.12"
   )
 
-  val main = Project(appName, file(".")).enablePlugins(play.PlayScala).settings(
-    retrieveManaged := true,
-    version := appVersion,
-    libraryDependencies ++= appDependencies,
-    scalaVersion := "2.11.7",
-    resolvers ++= List(
-      Resolver.file("local ivy repository", file(System.getenv("HOME") + "/.ivy2/local/"))(Resolver.ivyStylePatterns),
-      "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
-      "Staging Sonatype repository" at "https://oss.sonatype.org/content/groups/staging/"
+  val main = Project(appName, file("."))
+    .enablePlugins(play.PlayScala)
+    .settings(
+      retrieveManaged := true,
+      version := appVersion,
+      libraryDependencies ++= appDependencies,
+      javaOptions ++= Seq(
+        s"-Dorg.quartz.properties=${baseDirectory.value / "conf/quartz.properties"}",
+        s"-Dpidfile.path=/tmp/pid",
+        s"-Dnetworkaddress.cache.ttl=10",
+        s"-Dnetworkaddress.cache.negative.ttl=10"
+      ),
+      scalaVersion := "2.11.7",
+      resolvers ++= List(
+        Resolver.file("local ivy repository", file(System.getenv("HOME") + "/.ivy2/local/"))(Resolver.ivyStylePatterns),
+        "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
+        "Staging Sonatype repository" at "https://oss.sonatype.org/content/groups/staging/"
+      )
     )
-  )
-
 }

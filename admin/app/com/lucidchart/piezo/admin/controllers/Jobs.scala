@@ -115,7 +115,7 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory) extends Controller {
       Ok(com.lucidchart.piezo.admin.views.html.editJob(getJobsByGroup(), editJobForm, submitEditMessage, formEditAction(group, name), true)(request))
     } else {
       val errorMsg = Some("Job %s %s not found".format(group, name))
-      NotFound(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, None, errorMsg)(request))
+      NotFound(com.lucidchart.piezo.admin.views.html.job(mutable.Buffer(), None, None, None, errorMsg)(request))
     }
   }
 
