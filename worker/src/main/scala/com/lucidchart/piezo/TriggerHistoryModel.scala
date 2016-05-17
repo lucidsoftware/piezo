@@ -1,9 +1,10 @@
 package com.lucidchart.piezo
 
-import org.quartz.Trigger
+import org.quartz.{JobKey, Trigger}
 import java.sql.Timestamp
+
 import org.slf4j.LoggerFactory
-import java.util.{Properties, Date}
+import java.util.{Date, Properties}
 
 case class TriggerRecord(
   name:String,
@@ -76,6 +77,27 @@ class TriggerHistoryModel(props: Properties) {
     } catch {
       case e: Exception => logger.error("error in retrieving triggers", e)
       List()
+    } finally {
+      connection.close()
+    }
+  }
+
+  def getTriggeredJobs(): List[JobKey] = {
+    val connection = connectionProvider.getConnection
+
+    try {
+      val prepared = connection.prepareStatement("""
+        SELECT DISTINCT JOB_NAME, JOB_GROUP FROM QRTZ_TRIGGERS
+      """.stripMargin)
+
+      val rs = prepared.executeQuery()
+
+      var result = List[JobKey]()
+      while(rs.next()) {
+        result :+= new JobKey(rs.getString("job_name"), rs.getString("job_group"))
+      }
+
+      result
     } finally {
       connection.close()
     }

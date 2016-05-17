@@ -3,7 +3,7 @@ package com.lucidchart.piezo.admin.controllers
 import com.lucidchart.piezo.admin.utils.JobUtils
 import play.api._
 import play.api.mvc._
-import com.lucidchart.piezo.{JobHistoryModel, WorkerSchedulerFactory}
+import com.lucidchart.piezo.{JobHistoryModel, TriggerHistoryModel, WorkerSchedulerFactory}
 import org.quartz.impl.matchers.GroupMatcher
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -22,6 +22,7 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory) extends Controller {
   val scheduler = logExceptions(schedulerFactory.getScheduler())
   val properties = schedulerFactory.props
   val jobHistoryModel = logExceptions(new JobHistoryModel(properties))
+  val triggerHistoryModel = logExceptions(new TriggerHistoryModel(properties))
   val jobFormHelper = new JobFormHelper()
 
   def getJobsByGroup(): mutable.Buffer[(String, List[JobKey])] = {
@@ -39,8 +40,10 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory) extends Controller {
       finalList ::: jobsForGroup._2})
     val jobHistories = allJobs.flatMap({ job =>
       jobHistoryModel.getJob(job.getName, job.getGroup).headOption
-    })
-    Ok(com.lucidchart.piezo.admin.views.html.jobs(getJobsByGroup(), None, Some(jobHistories), scheduler.getMetaData)(request))
+    }).sortWith(_.start after _.start)
+    val triggeredJobs: List[JobKey] = triggerHistoryModel.getTriggeredJobs
+    val untriggeredJobs: List[JobKey] = allJobs.filterNot(x => triggeredJobs.contains(x))
+    Ok(com.lucidchart.piezo.admin.views.html.jobs(getJobsByGroup(), None, Some(jobHistories), untriggeredJobs, scheduler.getMetaData)(request))
   }
 
   def getJob(group: String, name: String) = Action { implicit request =>
