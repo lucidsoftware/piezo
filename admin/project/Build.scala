@@ -11,8 +11,8 @@ object ApplicationBuild extends Build {
   val appDependencies = Seq(
     jdbc,
     anorm,
-    "org.quartz-scheduler" % "quartz" % "2.1.7",
-    "com.lucidchart" %% "piezo-worker" % "1.12"
+    "org.quartz-scheduler.internal" % "quartz-core" % "2.2.4-SNAPSHOT",
+    "com.lucidchart" %% "piezo-worker" % "1.13-SNAPSHOT"
   )
 
   val main = Project(appName, file("."))
@@ -30,6 +30,7 @@ object ApplicationBuild extends Build {
       scalaVersion := "2.11.7",
       resolvers ++= List(
         Resolver.file("local ivy repository", file(System.getenv("HOME") + "/.ivy2/local/"))(Resolver.ivyStylePatterns),
+        Resolver.mavenLocal,
         "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
         "Staging Sonatype repository" at "https://oss.sonatype.org/content/groups/staging/"
       )

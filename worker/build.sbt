@@ -2,7 +2,7 @@ name := "piezo-worker"
 
 organization := "com.lucidchart"
 
-version := "1.12"
+version := "1.13-SNAPSHOT"
 
 scalaVersion := "2.11.7"
 
@@ -19,7 +19,7 @@ mainClass := Some("com.lucidchart.piezo.Worker")
 libraryDependencies ++= Seq(
 	"ch.qos.logback" % "logback-classic" % "1.0.7",
   "net.databinder" %% "dispatch-http" % "0.8.10",
-	"org.quartz-scheduler" % "quartz" % "2.1.7",
+	"org.quartz-scheduler.internal" % "quartz-core" % "2.2.4-SNAPSHOT",
   "org.specs2" %% "specs2" % "2.3.13" % Test,
 	"mysql" % "mysql-connector-java" % "5.1.25",
 	"javax.transaction" % "jta" % "1.1",
@@ -29,6 +29,7 @@ libraryDependencies ++= Seq(
 )
 
 resolvers ++= List(
+  Resolver.mavenLocal,
 	DefaultMavenRepository,
 	"Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/",
 	"Staging Sonatype repository" at "https://oss.sonatype.org/content/groups/staging/"

@@ -146,6 +146,28 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
     )
   }
 
+  def patchTrigger(group: String, name: String) = Action { implicit request =>
+    val triggerKey = new TriggerKey(name, group)
+    val triggerExists = scheduler.checkExists(triggerKey)
+    if (!triggerExists) {
+      val errorMsg = Some("Trigger " + group + " " + name + " not found")
+      NotFound(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, None, errorMessage = errorMsg)(request))
+    } else {
+      request.body.asJson.map { json =>
+        (json \ "state").asOpt[String].map { state =>
+          // clear state
+          scheduler.resetTriggerState(triggerKey)
+          //scheduler.resumeTrigger(triggerKey)
+          Ok("Trigger state cleared")
+        }.getOrElse {
+          BadRequest("Missing parameter [state]")
+        }
+      }.getOrElse {
+        BadRequest("Expecting Json data")
+      }
+    }
+  }
+
   def triggerGroupTypeAhead(sofar: String) = Action { implicit request =>
     val groups = scheduler.getTriggerGroupNames().asScala.toList
 
