@@ -36,12 +36,13 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory) extends Controller {
   }
 
   def getIndex = Action { implicit request =>
-    val allJobs: List[JobKey] = getJobsByGroup().foldLeft(List[JobKey]())({(finalList, jobsForGroup) =>
-      finalList ::: jobsForGroup._2})
+    val allJobs: List[JobKey] = getJobsByGroup().flatMap(_._2).toList
     val jobHistories = allJobs.flatMap({ job =>
       jobHistoryModel.getJob(job.getName, job.getGroup).headOption
     }).sortWith(_.start after _.start)
-    val triggeredJobs: List[JobKey] = triggerHistoryModel.getTriggeredJobs
+    val triggeredJobs: List[JobKey] = TriggerHelper.getTriggersByGroup(scheduler).flatMap { case (group, triggerKeys) =>
+      triggerKeys.map(triggerKey => scheduler.getTrigger(triggerKey).getJobKey)
+    }.toList
     val untriggeredJobs: List[JobKey] = allJobs.filterNot(x => triggeredJobs.contains(x))
     Ok(com.lucidchart.piezo.admin.views.html.jobs(getJobsByGroup(), None, Some(jobHistories), untriggeredJobs, scheduler.getMetaData)(request))
   }
