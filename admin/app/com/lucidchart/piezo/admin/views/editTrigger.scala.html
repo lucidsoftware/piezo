@@ -21,7 +21,12 @@ request: play.api.mvc.Request[AnyContent]
   @if(!errorMessage.isEmpty) {
     <h3 class="text-danger">@errorMessage.get</h3>
   }
-  <h3>New Trigger</h3>
+
+  @if(existing) {
+    <h3>Edit Trigger</h3>
+  } else {
+    <h3>New Trigger</h3>
+  }
 
   <div class="form-horizontal">
       <div class="form-group">

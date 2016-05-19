@@ -20,7 +20,12 @@ request: play.api.mvc.Request[AnyContent]
   @if(!errorMessage.isEmpty) {
     <h3 class="text-danger">@errorMessage.get</h3>
   }
-  <h3>New Job</h3>
+
+  @if(existing) {
+    <h3>Edit Job</h3>
+  } else {
+    <h3>New Job</h3>
+  }
 
   <h4 class="text-danger">@jobForm.errors.filter(_.key == "").map(_.message).mkString(", ")</h4>
   <form role="form" action="@formAction" method="POST">

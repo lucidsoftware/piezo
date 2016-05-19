@@ -25,6 +25,9 @@ request: play.api.mvc.Request[AnyContent]
         <a id="deleteTrigger" class="piezo-button pull-right" data-toggle="tooltip" title="Delete trigger" onclick="$('#deleteConfirm').show()">
             <span class="glyphicon glyphicon-remove"></span>
         </a>
+        <a class="piezo-button pull-right" data-toggle="tooltip" title="Duplicate trigger" href="@piezoRoutes.Triggers.getDuplicateTrigger(currentTrigger.get.getKey.getGroup(), currentTrigger.get.getKey.getName())">
+            <span class="glyphicon glyphicon-plus-sign"></span>
+        </a>
         <div class="clearfix"></div>
         <div id="deleteError" class="alert alert-danger">
             <p>Failed to delete trigger.</p>
@@ -98,8 +101,8 @@ request: play.api.mvc.Request[AnyContent]
                         <td>@s.getRepeatCount()</td>
                     </tr>
                     <tr>
-                        <td class="text-right">Repeat interval:</td>
-                        <td>@s.getRepeatInterval()</td>
+                        <td class="text-right">Repeat interval (seconds):</td>
+                        <td>@{s.getRepeatInterval() / 1000}</td>
                     </tr>
                     <tr>
                         <td class="text-right">Times triggered:</td>

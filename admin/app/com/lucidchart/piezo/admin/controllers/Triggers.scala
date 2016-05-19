@@ -12,6 +12,7 @@ import play.api.data.Forms._
 import play.api.data.validation.Constraints._
 import java.util.{TimeZone, Date}
 import org.quartz.impl.triggers.{SimpleTriggerImpl, CronTriggerImpl}
+import org.quartz.ObjectAlreadyExistsException
 import play.api.data.format.Formatter
 import java.text.ParseException
 import play.api.data.validation.{Valid, ValidationError, Invalid, Constraint}
@@ -120,6 +121,19 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
     }
   }
 
+  def getDuplicateTrigger(group: String, name: String) = Action { implicit request =>
+    val triggerKey = new TriggerKey(name, group)
+    val triggerExists = scheduler.checkExists(triggerKey)
+    if (!triggerExists) {
+      val errorMsg = Some("Trigger " + group + " " + name + " not found")
+      NotFound(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, None, errorMsg)(request))
+    } else {
+      val triggerDetail: Trigger = scheduler.getTrigger(triggerKey)
+      val duplicateTriggerForm = triggerFormHelper.buildTriggerForm().fill(triggerDetail)
+      Ok(com.lucidchart.piezo.admin.views.html.editTrigger(getTriggersByGroup(), duplicateTriggerForm, submitNewMessage, formNewAction, false)(request))
+    }
+  }
+
   def putTrigger(group: String, name: String) = Action { implicit request =>
     triggerFormHelper.buildTriggerForm.bindFromRequest.fold(
       formWithErrors =>
@@ -137,9 +151,15 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
       formWithErrors =>
         BadRequest(com.lucidchart.piezo.admin.views.html.editTrigger(getTriggersByGroup(), formWithErrors, submitNewMessage, formNewAction, false)),
       value => {
-        scheduler.scheduleJob(value)
-        Redirect(routes.Triggers.getTrigger(value.getKey.getGroup(), value.getKey.getName()))
-          .flashing("message" -> "Successfully added trigger.", "class" -> "")
+        try {
+          scheduler.scheduleJob(value)
+          Redirect(routes.Triggers.getTrigger(value.getKey.getGroup(), value.getKey.getName()))
+            .flashing("message" -> "Successfully added trigger.", "class" -> "")
+        } catch {
+          case alreadyExists: ObjectAlreadyExistsException =>
+            val form = triggerFormHelper.buildTriggerForm.fill(value)
+            Ok(com.lucidchart.piezo.admin.views.html.editTrigger(getTriggersByGroup(), form, submitNewMessage, formNewAction, false, errorMessage = Some("Please provide unique group-name pair"))(request))
+        }
       }
     )
   }

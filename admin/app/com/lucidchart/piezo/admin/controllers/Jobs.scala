@@ -119,6 +119,19 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory) extends Controller {
     }
   }
 
+  def getDuplicateJob(group: String, name: String) = Action { implicit request =>
+    val jobKey = new JobKey(name, group)
+
+    if (scheduler.checkExists(jobKey)) {
+      val jobDetail = scheduler.getJobDetail(jobKey)
+      val duplicateJobForm = jobFormHelper.buildJobForm().fill(jobDetail)
+      Ok(com.lucidchart.piezo.admin.views.html.editJob(getJobsByGroup(), duplicateJobForm, submitNewMessage, formNewAction, false)(request))
+    } else {
+      val errorMsg = Some("Job %s %s not found".format(group, name))
+      NotFound(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, None, errorMsg)(request))
+    }
+  }
+
   def putJob(group: String, name: String) = Action { implicit request =>
     jobFormHelper.buildJobForm.bindFromRequest.fold(
       formWithErrors =>
@@ -137,10 +150,22 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory) extends Controller {
       formWithErrors =>
         BadRequest(com.lucidchart.piezo.admin.views.html.editJob(getJobsByGroup(), formWithErrors, submitNewMessage, formNewAction, false)),
       value => {
-        val jobDetail = JobUtils.cleanup(value)
-        scheduler.addJob(jobDetail, false)
-        Redirect(routes.Jobs.getJob(value.getKey.getGroup(), value.getKey.getName()))
-          .flashing("message" -> "Successfully added job.", "class" -> "")
+        try {
+          val jobDetail = JobUtils.cleanup(value)
+          scheduler.addJob(jobDetail, false)
+          Redirect(routes.Jobs.getJob(value.getKey.getGroup(), value.getKey.getName()))
+            .flashing("message" -> "Successfully added job.", "class" -> "")
+        } catch {
+          case alreadyExists: ObjectAlreadyExistsException =>
+            val form = jobFormHelper.buildJobForm.fill(value)
+            Ok(com.lucidchart.piezo.admin.views.html.editJob(getJobsByGroup(),
+              form,
+              submitNewMessage,
+              formNewAction,
+              false,
+              errorMessage = Some("Please provide unique group-name pair")
+            )(request))
+        }
       }
     )
   }
