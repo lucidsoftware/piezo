@@ -81,26 +81,5 @@ class TriggerHistoryModel(props: Properties) {
       connection.close()
     }
   }
-
-  def getTriggeredJobs(): List[JobKey] = {
-    val connection = connectionProvider.getConnection
-
-    try {
-      val prepared = connection.prepareStatement("""
-        SELECT DISTINCT JOB_NAME, JOB_GROUP FROM QRTZ_TRIGGERS
-      """.stripMargin)
-
-      val rs = prepared.executeQuery()
-
-      var result = List[JobKey]()
-      while(rs.next()) {
-        result :+= new JobKey(rs.getString("job_name"), rs.getString("job_group"))
-      }
-
-      result
-    } finally {
-      connection.close()
-    }
-  }
 }
 
