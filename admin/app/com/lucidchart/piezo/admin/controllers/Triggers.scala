@@ -27,18 +27,8 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
   val triggerHistoryModel = logExceptions(new TriggerHistoryModel(properties))
   val triggerFormHelper = new TriggerFormHelper(scheduler)
 
-  def getTriggersByGroup(): mutable.Buffer[(String, List[TriggerKey])] = {
-    val triggersByGroup =
-      for (groupName <- scheduler.getTriggerGroupNames().asScala) yield {
-        val triggers: List[TriggerKey] = scheduler.getTriggerKeys(GroupMatcher.triggerGroupEquals(groupName)).asScala.toList
-        val sortedTriggers: List[TriggerKey] = triggers.sortBy(triggerKey => triggerKey.getName())
-        (groupName, sortedTriggers)
-      }
-    triggersByGroup.sortBy(groupList => groupList._1)
-  }
-
    def getIndex = Action { implicit request =>
-     Ok(com.lucidchart.piezo.admin.views.html.triggers(getTriggersByGroup(), None, scheduler.getMetaData)(request))
+     Ok(com.lucidchart.piezo.admin.views.html.triggers(TriggerHelper.getTriggersByGroup(scheduler), None, scheduler.getMetaData)(request))
    }
 
   def getTrigger(group: String, name: String) = Action { implicit request =>
@@ -62,7 +52,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
           }
         }
 
-        Ok(com.lucidchart.piezo.admin.views.html.trigger(getTriggersByGroup(), triggerDetail, history)(request))
+        Ok(com.lucidchart.piezo.admin.views.html.trigger(TriggerHelper.getTriggersByGroup(scheduler), triggerDetail, history)(request))
       } catch {
         case e: Exception => {
           val errorMsg = "Exception caught getting trigger " + group + " " + name + ". -- " + e.getLocalizedMessage()
@@ -82,7 +72,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
     } else {
       try {
         scheduler.unscheduleJob(triggerKey)
-        Ok(com.lucidchart.piezo.admin.views.html.trigger(getTriggersByGroup(), None, None)(request))
+        Ok(com.lucidchart.piezo.admin.views.html.trigger(TriggerHelper.getTriggersByGroup(scheduler), None, None)(request))
       } catch {
         case e: Exception => {
           val errorMsg = "Exception caught deleting trigger " + group + " " + name + ". -- " + e.getLocalizedMessage()
@@ -104,7 +94,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
       case "simple" => new DummySimpleTrigger(jobGroup, jobName)
     }
     val newTriggerForm = triggerFormHelper.buildTriggerForm().fill(dummyTrigger)
-    Ok(com.lucidchart.piezo.admin.views.html.editTrigger(getTriggersByGroup(), newTriggerForm, submitNewMessage, formNewAction, false)(request))
+    Ok(com.lucidchart.piezo.admin.views.html.editTrigger(TriggerHelper.getTriggersByGroup(scheduler), newTriggerForm, submitNewMessage, formNewAction, false)(request))
   }
 
   def getEditTrigger(group: String, name: String) = Action { implicit request =>
@@ -116,14 +106,14 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
     } else {
       val triggerDetail: Trigger = scheduler.getTrigger(triggerKey)
       val editTriggerForm = triggerFormHelper.buildTriggerForm().fill(triggerDetail)
-      Ok(com.lucidchart.piezo.admin.views.html.editTrigger(getTriggersByGroup(), editTriggerForm, submitEditMessage, formEditAction(group, name), true)(request))
+      Ok(com.lucidchart.piezo.admin.views.html.editTrigger(TriggerHelper.getTriggersByGroup(scheduler), editTriggerForm, submitEditMessage, formEditAction(group, name), true)(request))
     }
   }
 
   def putTrigger(group: String, name: String) = Action { implicit request =>
     triggerFormHelper.buildTriggerForm.bindFromRequest.fold(
       formWithErrors =>
-        BadRequest(com.lucidchart.piezo.admin.views.html.editTrigger(getTriggersByGroup(), formWithErrors, submitEditMessage, formEditAction(group, name), true)),
+        BadRequest(com.lucidchart.piezo.admin.views.html.editTrigger(TriggerHelper.getTriggersByGroup(scheduler), formWithErrors, submitEditMessage, formEditAction(group, name), true)),
       value => {
         scheduler.rescheduleJob(value.getKey(), value)
         Redirect(routes.Triggers.getTrigger(value.getKey.getGroup(), value.getKey.getName()))
@@ -135,7 +125,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
   def postTrigger() = Action { implicit request =>
     triggerFormHelper.buildTriggerForm.bindFromRequest.fold(
       formWithErrors =>
-        BadRequest(com.lucidchart.piezo.admin.views.html.editTrigger(getTriggersByGroup(), formWithErrors, submitNewMessage, formNewAction, false)),
+        BadRequest(com.lucidchart.piezo.admin.views.html.editTrigger(TriggerHelper.getTriggersByGroup(scheduler), formWithErrors, submitNewMessage, formNewAction, false)),
       value => {
         scheduler.scheduleJob(value)
         Redirect(routes.Triggers.getTrigger(value.getKey.getGroup(), value.getKey.getName()))

@@ -113,3 +113,23 @@ a.piezo-button:hover, a.piezo-button:focus {
 .inline-header {
     display: inline-block;
 }
+
+th, td {
+    word-wrap: break-word;
+}
+
+.column-long-content {
+    width: 17%;
+}
+
+.column-success {
+    width: 70px;
+}
+
+.table-fixed-layout {
+    table-layout: fixed;
+}
+
+.column-time {
+    min-width: 85px;
+}
