@@ -5,16 +5,20 @@ import play.api.mvc._
 import com.lucidchart.piezo.{TriggerHistoryModel, WorkerSchedulerFactory}
 import org.quartz._
 import impl.matchers.GroupMatcher
+
 import scala.collection.JavaConverters._
 import scala.collection.mutable
-import play.api.data.{FormError, Form}
+import play.api.data.{Form, FormError}
 import play.api.data.Forms._
 import play.api.data.validation.Constraints._
-import java.util.{TimeZone, Date}
-import org.quartz.impl.triggers.{SimpleTriggerImpl, CronTriggerImpl}
+import java.util.{Calendar, Date, TimeZone}
+
+import org.quartz.impl.triggers.{CronTriggerImpl, SimpleTriggerImpl}
 import play.api.data.format.Formatter
 import java.text.ParseException
-import play.api.data.validation.{Valid, ValidationError, Invalid, Constraint}
+
+import org.quartz.Trigger.TriggerTimeComparator
+import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
 import play.api.libs.json._
 
 object Triggers extends Triggers(new WorkerSchedulerFactory())
@@ -27,8 +31,21 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
   val triggerHistoryModel = logExceptions(new TriggerHistoryModel(properties))
   val triggerFormHelper = new TriggerFormHelper(scheduler)
 
+  def firesFirst(time: Date)(trigger1: Trigger, trigger2: Trigger): Boolean = {
+    val time1 = trigger1.getFireTimeAfter(time)
+    val time2 = trigger2.getFireTimeAfter(time)
+    if (time2 == null) true
+    else if (time1 == null) false
+    else if (time1 != time2) time1 before time2
+    else trigger1.getPriority > trigger2.getPriority
+  }
+
    def getIndex = Action { implicit request =>
-     Ok(com.lucidchart.piezo.admin.views.html.triggers(TriggerHelper.getTriggersByGroup(scheduler), None, scheduler.getMetaData)(request))
+     val now = new Date()
+     val allTriggers: List[Trigger] = TriggerHelper.getTriggersByGroup(scheduler).flatMap { case (group, triggerKeys) =>
+       triggerKeys.map(triggerKey => scheduler.getTrigger(triggerKey))
+     }.toList.sortWith(firesFirst(now))
+     Ok(com.lucidchart.piezo.admin.views.html.triggers(TriggerHelper.getTriggersByGroup(scheduler), None, allTriggers, scheduler.getMetaData)(request))
    }
 
   def getTrigger(group: String, name: String) = Action { implicit request =>
