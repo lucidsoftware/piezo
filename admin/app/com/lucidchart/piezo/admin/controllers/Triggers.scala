@@ -115,6 +115,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
         val newTriggerForm = triggerFormHelper.buildTriggerForm().fill(dummyTrigger)
         Ok(com.lucidchart.piezo.admin.views.html.editTrigger(TriggerHelper.getTriggersByGroup(scheduler), newTriggerForm, formNewAction, false, false)(request))
     }
+  }
 
   def getEditTrigger(group: String, name: String, isTemplate: Boolean)(implicit request: Request[AnyContent]) = {
     val triggerKey = new TriggerKey(name, group)
