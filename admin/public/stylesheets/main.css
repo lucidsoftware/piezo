@@ -36,11 +36,13 @@ div.jobs-list .panel-body {
 
 div.jobs-list .list-group-item {
     border-style: none;
+    overflow: hidden;
 }
 
 div.jobs-list h5.title {
     margin-top: 0px;
     margin-bottom: 0px;
+    overflow: hidden;
 }
 
 div.jobs-list a[data-toggle="collapse"] {
