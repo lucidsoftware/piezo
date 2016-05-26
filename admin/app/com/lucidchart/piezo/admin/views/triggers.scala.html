@@ -11,6 +11,9 @@ request: play.api.mvc.Request[AnyContent]
 @import com.lucidchart.piezo.admin.controllers.{routes=>piezoRoutes}
 @import com.lucidchart.piezo.admin.views
 @import java.net.URLEncoder
+@import java.util.Date
+@import org.joda.time.format.DateTimeFormat
+@import org.joda.time.DateTime
 
 @com.lucidchart.piezo.admin.views.html.triggersLayout(triggersByGroup, currentTrigger) {
     <h3>Select a trigger</h3>
@@ -28,29 +31,33 @@ request: play.api.mvc.Request[AnyContent]
     </table>
 
     <h4>Upcoming Triggers</h4>
-    <table class="table table-bordered table-striped table-hover table-condensed">
+    <table class="table table-bordered table-striped table-hover table-condensed table-fixed-layout">
         <thead>
         <tr>
-            <th>Next Fire Time</th>
-            <th>Following Fire Time</th>
-            <th>Trigger Group</th>
-            <th>Trigger Name</th>
-            <th>Job Group</th>
-            <th>Job Name</th>
+            <th class="column-time">Next Fire Time</th>
+            <th class="column-time">Following Fire Time</th>
+            <th class="column-long-content">Trigger Group</th>
+            <th class="column-long-content">Trigger Name</th>
+            <th class="column-long-content">Job Group</th>
+            <th class="column-long-content">Job Name</th>
 
         </tr>
         </thead>
         <tbody>
+        @defining(DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss")) { dtf =>
+        @defining(new Date()) { now =>
         @upcomingTriggers.map { trigger =>
         <tr>
-            <td>@trigger.getFireTimeAfter(java.util.Calendar.getInstance.getTime)</td>
-            <td>@trigger.getFireTimeAfter(trigger.getFireTimeAfter(java.util.Calendar.getInstance.getTime))</td>
+            <td>@dtf.print(new DateTime(trigger.getFireTimeAfter(now)))</td>
+            <td>@dtf.print(new DateTime(trigger.getFireTimeAfter(trigger.getFireTimeAfter(now))))</td>
             <td>@trigger.getKey.getGroup</td>
             <td>@trigger.getKey.getName</td>
             <td>@trigger.getJobKey.getGroup</td>
             <td>@trigger.getJobKey.getName</td>
 
         </tr>
+        }
+        }
         }
         </tbody>
     </table>
