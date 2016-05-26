@@ -1,16 +1,17 @@
+@import com.lucidchart.piezo.admin.controllers.{routes=>piezoRoutes}
+@import com.lucidchart.piezo.admin.views
+@import java.net.URLEncoder
+@import org.quartz.{JobKey, SchedulerMetaData}
 @(
 jobsByGroup: scala.collection.mutable.Buffer[(String, scala.collection.immutable.List[org.quartz.JobKey])],
 currentJob: Option[org.quartz.JobDetail],
 jobsHistory: Option[List[com.lucidchart.piezo.JobRecord]],
-schedulerMetadata: org.quartz.SchedulerMetaData,
+untriggeredJobs: List[JobKey],
+schedulerMetadata: SchedulerMetaData,
 errorMessage: Option[String] = None
 )(
-implicit
-request: play.api.mvc.Request[AnyContent]
+implicit request: play.api.mvc.Request[AnyContent]
 )
-@import com.lucidchart.piezo.admin.controllers.{routes=>piezoRoutes}
-@import com.lucidchart.piezo.admin.views
-@import java.net.URLEncoder
 
 @com.lucidchart.piezo.admin.views.html.jobsLayout(jobsByGroup, currentJob) {
 <h3>Select a job</h3>
@@ -29,29 +30,50 @@ request: play.api.mvc.Request[AnyContent]
 
 
     @if(jobsHistory.isDefined) {
-    <h4>Job History</h4>
-    <table class="table table-bordered table-striped table-hover table-condensed">
+    <h4>Jobs History</h4>
+    <table class="table table-bordered table-striped table-hover table-condensed table-fixed-layout">
         <thead>
         <tr>
-            <th>Job Group</th>
-            <th>Job Name</th>
-            <th>Trigger Group</th>
-            <th>Trigger Name</th>
-            <th>Success</th>
-            <th>Start</th>
-            <th>Finish</th>
+            <th class="column-time">Most Recent Start</th>
+            <th class="column-time">Finish</th>
+            <th class="column-long-content">Job Group</th>
+            <th class="column-long-content">Job Name</th>
+            <th class="column-long-content">Trigger Group</th>
+            <th class="column-long-content">Trigger Name</th>
+            <th class="column-success">Success</th>
+
         </tr>
         </thead>
         <tbody>
         @jobsHistory.get.map { record =>
         <tr>
+            <td>@record.start</td>
+            <td>@record.finish</td>
             <td>@record.group</td>
-            <td>@record.name</td>
+            <td><a href="@piezoRoutes.Jobs.getJob(record.group, record.name)">@record.name</a></td>
             <td>@record.trigger_group</td>
             <td>@record.trigger_name</td>
             <td>@record.success</td>
-            <td>@record.start</td>
-            <td>@record.finish</td>
+
+        </tr>
+        }
+        </tbody>
+    </table>
+    }
+    @if(!untriggeredJobs.isEmpty) {
+    <h4>Untriggered Jobs</h4>
+    <table class="table table-bordered table-striped table-hover table-condensed">
+        <thead>
+        <tr>
+            <th>Job Group</th>
+            <th>Job Name</th>
+        </tr>
+        </thead>
+        <tbody>
+        @untriggeredJobs.map { job =>
+        <tr>
+            <td>@job.getGroup</td>
+            <td><a href="@piezoRoutes.Jobs.getJob(job.getGroup, job.getName)">@job.getName</a></td>
         </tr>
         }
         </tbody>
