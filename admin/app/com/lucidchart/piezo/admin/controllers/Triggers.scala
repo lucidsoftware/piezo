@@ -11,9 +11,10 @@ import scala.collection.mutable
 import play.api.data.{Form, FormError}
 import play.api.data.Forms._
 import play.api.data.validation.Constraints._
-import java.util.{Calendar, Date, TimeZone}
 
+import java.util.{Date, TimeZone}
 import org.quartz.impl.triggers.{CronTriggerImpl, SimpleTriggerImpl}
+
 import play.api.data.format.Formatter
 import java.text.ParseException
 
@@ -100,21 +101,23 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
     }
   }
 
-  val submitNewMessage = "Create"
   val formNewAction = routes.Triggers.postTrigger()
-  val submitEditMessage = "Save"
   def formEditAction(group: String, name: String): Call = routes.Triggers.putTrigger(group, name)
 
-  def getNewTriggerForm(triggerType: String = "cron", jobGroup: String = "", jobName: String = "") = Action { implicit request =>
-    val dummyTrigger = triggerType match {
-      case "cron" => new DummyCronTrigger(jobGroup, jobName)
-      case "simple" => new DummySimpleTrigger(jobGroup, jobName)
+  def getNewTriggerForm(triggerType: String = "cron", jobGroup: String = "", jobName: String = "", templateGroup: Option[String] = None, templateName: Option[String] = None) = Action { implicit request =>
+    templateGroup match {
+      case Some(group) => getEditTrigger(group, templateName.get, true)
+      case None =>
+        val dummyTrigger = triggerType match {
+          case "cron" => new DummyCronTrigger(jobGroup, jobName)
+          case "simple" => new DummySimpleTrigger(jobGroup, jobName)
+        }
+        val newTriggerForm = triggerFormHelper.buildTriggerForm().fill(dummyTrigger)
+        Ok(com.lucidchart.piezo.admin.views.html.editTrigger(TriggerHelper.getTriggersByGroup(scheduler), newTriggerForm, formNewAction, false, false)(request))
     }
-    val newTriggerForm = triggerFormHelper.buildTriggerForm().fill(dummyTrigger)
-    Ok(com.lucidchart.piezo.admin.views.html.editTrigger(TriggerHelper.getTriggersByGroup(scheduler), newTriggerForm, submitNewMessage, formNewAction, false)(request))
   }
 
-  def getEditTrigger(group: String, name: String) = Action { implicit request =>
+  def getEditTrigger(group: String, name: String, isTemplate: Boolean)(implicit request: Request[AnyContent]) = {
     val triggerKey = new TriggerKey(name, group)
     val triggerExists = scheduler.checkExists(triggerKey)
     if (!triggerExists) {
@@ -123,14 +126,17 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
     } else {
       val triggerDetail: Trigger = scheduler.getTrigger(triggerKey)
       val editTriggerForm = triggerFormHelper.buildTriggerForm().fill(triggerDetail)
-      Ok(com.lucidchart.piezo.admin.views.html.editTrigger(TriggerHelper.getTriggersByGroup(scheduler), editTriggerForm, submitEditMessage, formEditAction(group, name), true)(request))
+      if (isTemplate) Ok(com.lucidchart.piezo.admin.views.html.editTrigger(TriggerHelper.getTriggersByGroup(scheduler), editTriggerForm, formNewAction, false, isTemplate)(request))
+      else Ok(com.lucidchart.piezo.admin.views.html.editTrigger(TriggerHelper.getTriggersByGroup(scheduler), editTriggerForm, formEditAction(group, name), true, isTemplate)(request))
     }
   }
+
+  def getEditTriggerAction(group: String, name: String) = Action { implicit request => getEditTrigger(group, name, false) }
 
   def putTrigger(group: String, name: String) = Action { implicit request =>
     triggerFormHelper.buildTriggerForm.bindFromRequest.fold(
       formWithErrors =>
-        BadRequest(com.lucidchart.piezo.admin.views.html.editTrigger(TriggerHelper.getTriggersByGroup(scheduler), formWithErrors, submitEditMessage, formEditAction(group, name), true)),
+        BadRequest(com.lucidchart.piezo.admin.views.html.editTrigger(TriggerHelper.getTriggersByGroup(scheduler), formWithErrors, formEditAction(group, name), true, false)),
       value => {
         scheduler.rescheduleJob(value.getKey(), value)
         Redirect(routes.Triggers.getTrigger(value.getKey.getGroup(), value.getKey.getName()))
@@ -142,11 +148,17 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
   def postTrigger() = Action { implicit request =>
     triggerFormHelper.buildTriggerForm.bindFromRequest.fold(
       formWithErrors =>
-        BadRequest(com.lucidchart.piezo.admin.views.html.editTrigger(TriggerHelper.getTriggersByGroup(scheduler), formWithErrors, submitNewMessage, formNewAction, false)),
+        BadRequest(com.lucidchart.piezo.admin.views.html.editTrigger(TriggerHelper.getTriggersByGroup(scheduler), formWithErrors, formNewAction, false, false)),
       value => {
-        scheduler.scheduleJob(value)
-        Redirect(routes.Triggers.getTrigger(value.getKey.getGroup(), value.getKey.getName()))
-          .flashing("message" -> "Successfully added trigger.", "class" -> "")
+        try {
+          scheduler.scheduleJob(value)
+          Redirect(routes.Triggers.getTrigger(value.getKey.getGroup(), value.getKey.getName()))
+            .flashing("message" -> "Successfully added trigger.", "class" -> "")
+        } catch {
+          case alreadyExists: ObjectAlreadyExistsException =>
+            val form = triggerFormHelper.buildTriggerForm.fill(value)
+            Ok(com.lucidchart.piezo.admin.views.html.editTrigger(TriggerHelper.getTriggersByGroup(scheduler), form, formNewAction, false, false, errorMessage = Some("Please provide unique group-name pair"))(request))
+        }
       }
     )
   }
