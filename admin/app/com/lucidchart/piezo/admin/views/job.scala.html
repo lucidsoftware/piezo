@@ -18,7 +18,10 @@ request: play.api.mvc.Request[AnyContent]
     }
     @if(!currentJob.isEmpty) {
       <h3 class="pull-left job-name">@currentJob.get.getKey.getGroup() &raquo; <span class="text-info">@currentJob.get.getKey.getName()</span></h3>
-      <a class="piezo-button pull-right" href="@piezoRoutes.Jobs.getEditJob(currentJob.get.getKey.getGroup(), currentJob.get.getKey.getName())" data-toggle="tooltip" title="Edit job">
+      <a class="piezo-button pull-right" data-toggle="tooltip" title="Duplicate job" href="@{piezoRoutes.Jobs.getNewJobForm()}?templateGroup=@currentJob.get.getKey.getGroup()&templateName=@currentJob.get.getKey.getName()">
+        <span class="glyphicon glyphicon-plus-sign"></span>
+      </a>
+      <a class="piezo-button pull-right" href="@piezoRoutes.Jobs.getEditJobAction(currentJob.get.getKey.getGroup(), currentJob.get.getKey.getName())" data-toggle="tooltip" title="Edit job">
         <span class="glyphicon glyphicon-pencil"></span>
       </a>
       <a id="deleteJob" class="piezo-button pull-right" data-toggle="tooltip" title="Delete job" onclick="$('#deleteConfirm').show()">
@@ -27,9 +30,7 @@ request: play.api.mvc.Request[AnyContent]
       <a id="runJob" class="piezo-button pull-right" data-toggle="tooltip" title="Run job" onclick="$('#runConfirm').show()">
         <span class="glyphicon glyphicon-play"></span>
       </a>
-      <a class="piezo-button pull-right" data-toggle="tooltip" title="Duplicate job" href="@piezoRoutes.Jobs.getDuplicateJob(currentJob.get.getKey.getGroup(), currentJob.get.getKey.getName())">
-        <span class="glyphicon glyphicon-plus-sign"></span>
-      </a>
+
       <div class="clearfix"></div>
 
         <!-- Run Job Alerts -->

@@ -101,36 +101,32 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory) extends Controller {
   val submitEditMessage = "Save"
   def formEditAction(group: String, name: String): Call = routes.Jobs.putJob(group, name)
 
-  def getNewJobForm() = Action { implicit request =>
-    val newJobForm = jobFormHelper.buildJobForm
-    Ok(com.lucidchart.piezo.admin.views.html.editJob(getJobsByGroup(), newJobForm, submitNewMessage, formNewAction, false)(request))
+  def getNewJobForm(templateGroup: Option[String] = None, templateName: Option[String] = None) = Action { implicit request =>
+    //if (request.queryString.contains())
+    templateGroup match {
+      case Some(group) => getEditJob(group, templateName.get, true)
+      case None =>
+        val newJobForm = jobFormHelper.buildJobForm
+        Ok(com.lucidchart.piezo.admin.views.html.editJob(getJobsByGroup(), newJobForm, submitNewMessage, formNewAction, false)(request))
+    }
+
   }
 
-  def getEditJob(group: String, name: String) = Action { implicit request =>
+  def getEditJob(group: String, name: String, isTemplate: Boolean)(implicit request: Request[AnyContent]) = {
     val jobKey = new JobKey(name, group)
 
     if (scheduler.checkExists(jobKey)) {
       val jobDetail = scheduler.getJobDetail(jobKey)
       val editJobForm = jobFormHelper.buildJobForm().fill(jobDetail)
-      Ok(com.lucidchart.piezo.admin.views.html.editJob(getJobsByGroup(), editJobForm, submitEditMessage, formEditAction(group, name), true)(request))
+      if (isTemplate) Ok(com.lucidchart.piezo.admin.views.html.editJob(getJobsByGroup(), editJobForm, submitNewMessage, formNewAction, false)(request))
+      else Ok(com.lucidchart.piezo.admin.views.html.editJob(getJobsByGroup(), editJobForm, submitEditMessage, formEditAction(group, name), true)(request))
     } else {
       val errorMsg = Some("Job %s %s not found".format(group, name))
       NotFound(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, None, errorMsg)(request))
     }
   }
 
-  def getDuplicateJob(group: String, name: String) = Action { implicit request =>
-    val jobKey = new JobKey(name, group)
-
-    if (scheduler.checkExists(jobKey)) {
-      val jobDetail = scheduler.getJobDetail(jobKey)
-      val duplicateJobForm = jobFormHelper.buildJobForm().fill(jobDetail)
-      Ok(com.lucidchart.piezo.admin.views.html.editJob(getJobsByGroup(), duplicateJobForm, submitNewMessage, formNewAction, false)(request))
-    } else {
-      val errorMsg = Some("Job %s %s not found".format(group, name))
-      NotFound(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, None, errorMsg)(request))
-    }
-  }
+  def getEditJobAction(group: String, name: String) = Action { implicit request => getEditJob(group, name, false) }
 
   def putJob(group: String, name: String) = Action { implicit request =>
     jobFormHelper.buildJobForm.bindFromRequest.fold(

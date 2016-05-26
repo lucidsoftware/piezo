@@ -19,15 +19,21 @@ request: play.api.mvc.Request[AnyContent]
     }
     @if(!currentTrigger.isEmpty) {
         <h3 class="pull-left">@currentTrigger.get.getKey.getGroup() &raquo; <span class="text-info">@currentTrigger.get.getKey.getName()</span></h3>
-        <a class="piezo-button pull-right" href="@piezoRoutes.Triggers.getEditTrigger(currentTrigger.get.getKey.getGroup(), currentTrigger.get.getKey.getName())" data-toggle="tooltip" title="Edit trigger">
+        <a class="piezo-button pull-right" data-toggle="tooltip" title="Duplicate trigger" href="@{piezoRoutes.Triggers.getNewTriggerForm(
+                        currentTrigger.get match {
+                          case c: CronTrigger => "cron"
+        case s: SimpleTrigger => "simple"
+        }
+        )}?templateGroup=@currentTrigger.get.getKey.getGroup()&templateName=@currentTrigger.get.getKey.getName()">
+        <span class="glyphicon glyphicon-plus-sign"></span>
+        </a>
+        <a class="piezo-button pull-right" href="@piezoRoutes.Triggers.getEditTriggerAction(currentTrigger.get.getKey.getGroup(), currentTrigger.get.getKey.getName())" data-toggle="tooltip" title="Edit trigger">
             <span class="glyphicon glyphicon-pencil"></span>
         </a>
         <a id="deleteTrigger" class="piezo-button pull-right" data-toggle="tooltip" title="Delete trigger" onclick="$('#deleteConfirm').show()">
             <span class="glyphicon glyphicon-remove"></span>
         </a>
-        <a class="piezo-button pull-right" data-toggle="tooltip" title="Duplicate trigger" href="@piezoRoutes.Triggers.getDuplicateTrigger(currentTrigger.get.getKey.getGroup(), currentTrigger.get.getKey.getName())">
-            <span class="glyphicon glyphicon-plus-sign"></span>
-        </a>
+
         <div class="clearfix"></div>
         <div id="deleteError" class="alert alert-danger">
             <p>Failed to delete trigger.</p>
