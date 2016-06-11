@@ -11,7 +11,8 @@ object ApplicationBuild extends Build {
   val appDependencies = Seq(
     jdbc,
     anorm,
-    "org.quartz-scheduler.internal" % "quartz-core" % "2.2.4-SNAPSHOT",
+    "org.quartz-scheduler" % "quartz" % "2.2.4-SNAPSHOT",
+    "org.quartz-scheduler" % "quartz-jobs" % "2.2.3", // remove when this is fixed https://jira.terracotta.org/jira/browse/QTZ-404
     "com.lucidchart" %% "piezo-worker" % "1.13-SNAPSHOT"
   )
 
