@@ -2,7 +2,7 @@ name := "piezo-worker"
 
 organization := "com.lucidchart"
 
-version := "1.13-SNAPSHOT"
+version := "1.14-SNAPSHOT"
 
 scalaVersion := "2.11.7"
 
@@ -19,7 +19,8 @@ mainClass := Some("com.lucidchart.piezo.Worker")
 libraryDependencies ++= Seq(
 	"ch.qos.logback" % "logback-classic" % "1.0.7",
   "net.databinder" %% "dispatch-http" % "0.8.10",
-	"org.quartz-scheduler" % "quartz" % "2.1.7",
+	"org.quartz-scheduler" % "quartz" % "2.2.4-SNAPSHOT",
+	"org.quartz-scheduler" % "quartz-jobs" % "2.2.3", // remove when this is fixed https://jira.terracotta.org/jira/browse/QTZ-404
   "org.specs2" %% "specs2" % "2.3.13" % Test,
 	"mysql" % "mysql-connector-java" % "5.1.25",
 	"javax.transaction" % "jta" % "1.1",
@@ -31,7 +32,8 @@ libraryDependencies ++= Seq(
 resolvers ++= List(
 	DefaultMavenRepository,
 	"Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/",
-	"Staging Sonatype repository" at "https://oss.sonatype.org/content/groups/staging/"
+	"Staging Sonatype repository" at "https://oss.sonatype.org/content/groups/staging/",
+  "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository"
 )
 
 TaskKey[Set[File]]("stage") <<= (fullClasspath in Runtime, target) map { (cp, out) =>

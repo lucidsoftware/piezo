@@ -11,8 +11,9 @@ object ApplicationBuild extends Build {
   val appDependencies = Seq(
     jdbc,
     anorm,
-    "org.quartz-scheduler" % "quartz" % "2.1.7",
-    "com.lucidchart" %% "piezo-worker" % "1.13-SNAPSHOT"
+    "org.quartz-scheduler" % "quartz" % "2.2.4-SNAPSHOT",
+    "org.quartz-scheduler" % "quartz-jobs" % "2.2.3", // remove when this is fixed https://jira.terracotta.org/jira/browse/QTZ-404
+    "com.lucidchart" %% "piezo-worker" % "1.14-SNAPSHOT"
   )
 
   val main = Project(appName, file(".")).enablePlugins(play.PlayScala).settings(
@@ -23,7 +24,8 @@ object ApplicationBuild extends Build {
     resolvers ++= List(
       Resolver.file("local ivy repository", file(System.getenv("HOME") + "/.ivy2/local/"))(Resolver.ivyStylePatterns),
       "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
-      "Staging Sonatype repository" at "https://oss.sonatype.org/content/groups/staging/"
+      "Staging Sonatype repository" at "https://oss.sonatype.org/content/groups/staging/",
+      "Local Maven Repository" at "file://"+Path.userHome.absolutePath+"/.m2/repository"
     )
   )
 
