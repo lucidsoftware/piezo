@@ -1,6 +1,7 @@
 @(
 triggersByGroup: scala.collection.mutable.Buffer[(String, scala.collection.immutable.List[org.quartz.TriggerKey])],
 currentTrigger: Option[org.quartz.Trigger],
+upcomingTriggers: List[org.quartz.Trigger],
 schedulerMetadata: org.quartz.SchedulerMetaData,
 errorMessage: Option[String] = None
 )(
@@ -10,19 +11,54 @@ request: play.api.mvc.Request[AnyContent]
 @import com.lucidchart.piezo.admin.controllers.{routes=>piezoRoutes}
 @import com.lucidchart.piezo.admin.views
 @import java.net.URLEncoder
+@import java.util.Date
+@import org.joda.time.format.DateTimeFormat
+@import org.joda.time.DateTime
 
 @com.lucidchart.piezo.admin.views.html.triggersLayout(triggersByGroup, currentTrigger) {
-<h3>Select a trigger</h3>
-<table class="table table-condensed table-fixed-first-col table-bordered table-striped table-hover">
-    <tbody>
-    <tr>
-        <td class="text-right">Scheduler name</td>
-        <td>@schedulerMetadata.getSchedulerName()</td>
-    </tr>
-    <tr>
-        <td class="text-right">Total triggers</td>
-        <td>@{triggersByGroup.foldLeft(0)((a, b) => a + b._2.length)}</td>
-    </tr>
-    </tbody>
-</table>
+    <h3>Select a trigger</h3>
+    <table class="table table-condensed table-fixed-first-col table-bordered table-striped table-hover">
+        <tbody>
+        <tr>
+            <td class="text-right">Scheduler name</td>
+            <td>@schedulerMetadata.getSchedulerName()</td>
+        </tr>
+        <tr>
+            <td class="text-right">Total triggers</td>
+            <td>@{triggersByGroup.foldLeft(0)((a, b) => a + b._2.length)}</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h4>Upcoming Triggers</h4>
+    <table class="table table-bordered table-striped table-hover table-condensed table-fixed-layout">
+        <thead>
+        <tr>
+            <th class="column-time">Next Fire Time</th>
+            <th class="column-time">Following Fire Time</th>
+            <th class="column-long-content">Trigger Group</th>
+            <th class="column-long-content">Trigger Name</th>
+            <th class="column-long-content">Job Group</th>
+            <th class="column-long-content">Job Name</th>
+
+        </tr>
+        </thead>
+        <tbody>
+        @defining(DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss")) { dtf =>
+        @defining(new Date()) { now =>
+        @upcomingTriggers.map { trigger =>
+        <tr>
+            <td>@dtf.print(new DateTime(trigger.getFireTimeAfter(now)))</td>
+            <td>@dtf.print(new DateTime(trigger.getFireTimeAfter(trigger.getFireTimeAfter(now))))</td>
+            <td>@trigger.getKey.getGroup</td>
+            <td>@trigger.getKey.getName</td>
+            <td>@trigger.getJobKey.getGroup</td>
+            <td>@trigger.getJobKey.getName</td>
+
+        </tr>
+        }
+        }
+        }
+        </tbody>
+    </table>
 }

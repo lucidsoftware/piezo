@@ -1,9 +1,9 @@
 @(
 triggersByGroup: scala.collection.mutable.Buffer[(String, scala.collection.immutable.List[org.quartz.TriggerKey])],
 triggerForm: Form[org.quartz.Trigger],
-submitValue: String,
 formAction: play.api.mvc.Call,
 existing: Boolean,
+isTemplate: Boolean,
 errorMessage: Option[String] = None,
 scripts: List[String] = List[String]("js/jobData.js", "js/typeAhead.js")
 )(
@@ -21,12 +21,17 @@ request: play.api.mvc.Request[AnyContent]
   @if(!errorMessage.isEmpty) {
     <h3 class="text-danger">@errorMessage.get</h3>
   }
-  <h3>New Trigger</h3>
+
+  @if(existing) {
+    <h3>Edit Trigger</h3>
+  } else {
+    <h3>New Trigger</h3>
+  }
 
   <div class="form-horizontal">
       <div class="form-group">
           <div class="col-sm-2">
-              <select class="form-control col-sm-2" onchange="window.location = this.options[this.selectedIndex].value;">
+              <select class="form-control col-sm-2" onchange="window.location = this.options[this.selectedIndex].value;" @if(isTemplate){disabled} >
                   <option value="@piezoRoutes.Triggers.getNewTriggerForm("cron")?@request.rawQueryString" @if(triggerForm.data.get("triggerType")==Some("cron")) {selected} else {}>Cron</option>
                   <option value="@piezoRoutes.Triggers.getNewTriggerForm("simple")?@request.rawQueryString" @if(triggerForm.data.get("triggerType")==Some("simple")) {selected} else {}>Simple</option>
               </select>
@@ -100,7 +105,7 @@ request: play.api.mvc.Request[AnyContent]
 
     </div>
     <div class="clearfix"></div>
-    <button type="submit" class="btn btn-default submit-btn">@submitValue</button>
+    <button type="submit" class="btn btn-default submit-btn">@if(existing) {Save} else {Create}</button>
     <button type="button" class="btn btn-default submit-btn" onclick="history.back();" value="Cancel">Cancel</button>
   </form>
 }

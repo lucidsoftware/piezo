@@ -22,7 +22,7 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
 
   private def simpleScheduleFormUnapply(simple: SimpleScheduleBuilder) = {
     val simpleTrigger = simple.build().asInstanceOf[SimpleTrigger]
-    Some((simpleTrigger.getRepeatCount, simpleTrigger.getRepeatInterval.toInt))
+    Some((simpleTrigger.getRepeatCount, simpleTrigger.getRepeatInterval.toInt / 1000))
   }
 
   private def cronScheduleFormApply(cronExpression: String): CronScheduleBuilder = {

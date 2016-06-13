@@ -1,9 +1,10 @@
 package com.lucidchart.piezo
 
-import org.quartz.Trigger
+import org.quartz.{JobKey, Trigger}
 import java.sql.Timestamp
+
 import org.slf4j.LoggerFactory
-import java.util.{Properties, Date}
+import java.util.{Date, Properties}
 
 case class TriggerRecord(
   name:String,
@@ -28,7 +29,7 @@ class TriggerHistoryModel(props: Properties) {
       prepared.setTimestamp(4, actualStart.map(date => new Timestamp(date.getTime)).getOrElse(null))
       prepared.setTimestamp(5, new Timestamp(System.currentTimeMillis))
       prepared.setBoolean(6, misfire)
-      prepared.setString(7, fireInstanceId.getOrElse(null))
+      prepared.setString(7, fireInstanceId.getOrElse(""))
       prepared.executeUpdate()
     } catch {
       case e:Exception => logger.error("error in recording end of trigger",e)

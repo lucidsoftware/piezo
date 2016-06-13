@@ -20,7 +20,12 @@ request: play.api.mvc.Request[AnyContent]
   @if(!errorMessage.isEmpty) {
     <h3 class="text-danger">@errorMessage.get</h3>
   }
-  <h3>New Job</h3>
+
+  @if(existing) {
+    <h3>Edit Job</h3>
+  } else {
+    <h3>New Job</h3>
+  }
 
   <h4 class="text-danger">@jobForm.errors.filter(_.key == "").map(_.message).mkString(", ")</h4>
   <form role="form" action="@formAction" method="POST">
@@ -31,11 +36,11 @@ request: play.api.mvc.Request[AnyContent]
         @helper.inputText(jobForm("name"), '_label -> "Name", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Name", newEditOnly -> None, 'class -> "form-control form-inline-control")
         @helper.inputText(jobForm("class"), '_label -> "Class", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Name", 'class -> "form-control form-inline-control")
         @helper.inputText(jobForm("description"), '_label -> "Description", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Description", 'class -> "form-control form-inline-control")
-        @helper.checkbox(jobForm("durable"), '_label -> "Durable", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'readonly -> None, 'class -> "form-control form-inline-control", 'checked -> true, 'disabled -> true, 'id -> "durable-placeholder")
+        @helper.checkbox(jobForm("durable"), '_label -> "Durable", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'readonly -> None, 'class -> "form-inline-control", 'checked -> true, 'disabled -> true, 'id -> "durable-placeholder")
 
         <input type="hidden" id="durable" name="durable" value="true" readonly="true" />
 
-        @helper.checkbox(jobForm("requests-recovery"), '_label -> "Requests recovery", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'class -> "form-control form-inline-control")
+        @helper.checkbox(jobForm("requests-recovery"), '_label -> "Requests recovery", 'labelClass -> "col-sm-3 text-right", 'inputDivClass -> "col-sm-4", 'class -> "form-inline-control")
 
         <h4>Job Data Map</h4>
 

@@ -36,11 +36,13 @@ div.jobs-list .panel-body {
 
 div.jobs-list .list-group-item {
     border-style: none;
+    overflow: hidden;
 }
 
 div.jobs-list h5.title {
     margin-top: 0px;
     margin-bottom: 0px;
+    overflow: hidden;
 }
 
 div.jobs-list a[data-toggle="collapse"] {
@@ -112,4 +114,24 @@ a.piezo-button:hover, a.piezo-button:focus {
 
 .inline-header {
     display: inline-block;
+}
+
+th, td {
+    word-wrap: break-word;
+}
+
+.column-long-content {
+    width: 17%;
+}
+
+.column-success {
+    width: 70px;
+}
+
+.table-fixed-layout {
+    table-layout: fixed;
+}
+
+.column-time {
+    min-width: 85px;
 }

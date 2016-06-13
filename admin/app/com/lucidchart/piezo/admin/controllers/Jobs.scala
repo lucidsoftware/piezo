@@ -3,7 +3,7 @@ package com.lucidchart.piezo.admin.controllers
 import com.lucidchart.piezo.admin.utils.JobUtils
 import play.api._
 import play.api.mvc._
-import com.lucidchart.piezo.{JobHistoryModel, WorkerSchedulerFactory}
+import com.lucidchart.piezo.{JobHistoryModel, TriggerHistoryModel, WorkerSchedulerFactory}
 import org.quartz.impl.matchers.GroupMatcher
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -22,6 +22,7 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory) extends Controller {
   val scheduler = logExceptions(schedulerFactory.getScheduler())
   val properties = schedulerFactory.props
   val jobHistoryModel = logExceptions(new JobHistoryModel(properties))
+  val triggerHistoryModel = logExceptions(new TriggerHistoryModel(properties))
   val jobFormHelper = new JobFormHelper()
 
   def getJobsByGroup(): mutable.Buffer[(String, List[JobKey])] = {
@@ -35,12 +36,15 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory) extends Controller {
   }
 
   def getIndex = Action { implicit request =>
-    val allJobs: List[JobKey] = getJobsByGroup().foldLeft(List[JobKey]())({(finalList, jobsForGroup) =>
-      finalList ::: jobsForGroup._2})
+    val allJobs: List[JobKey] = getJobsByGroup().flatMap(_._2).toList
     val jobHistories = allJobs.flatMap({ job =>
       jobHistoryModel.getJob(job.getName, job.getGroup).headOption
-    })
-    Ok(com.lucidchart.piezo.admin.views.html.jobs(getJobsByGroup(), None, Some(jobHistories), scheduler.getMetaData)(request))
+    }).sortWith(_.start after _.start)
+    val triggeredJobs: List[JobKey] = TriggerHelper.getTriggersByGroup(scheduler).flatMap { case (group, triggerKeys) =>
+      triggerKeys.map(triggerKey => scheduler.getTrigger(triggerKey).getJobKey)
+    }.toList
+    val untriggeredJobs: List[JobKey] = allJobs.filterNot(x => triggeredJobs.contains(x))
+    Ok(com.lucidchart.piezo.admin.views.html.jobs(getJobsByGroup(), None, Some(jobHistories), untriggeredJobs, scheduler.getMetaData)(request))
   }
 
   def getJob(group: String, name: String) = Action { implicit request =>
@@ -101,23 +105,32 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory) extends Controller {
   val submitEditMessage = "Save"
   def formEditAction(group: String, name: String): Call = routes.Jobs.putJob(group, name)
 
-  def getNewJobForm() = Action { implicit request =>
-    val newJobForm = jobFormHelper.buildJobForm
-    Ok(com.lucidchart.piezo.admin.views.html.editJob(getJobsByGroup(), newJobForm, submitNewMessage, formNewAction, false)(request))
+  def getNewJobForm(templateGroup: Option[String] = None, templateName: Option[String] = None) = Action { implicit request =>
+    //if (request.queryString.contains())
+    templateGroup match {
+      case Some(group) => getEditJob(group, templateName.get, true)
+      case None =>
+        val newJobForm = jobFormHelper.buildJobForm
+        Ok(com.lucidchart.piezo.admin.views.html.editJob(getJobsByGroup(), newJobForm, submitNewMessage, formNewAction, false)(request))
+    }
+
   }
 
-  def getEditJob(group: String, name: String) = Action { implicit request =>
+  def getEditJob(group: String, name: String, isTemplate: Boolean)(implicit request: Request[AnyContent]) = {
     val jobKey = new JobKey(name, group)
 
     if (scheduler.checkExists(jobKey)) {
       val jobDetail = scheduler.getJobDetail(jobKey)
       val editJobForm = jobFormHelper.buildJobForm().fill(jobDetail)
-      Ok(com.lucidchart.piezo.admin.views.html.editJob(getJobsByGroup(), editJobForm, submitEditMessage, formEditAction(group, name), true)(request))
+      if (isTemplate) Ok(com.lucidchart.piezo.admin.views.html.editJob(getJobsByGroup(), editJobForm, submitNewMessage, formNewAction, false)(request))
+      else Ok(com.lucidchart.piezo.admin.views.html.editJob(getJobsByGroup(), editJobForm, submitEditMessage, formEditAction(group, name), true)(request))
     } else {
       val errorMsg = Some("Job %s %s not found".format(group, name))
       NotFound(com.lucidchart.piezo.admin.views.html.job(mutable.Buffer(), None, None, None, errorMsg)(request))
     }
   }
+
+  def getEditJobAction(group: String, name: String) = Action { implicit request => getEditJob(group, name, false) }
 
   def putJob(group: String, name: String) = Action { implicit request =>
     jobFormHelper.buildJobForm.bindFromRequest.fold(
@@ -137,10 +150,22 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory) extends Controller {
       formWithErrors =>
         BadRequest(com.lucidchart.piezo.admin.views.html.editJob(getJobsByGroup(), formWithErrors, submitNewMessage, formNewAction, false)),
       value => {
-        val jobDetail = JobUtils.cleanup(value)
-        scheduler.addJob(jobDetail, false)
-        Redirect(routes.Jobs.getJob(value.getKey.getGroup(), value.getKey.getName()))
-          .flashing("message" -> "Successfully added job.", "class" -> "")
+        try {
+          val jobDetail = JobUtils.cleanup(value)
+          scheduler.addJob(jobDetail, false)
+          Redirect(routes.Jobs.getJob(value.getKey.getGroup(), value.getKey.getName()))
+            .flashing("message" -> "Successfully added job.", "class" -> "")
+        } catch {
+          case alreadyExists: ObjectAlreadyExistsException =>
+            val form = jobFormHelper.buildJobForm.fill(value)
+            Ok(com.lucidchart.piezo.admin.views.html.editJob(getJobsByGroup(),
+              form,
+              submitNewMessage,
+              formNewAction,
+              false,
+              errorMessage = Some("Please provide unique group-name pair")
+            )(request))
+        }
       }
     )
   }
