@@ -5,10 +5,11 @@ import java.util.Properties
 import org.joda.time.DateTime
 import org.joda.time.format.ISODateTimeFormat
 import org.slf4j.LoggerFactory
-import org.quartz.Scheduler
-import java.util.concurrent.{TimeUnit, Semaphore}
-import java.io.{FileWriter, FileOutputStream, File}
+import org.quartz.{JobExecutionContext, JobKey, Scheduler, SchedulerException}
+import java.util.concurrent.{Semaphore, TimeUnit}
+import java.io._
 
+import scala.collection.JavaConversions._
 import scala.util.control.NonFatal
 
 
@@ -31,6 +32,7 @@ object Worker {
     run(scheduler, props)
 
     logger.info("exiting")
+    System.exit(0)
   }
 
   private[piezo] def run(scheduler: Scheduler, properties: Properties, heartbeatSeconds: Int = 60, semaphorePermitsToStop: Int = 1) {
@@ -42,15 +44,25 @@ object Worker {
     try {
       scheduler.start()
       logger.info("scheduler started")
+      val reader = new InputStreamReader(System.in)
+      val stdin = new BufferedReader(reader)
+
       var acquired = false
       while (!acquired) {
         try {
-          acquired = runSemaphore.tryAcquire(semaphorePermitsToStop, heartbeatSeconds, TimeUnit.SECONDS)
+          acquired = runSemaphore.tryAcquire(semaphorePermitsToStop, 1, TimeUnit.SECONDS)
           if (!acquired) {
-            if (heartbeatFile != null) {
-              writeHeartbeat(heartbeatFile)
+            if (System.currentTimeMillis() / 1000 % heartbeatSeconds == 0) {
+              if (heartbeatFile != null) {
+                writeHeartbeat(heartbeatFile)
+              }
+              val currentJobs: Int = scheduler.getCurrentlyExecutingJobs.size
+              logger.info("worker heartbeat - currently running " + currentJobs + " jobs")
             }
-            logger.info("worker heartbeat")
+          if(reader.ready && System.in.read == -1){
+              logger.info("Received EOF on stdin")
+              runSemaphore.release()
+            }
           }
         }
         catch {
