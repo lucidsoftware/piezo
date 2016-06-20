@@ -2,7 +2,7 @@ name := "piezo-worker"
 
 organization := "com.lucidchart"
 
-version := "1.13-SNAPSHOT"
+version := "1.14"
 
 scalaVersion := "2.11.7"
 
@@ -15,6 +15,8 @@ exportJars in Test := false
 autoScalaLibrary := true
 
 mainClass := Some("com.lucidchart.piezo.Worker")
+
+connectInput in run := true
 
 libraryDependencies ++= Seq(
 	"ch.qos.logback" % "logback-classic" % "1.0.7",
