@@ -12,7 +12,9 @@ import java.io._
 import scala.collection.JavaConversions._
 import scala.util.control.NonFatal
 
-
+/**
+  * To stop the worker without stopping SBT: Ctrl+D Enter
+  */
 object Worker {
   private val logger = LoggerFactory.getLogger(this.getClass)
   private[piezo] val runSemaphore = new Semaphore(0)
