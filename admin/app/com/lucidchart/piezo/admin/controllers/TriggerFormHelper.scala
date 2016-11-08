@@ -1,16 +1,13 @@
 package com.lucidchart.piezo.admin.controllers
 
+import com.lucidchart.piezo.TriggerMonitoringPriority
+import com.lucidchart.piezo.TriggerMonitoringPriority.TriggerMonitoringPriority
 import org.quartz._
-import scala.Some
-import scala.Some
-import scala.Some
 import java.text.ParseException
-import play.api.data.validation.{Valid, ValidationError, Invalid, Constraint}
+import play.api.data.validation.{Constraint, Invalid, Valid}
 import play.api.data.Form
 import play.api.data.Forms._
-import scala.Some
 import play.api.data.validation.ValidationError
-
 
 class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
 
@@ -35,7 +32,8 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
   }
 
   private def triggerFormApply(triggerType: String, group: String, name: String, jobGroup: String, jobName: String, description: String,
-                               simple: Option[SimpleScheduleBuilder], cron: Option[CronScheduleBuilder], jobDataMap: Option[JobDataMap]): Trigger = {
+                               simple: Option[SimpleScheduleBuilder], cron: Option[CronScheduleBuilder], jobDataMap: Option[JobDataMap],
+                               triggerMonitoringPriority: String): (Trigger, TriggerMonitoringPriority) = {
     val newTrigger: Trigger = TriggerBuilder.newTrigger()
       .withIdentity(name, group)
       .withDescription(description)
@@ -47,11 +45,13 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
       .forJob(jobName, jobGroup)
       .usingJobData(jobDataMap.getOrElse(new JobDataMap()))
       .build()
-    newTrigger
+    (newTrigger, TriggerMonitoringPriority.withName(triggerMonitoringPriority))
   }
 
-  private def triggerFormUnapply(trigger: Trigger):
-  Option[(String, String, String, String, String, String, Option[SimpleScheduleBuilder], Option[CronScheduleBuilder], Option[JobDataMap])] = {
+  private def triggerFormUnapply(tp: (Trigger, TriggerMonitoringPriority)):
+  Option[(String, String, String, String, String, String, Option[SimpleScheduleBuilder], Option[CronScheduleBuilder], Option[JobDataMap], String)] = {
+    val trigger = tp._1
+    val triggerMonitoringPriority = tp._2
     val (triggerType: String, simple, cron) = trigger match {
       case cron: CronTrigger => ("cron", None, Some(cron.getScheduleBuilder))
       case simple: SimpleTrigger => ("simple", Some(simple.getScheduleBuilder), None)
@@ -59,7 +59,8 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
     val description = if (trigger.getDescription() == null) "" else trigger.getDescription()
     Some((triggerType, trigger.getKey.getGroup(), trigger.getKey.getName(),
       trigger.getJobKey.getGroup(), trigger.getJobKey.getName(), description,
-      simple.asInstanceOf[Option[SimpleScheduleBuilder]], cron.asInstanceOf[Option[CronScheduleBuilder]], Some(trigger.getJobDataMap)))
+      simple.asInstanceOf[Option[SimpleScheduleBuilder]], cron.asInstanceOf[Option[CronScheduleBuilder]], Some(trigger.getJobDataMap),
+      triggerMonitoringPriority.toString))
   }
 
   private def getCronParseError(cronExpression: String): String = {
@@ -87,7 +88,7 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
     }
   }
 
-  def buildTriggerForm() = Form[Trigger](
+  def buildTriggerForm() = Form[(Trigger, TriggerMonitoringPriority)](
     mapping(
       "triggerType" -> nonEmptyText(),
       "group" -> nonEmptyText(),
@@ -102,9 +103,10 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
       "cron" -> optional(mapping(
         "cronExpression" -> nonEmptyText().verifying(validCronExpression)
       )(cronScheduleFormApply)(cronScheduleFormUnapply)),
-      "job-data-map" -> jobDataMap
-    )(triggerFormApply)(triggerFormUnapply) verifying("Job does not exist", trigger => {
-      scheduler.checkExists(trigger.getJobKey)
+      "job-data-map" -> jobDataMap,
+      "triggerMonitoringPriority" -> nonEmptyText()
+    )(triggerFormApply)(triggerFormUnapply) verifying("Job does not exist", fields => {
+      scheduler.checkExists(fields._1.getJobKey)
     })
   )
 }

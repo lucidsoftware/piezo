@@ -10,6 +10,7 @@ object WorkerJobListener {
 
 class WorkerJobListener(props: Properties) extends JobListener {
   val jobHistoryModel = new JobHistoryModel(props)
+  val triggerMonitoringPriorityModel = new TriggerMonitoringPriorityModel(props)
   def getName: String = "WorkerJobListener"
 
   def jobToBeExecuted(context: JobExecutionContext) {}
@@ -19,10 +20,20 @@ class WorkerJobListener(props: Properties) extends JobListener {
   def jobWasExecuted(context: JobExecutionContext, jobException: JobExecutionException) {
     try {
       val success = jobException == null
-      jobHistoryModel.addJob(context, success=success)
+      jobHistoryModel.addJob(context,success = success)
+
       val suffix = if (success) ".succeeded" else ".failed"
       val statsKey = "jobs." + context.getTrigger.getJobKey.getGroup + "." + context.getTrigger.getJobKey.getName + suffix
-      StatsD.increment(statsKey)
+
+      if (props.getProperty("com.lucidchart.piezo.enableMonitoring") == "new") {
+        triggerMonitoringPriorityModel.getTriggerMonitoringPriority(context.getTrigger).map { triggerMonitoringPriority =>
+          if (triggerMonitoringPriority > TriggerMonitoringPriority.Off) {
+            StatsD.increment(statsKey)
+          }
+        }
+      } else {
+        StatsD.increment(statsKey)
+      }
     } catch {
       case e: Exception => WorkerJobListener.logger.error("error in jobWasExecuted", e)
     }

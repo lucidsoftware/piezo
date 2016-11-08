@@ -1,18 +1,19 @@
 package com.lucidchart.piezo
 
 import org.quartz.JobExecutionContext
-import java.sql.Timestamp
+import java.sql.{ResultSet, Timestamp}
 import org.slf4j.LoggerFactory
-import java.util.{Properties, Date}
+import java.util.{Date, Properties}
 
 case class JobRecord(
-name:String,
-group:String,
-trigger_name:String,
-trigger_group:String,
-success:Int,
-start:Date,
-finish:Date
+  name: String,
+  group: String,
+  trigger_name: String,
+  trigger_group: String,
+  success: Int,
+  start: Date,
+  finish: Date,
+  fire_instance_id: String
 )
 
 class JobHistoryModel(props: Properties) {
@@ -62,23 +63,31 @@ class JobHistoryModel(props: Properties) {
       prepared.setString(1, name)
       prepared.setString(2, group)
       val rs = prepared.executeQuery();
-
-      var result = List[JobRecord]()
-      while(rs.next()) {
-        result :+= new JobRecord(
-          rs.getString("job_name"),
-          rs.getString("job_group"),
-          rs.getString("trigger_name"),
-          rs.getString("trigger_group"),
-          rs.getInt("success"),
-          rs.getTimestamp("start"),
-          rs.getTimestamp("finish")
-        )
-      }
-      result
+      parseJobs(rs)
     } catch {
-      case e: Exception => logger.error("error in retrieving jobs", e)
-      List()
+      case e: Exception => {
+        logger.error("error in retrieving jobs", e)
+        Nil
+      }
+    } finally {
+      connection.close()
+    }
+  }
+
+  def getJobByTrigger(triggerName: String, triggerGroup: String): List[JobRecord] = {
+    val connection = connectionProvider.getConnection
+
+    try {
+      val prepared = connection.prepareStatement("""SELECT * FROM job_history WHERE trigger_name=? AND trigger_group=? ORDER BY start DESC LIMIT 100""")
+      prepared.setString(1, triggerName)
+      prepared.setString(2, triggerGroup)
+      val rs = prepared.executeQuery();
+      parseJobs(rs)
+    } catch {
+      case e: Exception => {
+        logger.error("error in retrieving jobs", e)
+        Nil
+      }
     } finally {
       connection.close()
     }
@@ -90,25 +99,31 @@ class JobHistoryModel(props: Properties) {
     try {
       val prepared = connection.prepareStatement("""SELECT * FROM job_history ORDER BY start DESC LIMIT 100""")
       val rs = prepared.executeQuery()
-
-      var result = List[JobRecord]()
-      while(rs.next()) {
-        result :+= new JobRecord(
-          rs.getString("job_name"),
-          rs.getString("job_group"),
-          rs.getString("trigger_name"),
-          rs.getString("trigger_group"),
-          rs.getInt("success"),
-          rs.getTimestamp("start"),
-          rs.getTimestamp("finish")
-        )
-      }
-      result
+      parseJobs(rs)
     } catch {
-      case e: Exception => logger.error("error in retrieving jobs", e)
-        List()
+      case e: Exception => {
+        logger.error("error in retrieving jobs", e)
+        Nil
+      }
     } finally {
       connection.close()
     }
+  }
+
+  def parseJobs(rs: ResultSet): List[JobRecord] = {
+    var result = List[JobRecord]()
+    while(rs.next()) {
+      result :+= new JobRecord(
+        rs.getString("job_name"),
+        rs.getString("job_group"),
+        rs.getString("trigger_name"),
+        rs.getString("trigger_group"),
+        rs.getInt("success"),
+        rs.getTimestamp("start"),
+        rs.getTimestamp("finish"),
+        rs.getString("fire_instance_id")
+      )
+    }
+    result
   }
 }
