@@ -7,12 +7,13 @@ import org.slf4j.LoggerFactory
 import java.util.{Date, Properties}
 
 case class TriggerRecord(
-  name:String,
-  group:String,
-  scheduled_start:Date,
-  actual_start:Date,
-  finish:Date,
-  misfire:Int
+  name: String,
+  group: String,
+  scheduled_start: Date,
+  actual_start: Date,
+  finish: Date,
+  misfire: Int,
+  fire_instance_id: String
 )
 
 class TriggerHistoryModel(props: Properties) {
@@ -70,7 +71,8 @@ class TriggerHistoryModel(props: Properties) {
           rs.getTimestamp("scheduled_start"),
           rs.getTimestamp("actual_start"),
           rs.getTimestamp("finish"),
-          rs.getInt("misfire")
+          rs.getInt("misfire"),
+          rs.getString("fire_instance_id")
         )
       }
       result

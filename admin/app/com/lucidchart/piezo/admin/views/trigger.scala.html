@@ -2,12 +2,14 @@
 triggersByGroup: scala.collection.mutable.Buffer[(String, scala.collection.immutable.List[org.quartz.TriggerKey])],
 currentTrigger: Option[org.quartz.Trigger],
 triggerHistory: Option[List[com.lucidchart.piezo.TriggerRecord]],
-errorMessage: Option[String] = None
+errorMessage: Option[String] = None,
+triggerMonitoringPriority: Option[com.lucidchart.piezo.TriggerMonitoringPriority.Value] = None
 )(
 implicit
 request: play.api.mvc.Request[AnyContent]
 )
 
+@import com.lucidchart.piezo.TriggerMonitoringPriority
 @import com.lucidchart.piezo.admin.controllers.{routes=>piezoRoutes}
 @import com.lucidchart.piezo.admin.views
 @import java.net.URLEncoder
@@ -116,6 +118,12 @@ request: play.api.mvc.Request[AnyContent]
                     </tr>
                 }
                 case _ => { }
+            }
+            @triggerMonitoringPriority.map { triggerMonitoringPriority =>
+            <tr>
+                <td class="text-right">Monitoring priority:</td>
+                <td>@triggerMonitoringPriority</td>
+            </tr>
             }
             <tr>
                 <td class="text-right">Description:</td>

@@ -11,6 +11,7 @@ object WorkerTriggerListener {
 
 class WorkerTriggerListener(props: Properties) extends TriggerListener {
   val triggerHistoryModel = new TriggerHistoryModel(props)
+  val triggerMonitoringPriorityModel = new TriggerMonitoringPriorityModel(props)
   def getName:String = "WorkerTriggerListener"
 
   def vetoJobExecution(trigger: Trigger, context: JobExecutionContext):Boolean = false
@@ -21,7 +22,16 @@ class WorkerTriggerListener(props: Properties) extends TriggerListener {
     try {
       triggerHistoryModel.addTrigger(trigger, Some(context.getFireTime), misfire=false, Some(context.getFireInstanceId))
       val statsKey = "triggers." + trigger.getKey.getGroup + "." + trigger.getKey.getName + ".completed"
-      StatsD.increment(statsKey)
+
+      if (props.getProperty("com.lucidchart.piezo.enableMonitoring") == "new") {
+        triggerMonitoringPriorityModel.getTriggerMonitoringPriority(trigger).map { triggerMonitoringPriority =>
+          if (triggerMonitoringPriority > TriggerMonitoringPriority.Off) {
+            StatsD.increment(statsKey)
+          }
+        }
+      } else {
+        StatsD.increment(statsKey)
+      }
     } catch {
       case e: Exception => WorkerTriggerListener.logger.error("exception in triggerComplete", e)
     }
@@ -29,9 +39,14 @@ class WorkerTriggerListener(props: Properties) extends TriggerListener {
 
   def triggerMisfired(trigger: Trigger) {
     try {
-      triggerHistoryModel.addTrigger(trigger, None, misfire=true, None)
-      val statsKey = "triggers." + trigger.getKey.getGroup + "." + trigger.getKey.getName + ".misfired"
-      StatsD.increment(statsKey)
+      triggerMonitoringPriorityModel.getTriggerMonitoringPriority(trigger).map { triggerMonitoringPriority =>
+        triggerHistoryModel.addTrigger(trigger,None,misfire = true,None)
+
+        if (triggerMonitoringPriority > TriggerMonitoringPriority.Off) {
+          val statsKey = "triggers." + trigger.getKey.getGroup + "." + trigger.getKey.getName + ".misfired"
+          StatsD.increment(statsKey)
+        }
+      }
     } catch {
       case e: Exception => WorkerTriggerListener.logger.error("exception in triggerMisfired", e)
     }
