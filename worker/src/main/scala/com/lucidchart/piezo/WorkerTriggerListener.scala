@@ -11,7 +11,7 @@ object WorkerTriggerListener {
 
 class WorkerTriggerListener(props: Properties) extends TriggerListener {
   val triggerHistoryModel = new TriggerHistoryModel(props)
-  val triggerMonitoringPriorityModel = new TriggerMonitoringPriorityModel(props)
+  val triggerMonitoringPriorityModel = new TriggerMonitoringModel(props)
   def getName:String = "WorkerTriggerListener"
 
   def vetoJobExecution(trigger: Trigger, context: JobExecutionContext):Boolean = false
@@ -24,8 +24,8 @@ class WorkerTriggerListener(props: Properties) extends TriggerListener {
       val statsKey = "triggers." + trigger.getKey.getGroup + "." + trigger.getKey.getName + ".completed"
 
       if (props.getProperty("com.lucidchart.piezo.enableMonitoring") == "new") {
-        triggerMonitoringPriorityModel.getTriggerMonitoringPriority(trigger).map { triggerMonitoringPriority =>
-          if (triggerMonitoringPriority > TriggerMonitoringPriority.Off) {
+        triggerMonitoringPriorityModel.getTriggerMonitoringRecord(trigger).map { triggerMonitoringRecord =>
+          if (triggerMonitoringRecord.priority > TriggerMonitoringPriority.Off) {
             StatsD.increment(statsKey)
           }
         }
@@ -39,10 +39,10 @@ class WorkerTriggerListener(props: Properties) extends TriggerListener {
 
   def triggerMisfired(trigger: Trigger) {
     try {
-      triggerMonitoringPriorityModel.getTriggerMonitoringPriority(trigger).map { triggerMonitoringPriority =>
+      triggerMonitoringPriorityModel.getTriggerMonitoringRecord(trigger).map { triggerMonitoringRecord =>
         triggerHistoryModel.addTrigger(trigger,None,misfire = true,None)
 
-        if (triggerMonitoringPriority > TriggerMonitoringPriority.Off) {
+        if (triggerMonitoringRecord.priority > TriggerMonitoringPriority.Off) {
           val statsKey = "triggers." + trigger.getKey.getGroup + "." + trigger.getKey.getName + ".misfired"
           StatsD.increment(statsKey)
         }
