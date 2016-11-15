@@ -2,12 +2,11 @@ package com.lucidchart.piezo.admin.controllers
 
 import com.lucidchart.piezo.TriggerMonitoringPriority
 import com.lucidchart.piezo.TriggerMonitoringPriority.TriggerMonitoringPriority
-import org.quartz._
 import java.text.ParseException
-import play.api.data.validation.{Constraint, Invalid, Valid}
+import org.quartz._
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.data.validation.ValidationError
+import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
 
 class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
 
@@ -31,9 +30,19 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
     Some((cronTrigger.getCronExpression()))
   }
 
-  private def triggerFormApply(triggerType: String, group: String, name: String, jobGroup: String, jobName: String, description: String,
-                               simple: Option[SimpleScheduleBuilder], cron: Option[CronScheduleBuilder], jobDataMap: Option[JobDataMap],
-                               triggerMonitoringPriority: String): (Trigger, TriggerMonitoringPriority) = {
+  private def triggerFormApply(
+    triggerType: String,
+    group: String,
+    name: String,
+    jobGroup: String,
+    jobName: String,
+    description: String,
+    simple: Option[SimpleScheduleBuilder],
+    cron: Option[CronScheduleBuilder],
+    jobDataMap: Option[JobDataMap],
+    triggerMonitoringPriority: String,
+    triggerMaxErrorTime: Int
+  ): (Trigger, TriggerMonitoringPriority, Int) = {
     val newTrigger: Trigger = TriggerBuilder.newTrigger()
       .withIdentity(name, group)
       .withDescription(description)
@@ -45,22 +54,44 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
       .forJob(jobName, jobGroup)
       .usingJobData(jobDataMap.getOrElse(new JobDataMap()))
       .build()
-    (newTrigger, TriggerMonitoringPriority.withName(triggerMonitoringPriority))
+    (newTrigger, TriggerMonitoringPriority.withName(triggerMonitoringPriority), triggerMaxErrorTime)
   }
 
-  private def triggerFormUnapply(tp: (Trigger, TriggerMonitoringPriority)):
-  Option[(String, String, String, String, String, String, Option[SimpleScheduleBuilder], Option[CronScheduleBuilder], Option[JobDataMap], String)] = {
+  private def triggerFormUnapply(tp: (Trigger, TriggerMonitoringPriority, Int)):
+    Option[
+      (
+        String,
+        String,
+        String,
+        String,
+        String,
+        String,
+        Option[SimpleScheduleBuilder],
+        Option[CronScheduleBuilder],
+        Option[JobDataMap], String, Int
+      )
+    ] = {
     val trigger = tp._1
-    val triggerMonitoringPriority = tp._2
     val (triggerType: String, simple, cron) = trigger match {
       case cron: CronTrigger => ("cron", None, Some(cron.getScheduleBuilder))
       case simple: SimpleTrigger => ("simple", Some(simple.getScheduleBuilder), None)
     }
     val description = if (trigger.getDescription() == null) "" else trigger.getDescription()
-    Some((triggerType, trigger.getKey.getGroup(), trigger.getKey.getName(),
-      trigger.getJobKey.getGroup(), trigger.getJobKey.getName(), description,
-      simple.asInstanceOf[Option[SimpleScheduleBuilder]], cron.asInstanceOf[Option[CronScheduleBuilder]], Some(trigger.getJobDataMap),
-      triggerMonitoringPriority.toString))
+    Some(
+      (
+        triggerType,
+        trigger.getKey.getGroup(),
+        trigger.getKey.getName(),
+        trigger.getJobKey.getGroup(),
+        trigger.getJobKey.getName(),
+        description,
+        simple.asInstanceOf[Option[SimpleScheduleBuilder]],
+        cron.asInstanceOf[Option[CronScheduleBuilder]],
+        Some(trigger.getJobDataMap),
+        tp._2.toString,
+        tp._3
+      )
+    )
   }
 
   private def getCronParseError(cronExpression: String): String = {
@@ -88,7 +119,7 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
     }
   }
 
-  def buildTriggerForm() = Form[(Trigger, TriggerMonitoringPriority)](
+  def buildTriggerForm() = Form[(Trigger, TriggerMonitoringPriority, Int)](
     mapping(
       "triggerType" -> nonEmptyText(),
       "group" -> nonEmptyText(),
@@ -104,9 +135,12 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
         "cronExpression" -> nonEmptyText().verifying(validCronExpression)
       )(cronScheduleFormApply)(cronScheduleFormUnapply)),
       "job-data-map" -> jobDataMap,
-      "triggerMonitoringPriority" -> nonEmptyText()
-    )(triggerFormApply)(triggerFormUnapply) verifying("Job does not exist", fields => {
+      "triggerMonitoringPriority" -> nonEmptyText(),
+      "triggerMaxErrorTime" -> number()
+    )(triggerFormApply)(triggerFormUnapply).verifying("Job does not exist", fields => {
       scheduler.checkExists(fields._1.getJobKey)
+    }).verifying("Max time between successes must be greater than 0", fields => {
+      fields._3 > 0
     })
   )
 }

@@ -1,12 +1,8 @@
-
-ALTER TABLE `job_history`
-  MODIFY COLUMN trigger_name VARCHAR(100) NOT NULL,
-  MODIFY COLUMN trigger_group VARCHAR(100) NOT NULL,
-  MODIFY COLUMN job_name VARCHAR(100) NOT NULL,
-  MODIFY COLUMN job_group VARCHAR(100) NOT NULL,
-  DROP KEY job_key,
-  ADD KEY job_key (job_group, job_name, start);
-
-ALTER TABLE `trigger_history`
-  MODIFY COLUMN trigger_name VARCHAR(100) NOT NULL,
-  MODIFY COLUMN trigger_group VARCHAR(100) NOT NULL;
+CREATE TABLE trigger_monitoring_priority(
+    trigger_name VARCHAR(190) NOT NULL,
+    trigger_group VARCHAR(190) NOT NULL,
+    priority TINYINT DEFAULT NULL,
+    created datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    modified datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY(trigger_group, trigger_name)
+);

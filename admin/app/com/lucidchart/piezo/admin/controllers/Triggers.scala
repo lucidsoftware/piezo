@@ -1,6 +1,6 @@
 package com.lucidchart.piezo.admin.controllers
 
-import com.lucidchart.piezo.{TriggerHistoryModel, TriggerMonitoringPriority, TriggerMonitoringPriorityModel, WorkerSchedulerFactory}
+import com.lucidchart.piezo.{TriggerHistoryModel, TriggerMonitoringModel, TriggerMonitoringPriority, WorkerSchedulerFactory}
 import java.util.Date
 import org.quartz._
 import org.quartz.impl.triggers.{CronTriggerImpl, SimpleTriggerImpl}
@@ -19,7 +19,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
   val scheduler = logExceptions(schedulerFactory.getScheduler())
   val properties = schedulerFactory.props
   val triggerHistoryModel = logExceptions(new TriggerHistoryModel(properties))
-  val triggerMonitoringPriorityModel = logExceptions(new TriggerMonitoringPriorityModel(properties))
+  val triggerMonitoringPriorityModel = logExceptions(new TriggerMonitoringModel(properties))
   val triggerFormHelper = new TriggerFormHelper(scheduler)
 
   def firesFirst(time: Date)(trigger1: Trigger, trigger2: Trigger): Boolean = {
@@ -36,7 +36,14 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
      val allTriggers: List[Trigger] = TriggerHelper.getTriggersByGroup(scheduler).flatMap { case (group, triggerKeys) =>
        triggerKeys.map(triggerKey => scheduler.getTrigger(triggerKey))
      }.toList.sortWith(firesFirst(now))
-     Ok(com.lucidchart.piezo.admin.views.html.triggers(TriggerHelper.getTriggersByGroup(scheduler), None, allTriggers, scheduler.getMetaData)(request))
+     Ok(
+       com.lucidchart.piezo.admin.views.html.triggers(
+        TriggerHelper.getTriggersByGroup(scheduler),
+        None,
+        allTriggers,
+        scheduler.getMetaData
+       )(request)
+     )
    }
 
   def getTrigger(group: String, name: String) = Action { implicit request =>
@@ -60,13 +67,15 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
           }
         }
 
-        val triggerMonitoringPriority = Try {
-          triggerMonitoringPriorityModel.getTriggerMonitoringPriority(
+        val (triggerMonitoringPriority, triggerMaxErrorTime) = Try {
+          triggerMonitoringPriorityModel.getTriggerMonitoringRecord(
             triggerDetail
-          ).getOrElse(TriggerMonitoringPriority.Off)
+          ).map { triggerMonitoringRecord =>
+            (triggerMonitoringRecord.priority, triggerMonitoringRecord.maxSecondsInError)
+          }.getOrElse((TriggerMonitoringPriority.Off, 300))
         }.getOrElse {
-          logger.error("Failed to get trigger monitoring priority")
-          TriggerMonitoringPriority.Off
+          logger.error("Failed to get trigger monitoring info")
+          (TriggerMonitoringPriority.Off, 300)
         }
 
         Ok(
@@ -75,14 +84,22 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
             Some(triggerDetail),
             history,
             None,
-            Some(triggerMonitoringPriority)
+            Some(triggerMonitoringPriority),
+            triggerMaxErrorTime
           )(request)
         )
       } catch {
         case e: Exception => {
           val errorMsg = "Exception caught getting trigger " + group + " " + name + ". -- " + e.getLocalizedMessage()
           logger.error(errorMsg, e)
-          InternalServerError(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, None, Some(errorMsg))(request))
+          InternalServerError(
+            com.lucidchart.piezo.admin.views.html.trigger(
+              mutable.Buffer(),
+              None,
+              None,
+              Some(errorMsg)
+            )(request)
+          )
         }
       }
     }
@@ -97,13 +114,26 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
     } else {
       try {
         scheduler.unscheduleJob(triggerKey)
-        triggerMonitoringPriorityModel.deleteTriggerMonitoringPriority(triggerKey)
-        Ok(com.lucidchart.piezo.admin.views.html.trigger(TriggerHelper.getTriggersByGroup(scheduler), None, None)(request))
+        triggerMonitoringPriorityModel.deleteTriggerMonitoringRecord(triggerKey)
+        Ok(
+          com.lucidchart.piezo.admin.views.html.trigger(
+            TriggerHelper.getTriggersByGroup(scheduler),
+            None,
+            None
+          )(request)
+        )
       } catch {
         case e: Exception => {
           val errorMsg = "Exception caught deleting trigger " + group + " " + name + ". -- " + e.getLocalizedMessage()
           logger.error(errorMsg, e)
-          InternalServerError(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, None, Some(errorMsg))(request))
+          InternalServerError(
+            com.lucidchart.piezo.admin.views.html.trigger(
+              mutable.Buffer(),
+              None,
+              None,
+              Some(errorMsg)
+            )(request)
+          )
         }
       }
     }
@@ -112,7 +142,15 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
   val formNewAction = routes.Triggers.postTrigger()
   def formEditAction(group: String, name: String): Call = routes.Triggers.putTrigger(group, name)
 
-  def getNewTriggerForm(triggerType: String = "cron", jobGroup: String = "", jobName: String = "", templateGroup: Option[String] = None, templateName: Option[String] = None, triggerMonitoringPriority: TriggerMonitoringPriority.Value = TriggerMonitoringPriority.Off) = Action { implicit request =>
+  def getNewTriggerForm(
+    triggerType: String = "cron",
+    jobGroup: String = "",
+    jobName: String = "",
+    templateGroup: Option[String] = None,
+    templateName: Option[String] = None,
+    triggerMonitoringPriority: TriggerMonitoringPriority.Value = TriggerMonitoringPriority.Off,
+    triggerMaxErrorTime: Int = 300
+  ) = Action { implicit request =>
     templateGroup match {
       case Some(group) => getEditTrigger(group, templateName.get, true)
       case None =>
@@ -120,8 +158,19 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
           case "cron" => new DummyCronTrigger(jobGroup, jobName)
           case "simple" => new DummySimpleTrigger(jobGroup, jobName)
         }
-        val newTriggerForm = triggerFormHelper.buildTriggerForm().fill((dummyTrigger, TriggerMonitoringPriority.Off))
-        Ok(com.lucidchart.piezo.admin.views.html.editTrigger(TriggerHelper.getTriggersByGroup(scheduler), newTriggerForm, triggerMonitoringPriority, formNewAction, false, false)(request))
+        val newTriggerForm = triggerFormHelper.buildTriggerForm().fill(
+          (dummyTrigger, TriggerMonitoringPriority.Off, 300)
+        )
+        Ok(
+          com.lucidchart.piezo.admin.views.html.editTrigger(
+            TriggerHelper.getTriggersByGroup(scheduler),
+            newTriggerForm,
+            formNewAction,
+            false,
+            false
+          )
+          (request)
+        )
     }
   }
 
@@ -133,30 +182,66 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
       NotFound(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, None, errorMsg)(request))
     } else {
       val triggerDetail: Trigger = scheduler.getTrigger(triggerKey)
-      val triggerMonitoringPriority = Try {
-        triggerMonitoringPriorityModel.getTriggerMonitoringPriority(
+      val (triggerMonitoringPriority, triggerMaxErrorTime) = Try {
+        triggerMonitoringPriorityModel.getTriggerMonitoringRecord(
           triggerDetail
-        ).getOrElse(TriggerMonitoringPriority.Off)
+        ).map { triggerMonitoringRecord =>
+          (triggerMonitoringRecord.priority, triggerMonitoringRecord.maxSecondsInError)
+        }.getOrElse((TriggerMonitoringPriority.Off, 300))
       }.getOrElse {
-        logger.error("Failed to get trigger monitoring priority")
-        TriggerMonitoringPriority.Off
+        logger.error("Failed to get trigger monitoring info")
+        (TriggerMonitoringPriority.Off, 300)
       }
-      val editTriggerForm = triggerFormHelper.buildTriggerForm().fill((triggerDetail, triggerMonitoringPriority))
-      if (isTemplate) Ok(com.lucidchart.piezo.admin.views.html.editTrigger(TriggerHelper.getTriggersByGroup(scheduler), editTriggerForm, triggerMonitoringPriority, formNewAction, false, isTemplate)(request))
-      else Ok(com.lucidchart.piezo.admin.views.html.editTrigger(TriggerHelper.getTriggersByGroup(scheduler), editTriggerForm, triggerMonitoringPriority, formEditAction(group, name), true, isTemplate)(request))
+      val editTriggerForm = triggerFormHelper.buildTriggerForm().fill(
+        (triggerDetail, triggerMonitoringPriority, triggerMaxErrorTime)
+      )
+      if (isTemplate) {
+        Ok(
+          com.lucidchart.piezo.admin.views.html.editTrigger(
+            TriggerHelper.getTriggersByGroup(scheduler),
+            editTriggerForm,
+            formNewAction,
+            false,
+            isTemplate
+          )(request)
+        )
+      }
+      else {
+        Ok(
+          com.lucidchart.piezo.admin.views.html.editTrigger(
+            TriggerHelper.getTriggersByGroup(scheduler),
+            editTriggerForm,
+            formEditAction(group, name),
+            true,
+            isTemplate
+          )(request)
+        )
+      }
     }
   }
 
-  def getEditTriggerAction(group: String, name: String) = Action { implicit request => getEditTrigger(group, name, false) }
+  def getEditTriggerAction(group: String, name: String) = Action { implicit request =>
+    getEditTrigger(group, name, false)
+  }
 
   def putTrigger(group: String, name: String) = Action { implicit request =>
     triggerFormHelper.buildTriggerForm.bindFromRequest.fold(
       formWithErrors =>
-        BadRequest(com.lucidchart.piezo.admin.views.html.editTrigger(TriggerHelper.getTriggersByGroup(scheduler), formWithErrors, TriggerMonitoringPriority.Off, formEditAction(group, name), true, false)),
+        BadRequest(
+          com.lucidchart.piezo.admin.views.html.editTrigger(
+            TriggerHelper.getTriggersByGroup(scheduler),
+            formWithErrors,
+            formEditAction(group, name),
+            true,
+            false
+          )
+        ),
       value => {
-        val (trigger, triggerMonitoringPriority) = value
+        val (trigger, triggerMonitoringPriority, triggerMaxErrorTime) = value
         scheduler.rescheduleJob(trigger.getKey(), trigger)
-        triggerMonitoringPriorityModel.setTriggerMonitoringPriority(trigger, triggerMonitoringPriority)
+        triggerMonitoringPriorityModel.setTriggerMonitoringRecord(
+          trigger, triggerMonitoringPriority, triggerMaxErrorTime
+        )
         Redirect(routes.Triggers.getTrigger(trigger.getKey.getGroup(), trigger.getKey.getName()))
           .flashing("message" -> "Successfully added trigger.", "class" -> "")
       }
@@ -166,18 +251,41 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
   def postTrigger() = Action { implicit request =>
     triggerFormHelper.buildTriggerForm.bindFromRequest.fold(
       formWithErrors =>
-        BadRequest(com.lucidchart.piezo.admin.views.html.editTrigger(TriggerHelper.getTriggersByGroup(scheduler), formWithErrors, TriggerMonitoringPriority.Off, formNewAction, false, false)),
+        BadRequest(
+          com.lucidchart.piezo.admin.views.html.editTrigger(
+            TriggerHelper.getTriggersByGroup(scheduler),
+            formWithErrors,
+            formNewAction,
+            false,
+            false
+          )
+        ),
       value => {
-        val (trigger, triggerMonitoringPriority) = value
+        val (trigger, triggerMonitoringPriority, triggerMaxErrorTime) = value
         try {
           scheduler.scheduleJob(trigger)
-          triggerMonitoringPriorityModel.setTriggerMonitoringPriority(trigger, triggerMonitoringPriority)
+          triggerMonitoringPriorityModel.setTriggerMonitoringRecord(
+            trigger,
+            triggerMonitoringPriority,
+            triggerMaxErrorTime
+          )
           Redirect(routes.Triggers.getTrigger(trigger.getKey.getGroup(), trigger.getKey.getName()))
             .flashing("message" -> "Successfully added trigger.", "class" -> "")
         } catch {
           case alreadyExists: ObjectAlreadyExistsException =>
-            val form = triggerFormHelper.buildTriggerForm.fill((trigger, triggerMonitoringPriority))
-            Ok(com.lucidchart.piezo.admin.views.html.editTrigger(TriggerHelper.getTriggersByGroup(scheduler), form, triggerMonitoringPriority, formNewAction, false, false, errorMessage = Some("Please provide unique group-name pair"))(request))
+            val form = triggerFormHelper.buildTriggerForm.fill(
+              (trigger, triggerMonitoringPriority, triggerMaxErrorTime)
+            )
+            Ok(
+              com.lucidchart.piezo.admin.views.html.editTrigger(
+                TriggerHelper.getTriggersByGroup(scheduler),
+                form,
+                formNewAction,
+                false,
+                false,
+                errorMessage = Some("Please provide unique group-name pair")
+              )(request)
+            )
         }
       }
     )

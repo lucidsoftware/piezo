@@ -10,7 +10,7 @@ object WorkerJobListener {
 
 class WorkerJobListener(props: Properties) extends JobListener {
   val jobHistoryModel = new JobHistoryModel(props)
-  val triggerMonitoringPriorityModel = new TriggerMonitoringPriorityModel(props)
+  val triggerMonitoringPriorityModel = new TriggerMonitoringModel(props)
   def getName: String = "WorkerJobListener"
 
   def jobToBeExecuted(context: JobExecutionContext) {}
@@ -26,8 +26,8 @@ class WorkerJobListener(props: Properties) extends JobListener {
       val statsKey = "jobs." + context.getTrigger.getJobKey.getGroup + "." + context.getTrigger.getJobKey.getName + suffix
 
       if (props.getProperty("com.lucidchart.piezo.enableMonitoring") == "new") {
-        triggerMonitoringPriorityModel.getTriggerMonitoringPriority(context.getTrigger).map { triggerMonitoringPriority =>
-          if (triggerMonitoringPriority > TriggerMonitoringPriority.Off) {
+        triggerMonitoringPriorityModel.getTriggerMonitoringRecord(context.getTrigger).map { triggerMonitoringRecord =>
+          if (triggerMonitoringRecord.priority > TriggerMonitoringPriority.Off) {
             StatsD.increment(statsKey)
           }
         }

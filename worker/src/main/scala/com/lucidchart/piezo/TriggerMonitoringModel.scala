@@ -1,7 +1,7 @@
 package com.lucidchart.piezo
 
 import com.lucidchart.piezo.TriggerMonitoringPriority.TriggerMonitoringPriority
-import java.util.Properties
+import java.util.{Date, Properties}
 import org.quartz.{Trigger, TriggerKey}
 import org.slf4j.LoggerFactory
 
@@ -13,24 +13,39 @@ object TriggerMonitoringPriority extends Enumeration {
   val High = Value(3, "High")
 }
 
-class TriggerMonitoringPriorityModel(props: Properties) {
+case class TriggerMonitoringRecord (
+  triggerName: String,
+  triggerGroup: String,
+  priority: TriggerMonitoringPriority,
+  maxSecondsInError: Int,
+  created: Date,
+  modified: Date
+)
+
+class TriggerMonitoringModel(props: Properties) {
   val logger = LoggerFactory.getLogger(this.getClass)
   val connectionProvider = new ConnectionProvider(props)
 
-  def setTriggerMonitoringPriority(trigger: Trigger, triggerMonitoringPriority: TriggerMonitoringPriority): Int = {
+  def setTriggerMonitoringRecord(
+    trigger: Trigger,
+    triggerMonitoringPriority: TriggerMonitoringPriority,
+    maxSecondsInError: Int
+  ): Int = {
     val connection = connectionProvider.getConnection
     try {
       val prepared = connection.prepareStatement("""
         INSERT INTO trigger_monitoring_priority
-          (trigger_name, trigger_group, priority)
+          (trigger_name, trigger_group, priority, max_error_time)
         VALUES
-          (?, ?, ?)
+          (?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE
-          priority = values(priority);
+          priority = values(priority),
+          max_error_time = values(max_error_time)
       """)
       prepared.setString(1, trigger.getKey.getName)
       prepared.setString(2, trigger.getKey.getGroup)
       prepared.setInt(3, triggerMonitoringPriority.id)
+      prepared.setInt(4, maxSecondsInError)
       prepared.executeUpdate()
     } catch {
       case e: Exception => logger.error(
@@ -44,11 +59,11 @@ class TriggerMonitoringPriorityModel(props: Properties) {
     }
   }
 
-  def deleteTriggerMonitoringPriority(trigger: Trigger): Int = {
-    deleteTriggerMonitoringPriority(trigger.getKey)
+  def deleteTriggerMonitoringRecord(trigger: Trigger): Int = {
+    deleteTriggerMonitoringRecord(trigger.getKey)
   }
 
-  def deleteTriggerMonitoringPriority(triggerKey: TriggerKey): Int = {
+  def deleteTriggerMonitoringRecord(triggerKey: TriggerKey): Int = {
     val connection = connectionProvider.getConnection
     try {
       val prepared = connection.prepareStatement("""
@@ -75,7 +90,7 @@ class TriggerMonitoringPriorityModel(props: Properties) {
     }
   }
 
-  def getTriggerMonitoringPriority(trigger: Trigger): Option[TriggerMonitoringPriority] = {
+  def getTriggerMonitoringRecord(trigger: Trigger): Option[TriggerMonitoringRecord] = {
     val connection = connectionProvider.getConnection
 
     try {
@@ -90,7 +105,16 @@ class TriggerMonitoringPriorityModel(props: Properties) {
       prepared.setString(2, trigger.getKey.getGroup)
       val rs = prepared.executeQuery()
       if (rs.first()) {
-        TriggerMonitoringPriority.values.find(_.id == rs.getInt("priority"))
+        TriggerMonitoringPriority.values.find(_.id == rs.getInt("priority")).map { priority =>
+          TriggerMonitoringRecord(
+            rs.getString("trigger_name"),
+            rs.getString("trigger_group"),
+            priority,
+            rs.getInt("max_error_time"),
+            rs.getDate("created"),
+            rs.getDate("modified")
+          )
+        }
       } else {
         None
       }

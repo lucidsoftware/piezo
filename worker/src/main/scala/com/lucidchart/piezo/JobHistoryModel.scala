@@ -23,7 +23,21 @@ class JobHistoryModel(props: Properties) {
   def addJob(context: JobExecutionContext, success:Boolean) {
     val connection = connectionProvider.getConnection
     try {
-      val prepared = connection.prepareStatement("""INSERT INTO job_history(fire_instance_id, job_name, job_group, trigger_name, trigger_group, success, start, finish) VALUES(?, ?, ?, ?, ?, ?, ?, ?)""")
+      val prepared = connection.prepareStatement(
+        """
+          INSERT INTO job_history(
+            fire_instance_id,
+            job_name,
+            job_group,
+            trigger_name,
+            trigger_group,
+            success,
+            start,
+            finish
+          )
+          VALUES(?, ?, ?, ?, ?, ?, ?, ?)
+        """.stripMargin
+      )
       prepared.setString(1, context.getFireInstanceId)
       prepared.setString(2, context.getTrigger.getJobKey.getName)
       prepared.setString(3, context.getTrigger.getJobKey.getGroup)
@@ -43,7 +57,13 @@ class JobHistoryModel(props: Properties) {
   def deleteJobs(minStart: Long): Int = {
     val connection = connectionProvider.getConnection
     try {
-      val prepared = connection.prepareStatement("""DELETE FROM job_history WHERE start < ?""")
+      val prepared = connection.prepareStatement(
+        """
+          DELETE
+          FROM job_history
+          WHERE start < ?
+        """.stripMargin
+      )
       prepared.setTimestamp(1, new Timestamp(minStart))
       prepared.executeUpdate()
     } catch {
@@ -59,7 +79,17 @@ class JobHistoryModel(props: Properties) {
     val connection = connectionProvider.getConnection
 
     try {
-      val prepared = connection.prepareStatement("""SELECT * FROM job_history WHERE job_name=? AND job_group=? ORDER BY start DESC LIMIT 100""")
+      val prepared = connection.prepareStatement(
+        """
+          SELECT *
+          FROM job_history
+          WHERE
+            job_name=?
+            AND job_group=?
+          ORDER BY start DESC
+          LIMIT 100
+        """.stripMargin
+      )
       prepared.setString(1, name)
       prepared.setString(2, group)
       val rs = prepared.executeQuery();
@@ -74,19 +104,34 @@ class JobHistoryModel(props: Properties) {
     }
   }
 
-  def getJobByTrigger(triggerName: String, triggerGroup: String): List[JobRecord] = {
+  def getLastJobSuccessByTrigger(triggerName: String, triggerGroup: String): Option[JobRecord] = {
     val connection = connectionProvider.getConnection
 
     try {
-      val prepared = connection.prepareStatement("""SELECT * FROM job_history WHERE trigger_name=? AND trigger_group=? ORDER BY start DESC LIMIT 100""")
+      val prepared = connection.prepareStatement(
+        """
+          SELECT *
+          FROM job_history
+          WHERE
+            trigger_name=?
+            AND trigger_group=?
+            AND success=1
+          ORDER BY start DESC
+          LIMIT 1
+        """.stripMargin
+      )
       prepared.setString(1, triggerName)
       prepared.setString(2, triggerGroup)
-      val rs = prepared.executeQuery();
-      parseJobs(rs)
+      val rs = prepared.executeQuery()
+      if (rs.first()) {
+        Some(parseJob(rs))
+      } else {
+        None
+      }
     } catch {
       case e: Exception => {
-        logger.error("error in retrieving jobs", e)
-        Nil
+        logger.error("error in retrieving last job success by trigger", e)
+        None
       }
     } finally {
       connection.close()
@@ -97,7 +142,14 @@ class JobHistoryModel(props: Properties) {
     val connection = connectionProvider.getConnection
 
     try {
-      val prepared = connection.prepareStatement("""SELECT * FROM job_history ORDER BY start DESC LIMIT 100""")
+      val prepared = connection.prepareStatement(
+        """
+          SELECT *
+          FROM job_history
+          ORDER BY start DESC
+          LIMIT 100
+        """.stripMargin
+      )
       val rs = prepared.executeQuery()
       parseJobs(rs)
     } catch {
@@ -113,17 +165,21 @@ class JobHistoryModel(props: Properties) {
   def parseJobs(rs: ResultSet): List[JobRecord] = {
     var result = List[JobRecord]()
     while(rs.next()) {
-      result :+= new JobRecord(
-        rs.getString("job_name"),
-        rs.getString("job_group"),
-        rs.getString("trigger_name"),
-        rs.getString("trigger_group"),
-        rs.getInt("success"),
-        rs.getTimestamp("start"),
-        rs.getTimestamp("finish"),
-        rs.getString("fire_instance_id")
-      )
+      result :+= parseJob(rs)
     }
     result
+  }
+
+  def parseJob(rs: ResultSet): JobRecord = {
+    new JobRecord(
+      rs.getString("job_name"),
+      rs.getString("job_group"),
+      rs.getString("trigger_name"),
+      rs.getString("trigger_group"),
+      rs.getInt("success"),
+      rs.getTimestamp("start"),
+      rs.getTimestamp("finish"),
+      rs.getString("fire_instance_id")
+    )
   }
 }

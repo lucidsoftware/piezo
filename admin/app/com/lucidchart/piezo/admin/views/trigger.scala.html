@@ -3,7 +3,8 @@ triggersByGroup: scala.collection.mutable.Buffer[(String, scala.collection.immut
 currentTrigger: Option[org.quartz.Trigger],
 triggerHistory: Option[List[com.lucidchart.piezo.TriggerRecord]],
 errorMessage: Option[String] = None,
-triggerMonitoringPriority: Option[com.lucidchart.piezo.TriggerMonitoringPriority.Value] = None
+triggerMonitoringPriority: Option[com.lucidchart.piezo.TriggerMonitoringPriority.Value] = None,
+triggerMaxErrorTime: Integer = 300
 )(
 implicit
 request: play.api.mvc.Request[AnyContent]
@@ -123,6 +124,10 @@ request: play.api.mvc.Request[AnyContent]
             <tr>
                 <td class="text-right">Monitoring priority:</td>
                 <td>@triggerMonitoringPriority</td>
+            </tr>
+            <tr>
+                <td class="text-right">Monitoring - max seconds between successes:</td>
+                <td>@triggerMaxErrorTime seconds</td>
             </tr>
             }
             <tr>

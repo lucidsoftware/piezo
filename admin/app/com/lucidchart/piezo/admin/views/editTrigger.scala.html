@@ -1,7 +1,6 @@
 @(
 triggersByGroup: scala.collection.mutable.Buffer[(String, scala.collection.immutable.List[org.quartz.TriggerKey])],
-triggerForm: Form[(org.quartz.Trigger, com.lucidchart.piezo.TriggerMonitoringPriority.Value)],
-triggerMonitoringPriority: com.lucidchart.piezo.TriggerMonitoringPriority.TriggerMonitoringPriority = com.lucidchart.piezo.TriggerMonitoringPriority.Off,
+triggerForm: Form[(org.quartz.Trigger, com.lucidchart.piezo.TriggerMonitoringPriority.Value, Int)],
 formAction: play.api.mvc.Call,
 existing: Boolean,
 isTemplate: Boolean,
@@ -66,7 +65,10 @@ request: play.api.mvc.Request[AnyContent]
       <input type="text" class="job-name-type-ahead form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
     }
     }
-    @helper.select(triggerForm("triggerMonitoringPriority"), TriggerMonitoringPriority.values.toList.map(tp => tp.toString -> tp.toString), '_label -> "Monitoring Priority", 'labelClass -> "col-sm-2 text-right", 'inputDivClass -> "col-sm-4", 'class -> "form-control", 'placeholder -> TriggerMonitoringPriority.Off)
+    @helper.select(triggerForm("triggerMonitoringPriority"), TriggerMonitoringPriority.values.toList.map(tp => tp.toString -> tp.toString), '_label -> "Monitoring Priority", 'labelClass -> "col-sm-2 text-right", 'inputDivClass -> "col-sm-4", 'class -> "form-control", 'value -> triggerForm.data.get("triggerMonitoringPriority").getOrElse(TriggerMonitoringPriority.Off), 'placeholder -> TriggerMonitoringPriority.Off)
+    @helper.input(triggerForm("triggerMaxErrorTime"), '_label -> "Monitoring - Max Seconds Between Successes", 'labelClass -> "col-sm-2 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "", 'value -> triggerForm.data.get("triggerMaxErrorTime").getOrElse(300)) { (id, name, value, args) =>
+      <input type="number" class="form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
+    }
 
     @helper.input(triggerForm("description"), '_label -> "Description", 'labelClass -> "col-sm-2 text-right", 'inputDivClass -> "col-sm-10", 'placeholder -> "Description", 'value-> triggerForm.data.get("description").getOrElse("")) { (id, name, value, args) =>
       <input type="text" class="form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
