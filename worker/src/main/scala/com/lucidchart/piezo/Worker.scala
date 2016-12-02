@@ -18,10 +18,13 @@ import scala.util.control.NonFatal
 object Worker {
   private val logger = LoggerFactory.getLogger(this.getClass)
   private[piezo] val runSemaphore = new Semaphore(0)
+  private val shutdownSemaphore = new Semaphore(1)
   private[piezo] val dtf = ISODateTimeFormat.dateTimeNoMillis().withZoneUTC()
 
   def main(args: Array[String]) {
     logger.info("worker starting")
+
+    shutdownSemaphore.acquire()
 
     writePID()
     setupShutdownHandler()
@@ -34,6 +37,9 @@ object Worker {
     run(scheduler, props)
 
     logger.info("exiting")
+
+    shutdownSemaphore.release()
+
     System.exit(0)
   }
 
@@ -118,6 +124,7 @@ object Worker {
       override def run() {
         logger.info("received shutdown signal")
         runSemaphore.release()
+        shutdownSemaphore.acquire()
       }
     })
   }
