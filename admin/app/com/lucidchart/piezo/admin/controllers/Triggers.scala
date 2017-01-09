@@ -2,6 +2,7 @@ package com.lucidchart.piezo.admin.controllers
 
 import com.lucidchart.piezo.{TriggerHistoryModel, TriggerMonitoringModel, TriggerMonitoringPriority, WorkerSchedulerFactory}
 import java.util.Date
+import org.quartz.Trigger.TriggerState
 import org.quartz._
 import org.quartz.impl.triggers.{CronTriggerImpl, SimpleTriggerImpl}
 import play.api._
@@ -85,7 +86,8 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
             history,
             None,
             Some(triggerMonitoringPriority),
-            triggerMaxErrorTime
+            triggerMaxErrorTime,
+            triggerState = Some(scheduler.getTriggerState(triggerKey))
           )(request)
         )
       } catch {
@@ -314,6 +316,34 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
       }
     } else {
       NotFound
+    }
+  }
+
+  def patchTrigger(group: String, name: String) = Action { implicit request =>
+    val triggerKey = new TriggerKey(name, group)
+    val triggerExists = scheduler.checkExists(triggerKey)
+    if (!triggerExists) {
+      NotFound(com.lucidchart.piezo.admin.views.html.trigger(
+        mutable.Buffer(),
+        None,
+        None,
+        errorMessage = Some(s"Trigger $group:$name not found"))(request)
+      )
+    } else {
+      request.body.asJson.map { json =>
+        (json \ "state").asOpt[String].map { state =>
+          if(state.equalsIgnoreCase(TriggerState.PAUSED.toString)) {
+            scheduler.pauseTrigger(triggerKey)
+          } else {
+            scheduler.resumeTrigger(triggerKey)
+          }
+          Ok(Json.obj("state" -> scheduler.getTriggerState(triggerKey).toString))
+        }.getOrElse {
+          BadRequest("Missing parameter [state]")
+        }
+      }.getOrElse {
+        BadRequest("Expecting Json data")
+      }
     }
   }
 

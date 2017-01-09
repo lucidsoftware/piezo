@@ -1,16 +1,20 @@
+@import com.lucidchart.piezo.admin.controllers.{routes=>piezoRoutes}
+@import com.lucidchart.piezo.admin.views
+@import java.net.URLEncoder
+@import org.quartz.TriggerKey
 @(
 jobsByGroup: scala.collection.mutable.Buffer[(String, scala.collection.immutable.List[org.quartz.JobKey])],
 currentJob: Option[org.quartz.JobDetail],
 jobHistory: Option[List[com.lucidchart.piezo.JobRecord]],
 triggers: Option[List[org.quartz.Trigger]],
-errorMessage: Option[String] = None
+errorMessage: Option[String] = None,
+pausableTriggers: List[TriggerKey] = Nil,
+resumableTriggers: List[TriggerKey] = Nil
 )(
 implicit
 request: play.api.mvc.Request[AnyContent]
 )
-@import com.lucidchart.piezo.admin.controllers.{routes=>piezoRoutes}
-@import com.lucidchart.piezo.admin.views
-@import java.net.URLEncoder
+
 
 @com.lucidchart.piezo.admin.views.html.jobsLayout(jobsByGroup, currentJob) {
     @if(!errorMessage.isEmpty) {
@@ -27,30 +31,39 @@ request: play.api.mvc.Request[AnyContent]
       <a id="deleteJob" class="piezo-button pull-right" data-toggle="tooltip" title="Delete job" onclick="$('#deleteConfirm').show()">
         <span class="glyphicon glyphicon-remove"></span>
       </a>
-      <a id="runJob" class="piezo-button pull-right" data-toggle="tooltip" title="Run job" onclick="$('#runConfirm').show()">
-        <span class="glyphicon glyphicon-play"></span>
+      <a id="runJob" class="piezo-button pull-right" data-toggle="tooltip" title="Trigger job" onclick="$('#runConfirm').show()">
+        <span class="glyphicon glyphicon-flash"></span>
       </a>
+      @if(!pausableTriggers.isEmpty) {
+        <a id="pauseJob" class="piezo-button pull-right" data-toggle="tooltip" title="Pause job">
+            <span class="glyphicon glyphicon-pause"></span>
+        </a>
+      } else {
+        @if(!resumableTriggers.isEmpty) {
+            <a id="resumeJob" class="piezo-button pull-right" data-toggle="tooltip" title="Resume job">
+                <span class="glyphicon glyphicon-play"></span>
+            </a>
+        }
+      }
 
       <div class="clearfix"></div>
 
+        <div id="errorGrowl" style="display:none;" class="alert alert-danger">
+            <p id="errorMessage">Failed to delete job.</p>
+        </div>
+
         <!-- Run Job Alerts -->
-        <div id="runSuccess" class="alert alert-success">
+        <div id="runSuccess"  style="display:none;" class="alert alert-success">
           <p>The job has been triggered, and will run once a thread becomes available.</p>
         </div>
-        <div id="runError" class="alert alert-warning">
-          <p>Failed to run job.</p>
-        </div>
-        <div id="runConfirm" class="alert alert-warning fade in">
+        <div id="runConfirm" style="display:none;" class="alert alert-warning fade in">
             <h4>Are you sure you want to run this job right now?</h4>
             <button type="button" class="btn btn-success" onclick="runJob()">Run</button>
             <button type="button" class="btn btn-default" onclick="$('#runConfirm').hide()">Cancel</button>
         </div>
 
         <!-- Delete Job Alerts -->
-        <div id="deleteError" class="alert alert-danger">
-          <p>Failed to delete job.</p>
-        </div>
-        <div id="deleteConfirm" class="alert alert-warning fade in">
+        <div id="deleteConfirm" style="display:none;" class="alert alert-warning fade in">
           <h4>This will permanently delete the job!</h4>
           <button type="button" class="btn btn-danger" onclick="deleteJob()">Delete</button>
           <button type="button" class="btn btn-default" onclick="$('#deleteConfirm').hide()">Cancel</button>
@@ -62,12 +75,13 @@ request: play.api.mvc.Request[AnyContent]
             var runSuccess = $('#runSuccess');
             var runError = $('#runError');
 
-            runConfirm.hide();
-            runSuccess.hide();
-            runError.hide();
-
-            deleteError.hide();
-            deleteConfirm.hide();
+            function showErrorMessage(message) {
+                $('#errorGrowl').show();
+                $('#errorMessage').text(message);
+                setTimeout(function() {
+                    $('#errorGrowl').fadeOut(1000);
+                }, 5000);
+            }
 
             function deleteJob() {
                 deleteConfirm.hide();
@@ -78,10 +92,7 @@ request: play.api.mvc.Request[AnyContent]
                         if (deleteRequest.status === 200) {
                             window.location.assign("@piezoRoutes.Jobs.getIndex()");
                         } else {
-                            deleteError.show();
-                            setTimeout(function() {
-                                deleteError.fadeOut(1000);
-                            }, 5000);
+                            showErrorMessage('Failed to delete job.');
                         }
                     }
                 };
@@ -101,16 +112,41 @@ request: play.api.mvc.Request[AnyContent]
                                 runSuccess.fadeOut(1000);
                             }, 5000);
                         } else {
-                            runError.show();
-                            setTimeout(function() {
-                                runError.fadeOut(1000);
-                            }, 5000);
+                            showErrorMessage('Failed to run job.');
                         }
                     }
                 };
                 runRequest.open("POST", jobUrl, true);
                 runRequest.send(null);
             }
+
+            function setTrigger(pause, triggerUrl) {
+                $.ajax({
+                    url:triggerUrl,
+                    type:'PATCH',
+                    headers : {
+                        'Accept' : 'application/json',
+                        'Content-Type' : 'application/json'
+                    },
+                    data: JSON.stringify({"state": (pause? "PAUSED" : "NORMAL")}),
+                    success: function(resp, status) {
+                        window.location.reload();
+                    },
+                    error: function() {
+                        showErrorMessage(pause? 'Failed to pause trigger.' : 'Failed to resume trigger.');
+                    }
+                });
+            }
+            $('#pauseJob').click(function() {
+                @pausableTriggers.map { triggerKey =>
+                    setTrigger(true, "@piezoRoutes.Triggers.patchTrigger(triggerKey.getGroup(), triggerKey.getName())");
+                }
+            });
+            $('#resumeJob').click(function() {
+                @resumableTriggers.map { triggerKey =>
+                    setTrigger(false, "@piezoRoutes.Triggers.patchTrigger(triggerKey.getGroup(), triggerKey.getName())");
+                }
+            });
         </script>
         <div class="clearfix"></div>
         <table class="table table-condensed table-fixed-first-col table-bordered table-striped table-hover">
