@@ -68,9 +68,12 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory) extends Controller {
           }
         }
 
-        val triggers = Some(scheduler.getTriggersOfJob(jobKey).asScala.toList)
+        val triggers = scheduler.getTriggersOfJob(jobKey).asScala.toList
+        val (resumableTriggers, pausableTriggers) = triggers.filter(_.isInstanceOf[CronTrigger]).map(_.getKey()).partition{ triggerKey =>
+          scheduler.getTriggerState(triggerKey) == Trigger.TriggerState.PAUSED
+        }
 
-        Ok(com.lucidchart.piezo.admin.views.html.job(getJobsByGroup(), jobDetail, history, triggers)(request))
+        Ok(com.lucidchart.piezo.admin.views.html.job(getJobsByGroup(), jobDetail, history, Some(triggers), None, pausableTriggers, resumableTriggers)(request))
       } catch {
         case e: Exception => {
           val errorMsg = "Exception caught getting job " + group + " " + name + ". -- " + e.getLocalizedMessage()

@@ -1,20 +1,21 @@
+@import com.lucidchart.piezo.TriggerMonitoringPriority
+@import com.lucidchart.piezo.admin.controllers.{routes=>piezoRoutes}
+@import com.lucidchart.piezo.admin.views
+@import java.net.URLEncoder
+@import org.quartz._
+@import org.quartz.Trigger.TriggerState
 @(
 triggersByGroup: scala.collection.mutable.Buffer[(String, scala.collection.immutable.List[org.quartz.TriggerKey])],
 currentTrigger: Option[org.quartz.Trigger],
 triggerHistory: Option[List[com.lucidchart.piezo.TriggerRecord]],
 errorMessage: Option[String] = None,
 triggerMonitoringPriority: Option[com.lucidchart.piezo.TriggerMonitoringPriority.Value] = None,
-triggerMaxErrorTime: Integer = 300
+triggerMaxErrorTime: Integer = 300,
+triggerState: Option[TriggerState] = None
 )(
 implicit
 request: play.api.mvc.Request[AnyContent]
 )
-
-@import com.lucidchart.piezo.TriggerMonitoringPriority
-@import com.lucidchart.piezo.admin.controllers.{routes=>piezoRoutes}
-@import com.lucidchart.piezo.admin.views
-@import java.net.URLEncoder
-@import org.quartz._
 
 @com.lucidchart.piezo.admin.views.html.triggersLayout(triggersByGroup, currentTrigger) {
     @if(!errorMessage.isEmpty) {
@@ -37,18 +38,35 @@ request: play.api.mvc.Request[AnyContent]
             <span class="glyphicon glyphicon-remove"></span>
         </a>
 
+        @if(triggerState.contains(TriggerState.PAUSED)) {
+            <a id="resumeTrigger" class="piezo-button pull-right" data-toggle="tooltip" title="Resume trigger">
+                <span class="glyphicon glyphicon-play"></span>
+            </a>
+        } else {
+            <a id="pauseTrigger" class="piezo-button pull-right" data-toggle="tooltip" title="Pause trigger">
+                <span class="glyphicon glyphicon-pause"></span>
+            </a>
+        }
         <div class="clearfix"></div>
-        <div id="deleteError" class="alert alert-danger">
-            <p>Failed to delete trigger.</p>
+        <div id="errorGrowl" style="display:none;" class="alert alert-danger">
+            <p id="errorMessage"></p>
         </div>
-        <div id="deleteConfirm" class="alert alert-warning fade in">
+
+        <div id="deleteConfirm" style="display:none;" class="alert alert-warning fade in">
           <h4>This will permanently delete the trigger!</h4>
             <button type="button" class="btn btn-danger" onclick="deleteTrigger()">Delete</button>
             <button type="button" class="btn btn-default" onclick="$('#deleteConfirm').hide()">Cancel</button>
         </div>
         <script>
-            $('#deleteError').hide();
-            $('#deleteConfirm').hide();
+
+            function showErrorMessage(message) {
+                $('#errorGrowl').show();
+                $('#errorMessage').text(message);
+                setTimeout(function() {
+                    $('#errorGrowl').fadeOut(1000);
+                }, 5000);
+            }
+
             function deleteTrigger() {
                 var triggerUrl = "@piezoRoutes.Triggers.deleteTrigger(currentTrigger.get.getKey.getGroup(), currentTrigger.get.getKey.getName())";
                 var deleteRequest = new XMLHttpRequest();
@@ -57,13 +75,33 @@ request: play.api.mvc.Request[AnyContent]
                         if (deleteRequest.status === 200) {
                             window.location.assign("@piezoRoutes.Triggers.getIndex()");
                         } else {
-                            $('#deleteError').show();
+                            showErrorMessage('Failed to delete trigger.');
                         }
                     }
                 };
                 deleteRequest.open("DELETE", triggerUrl, true);
                 deleteRequest.send(null);
             }
+
+            function setTriggerState(pause) {;
+                $.ajax({
+                    url:"@piezoRoutes.Triggers.patchTrigger(currentTrigger.get.getKey.getGroup(), currentTrigger.get.getKey.getName())",
+                    type:'PATCH',
+                    headers : {
+                        'Accept' : 'application/json',
+                        'Content-Type' : 'application/json'
+                    },
+                    data: JSON.stringify({"state": (pause? "PAUSED" : "NORMAL")}),
+                    success: function(resp, status) {
+                        window.location.reload();
+                    },
+                    error: function() {
+                        showErrorMessage(pause? 'Failed to pause trigger.' : 'Failed to resume trigger.');
+                    }
+                });
+            }
+            $('#pauseTrigger').click(setTriggerState.bind(this,true));
+            $('#resumeTrigger').click(setTriggerState.bind(this,false));
         </script>
         <table class="table table-condensed table-bordered table-striped table-hover">
             <tbody>
@@ -135,6 +173,10 @@ request: play.api.mvc.Request[AnyContent]
                 <td>
                     @if(currentTrigger.get.getDescription() != null) {@currentTrigger.get.getDescription()} else {}
                 </td>
+            </tr>
+            <tr>
+                <td class="text-right small">State:</td>
+                <td class="small">@triggerState.map(_.toString)</td>
             </tr>
             <tr>
                 <td class="text-right small">End time:</td>

@@ -23,6 +23,7 @@ DELETE  /triggers/:group/:name        com.lucidchart.piezo.admin.controllers.Tri
 GET     /triggers/:group/:name/editor com.lucidchart.piezo.admin.controllers.Triggers.getEditTriggerAction(group: String, name: String)
 POST    /triggers/:group/:name/runner com.lucidchart.piezo.admin.controllers.Triggers.triggerJob(group: String, name: String)
 POST    /triggers                     com.lucidchart.piezo.admin.controllers.Triggers.postTrigger()
+PATCH   /triggers/:group/:name        com.lucidchart.piezo.admin.controllers.Triggers.patchTrigger(group: String, name: String)
 
 GET     /typeahead/triggers/:sofar    com.lucidchart.piezo.admin.controllers.Triggers.triggerGroupTypeAhead(sofar: String)
 
