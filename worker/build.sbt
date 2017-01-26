@@ -4,9 +4,9 @@ organization := "com.lucidchart"
 
 version := "1.18-SNAPSHOT"
 
-scalaVersion := "2.11.7"
+scalaVersion := "2.11.8"
 
-crossScalaVersions := Seq(scalaVersion.value, "2.11.6")
+crossScalaVersions := Seq(scalaVersion.value, "2.11.7")
 
 exportJars := true
 
