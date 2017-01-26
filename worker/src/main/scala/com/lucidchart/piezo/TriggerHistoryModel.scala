@@ -23,10 +23,22 @@ class TriggerHistoryModel(props: Properties) {
   def addTrigger(trigger: Trigger, actualStart: Option[Date], misfire: Boolean, fireInstanceId: Option[String]) {
     val connection = connectionProvider.getConnection
     try {
-      val prepared = connection.prepareStatement("""INSERT INTO trigger_history(trigger_name, trigger_group, scheduled_start, actual_start, finish, misfire, fire_instance_id) VALUES(?, ?, ?, ?, ?, ?, ?)""")
+      val prepared = connection.prepareStatement(
+        """
+          INSERT INTO trigger_history(
+            trigger_name,
+            trigger_group,
+            scheduled_start,
+            actual_start,
+            finish,
+            misfire,
+            fire_instance_id
+          ) VALUES(?, ?, ?, ?, ?, ?, ?)
+        """.stripMargin
+      )
       prepared.setString(1, trigger.getKey.getName)
       prepared.setString(2, trigger.getKey.getGroup)
-      prepared.setTimestamp(3, new Timestamp(Option(trigger.getPreviousFireTime).getOrElse(new Date(0)).getTime))
+      prepared.setTimestamp(3, new Timestamp(Option(trigger.getPreviousFireTime).getOrElse(new Date).getTime))
       prepared.setTimestamp(4, actualStart.map(date => new Timestamp(date.getTime)).getOrElse(null))
       prepared.setTimestamp(5, new Timestamp(System.currentTimeMillis))
       prepared.setBoolean(6, misfire)

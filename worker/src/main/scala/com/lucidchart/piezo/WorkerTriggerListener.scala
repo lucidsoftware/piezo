@@ -12,15 +12,19 @@ object WorkerTriggerListener {
 class WorkerTriggerListener(props: Properties) extends TriggerListener {
   val triggerHistoryModel = new TriggerHistoryModel(props)
   val triggerMonitoringPriorityModel = new TriggerMonitoringModel(props)
-  def getName:String = "WorkerTriggerListener"
+  def getName: String = "WorkerTriggerListener"
 
-  def vetoJobExecution(trigger: Trigger, context: JobExecutionContext):Boolean = false
+  def vetoJobExecution(trigger: Trigger, context: JobExecutionContext): Boolean = false
 
-  def triggerFired(trigger: Trigger, context: JobExecutionContext) {}
+  def triggerFired(trigger: Trigger, context: JobExecutionContext):  Unit = {}
 
-  def triggerComplete(trigger: Trigger, context: JobExecutionContext, triggerInstructionCode: CompletedExecutionInstruction) {
+  def triggerComplete(
+    trigger: Trigger,
+    context: JobExecutionContext,
+    triggerInstructionCode: CompletedExecutionInstruction
+  ): Unit = {
     try {
-      triggerHistoryModel.addTrigger(trigger, Some(context.getFireTime), misfire=false, Some(context.getFireInstanceId))
+      triggerHistoryModel.addTrigger(trigger, Some(context.getFireTime), misfire = false, Some(context.getFireInstanceId))
       val statsKey = "triggers." + trigger.getKey.getGroup + "." + trigger.getKey.getName + ".completed"
 
       if (props.getProperty("com.lucidchart.piezo.enableMonitoring") == "new") {
@@ -37,10 +41,10 @@ class WorkerTriggerListener(props: Properties) extends TriggerListener {
     }
   }
 
-  def triggerMisfired(trigger: Trigger) {
+  def triggerMisfired(trigger: Trigger): Unit = {
     try {
       triggerMonitoringPriorityModel.getTriggerMonitoringRecord(trigger).map { triggerMonitoringRecord =>
-        triggerHistoryModel.addTrigger(trigger,None,misfire = true,None)
+        triggerHistoryModel.addTrigger(trigger, None, misfire = true, None)
 
         if (triggerMonitoringRecord.priority > TriggerMonitoringPriority.Off) {
           val statsKey = "triggers." + trigger.getKey.getGroup + "." + trigger.getKey.getName + ".misfired"
