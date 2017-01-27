@@ -24,6 +24,7 @@ class WorkerTriggerListener(props: Properties) extends TriggerListener {
     triggerInstructionCode: CompletedExecutionInstruction
   ): Unit = {
     try {
+      StatsD.increment("trigger.complete")
       triggerHistoryModel.addTrigger(trigger, Some(context.getFireTime), misfire = false, Some(context.getFireInstanceId))
       val statsKey = "triggers." + trigger.getKey.getGroup + "." + trigger.getKey.getName + ".completed"
 
