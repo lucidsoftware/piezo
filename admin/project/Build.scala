@@ -6,13 +6,13 @@ import sbt.plugins._
 object ApplicationBuild extends Build {
 
   val appName         = "admin"
-  val appVersion      = "1.1"
+  val appVersion      = "1.2"
 
   val appDependencies = Seq(
     jdbc,
     anorm,
     "org.quartz-scheduler" % "quartz" % "2.1.7",
-    "com.lucidchart" %% "piezo-worker" % "1.19"
+    "com.lucidchart" %% "piezo-worker" % "1.20"
   )
 
   val main = Project(appName, file(".")).enablePlugins(play.PlayScala).settings(
