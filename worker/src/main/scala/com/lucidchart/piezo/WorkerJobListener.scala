@@ -1,14 +1,15 @@
 package com.lucidchart.piezo
 
-import org.quartz.{JobExecutionException, JobExecutionContext, JobListener}
-import org.slf4j.LoggerFactory
+import com.lucidchart.util.statsd.StatsD
 import java.util.Properties
+import org.quartz.{JobExecutionContext, JobExecutionException, JobListener}
+import org.slf4j.LoggerFactory
 
 object WorkerJobListener {
   val logger = LoggerFactory.getLogger(this.getClass)
 }
 
-class WorkerJobListener(props: Properties) extends JobListener {
+class WorkerJobListener(props: Properties, statsd: StatsD) extends JobListener {
   val jobHistoryModel = new JobHistoryModel(props)
   val triggerMonitoringPriorityModel = new TriggerMonitoringModel(props)
   def getName: String = "WorkerJobListener"
@@ -23,16 +24,17 @@ class WorkerJobListener(props: Properties) extends JobListener {
       jobHistoryModel.addJob(context,success = success)
 
       val suffix = if (success) ".succeeded" else ".failed"
+      statsd.increment(s"job${suffix}")
       val statsKey = "jobs." + context.getTrigger.getJobKey.getGroup + "." + context.getTrigger.getJobKey.getName + suffix
 
       if (props.getProperty("com.lucidchart.piezo.enableMonitoring") == "new") {
         triggerMonitoringPriorityModel.getTriggerMonitoringRecord(context.getTrigger).map { triggerMonitoringRecord =>
           if (triggerMonitoringRecord.priority > TriggerMonitoringPriority.Off) {
-            StatsD.increment(statsKey)
+            statsd.increment(statsKey)
           }
         }
       } else {
-        StatsD.increment(statsKey)
+        statsd.increment(statsKey)
       }
     } catch {
       case e: Exception => WorkerJobListener.logger.error("error in jobWasExecuted", e)

@@ -1,15 +1,14 @@
 package com.lucidchart.piezo
 
+import com.lucidchart.util.statsd.StatsD
+import java.io._
 import java.util.Properties
-
+import java.util.concurrent.{Semaphore, TimeUnit}
 import org.joda.time.DateTime
 import org.joda.time.format.ISODateTimeFormat
+import org.quartz.Scheduler
 import org.slf4j.LoggerFactory
-import org.quartz.{JobExecutionContext, JobKey, Scheduler, SchedulerException}
-import java.util.concurrent.{Semaphore, TimeUnit}
-import java.io._
-
-import scala.collection.JavaConversions._
+import scala.util.Try
 import scala.util.control.NonFatal
 
 /**
@@ -32,8 +31,13 @@ object Worker {
     val schedulerFactory: WorkerSchedulerFactory = new WorkerSchedulerFactory()
     val scheduler = schedulerFactory.getScheduler()
     val props = schedulerFactory.props
-    scheduler.getListenerManager.addJobListener(new WorkerJobListener(props))
-    scheduler.getListenerManager.addTriggerListener(new WorkerTriggerListener(props))
+    val statsd = new StatsD(
+      "applications.piezo.worker",
+      port = Try(props.getProperty("com.lucidchart.piezo.statsd.port").toInt).getOrElse(8125),
+      multiMetrics = false
+    )
+    scheduler.getListenerManager.addJobListener(new WorkerJobListener(props, statsd))
+    scheduler.getListenerManager.addTriggerListener(new WorkerTriggerListener(props, statsd))
     run(scheduler, props)
 
     logger.info("exiting")
