@@ -12,7 +12,7 @@ object ApplicationBuild extends Build {
     jdbc,
     anorm,
     "org.quartz-scheduler" % "quartz" % "2.1.7",
-    "com.lucidchart" %% "piezo-worker" % "1.21"
+    "com.lucidchart" %% "piezo-worker" % "1.22"
   )
 
   val main = Project(appName, file(".")).enablePlugins(play.PlayScala).settings(
