@@ -9,7 +9,7 @@ import org.joda.time.format.ISODateTimeFormat
 import org.quartz.Scheduler
 import org.slf4j.LoggerFactory
 import scala.util.Try
-import scala.util.control.NonFatal;
+import scala.util.control.NonFatal
 
 /**
   * To stop the worker without stopping SBT: Ctrl+D Enter
@@ -31,13 +31,14 @@ object Worker {
     val schedulerFactory: WorkerSchedulerFactory = new WorkerSchedulerFactory()
     val scheduler = schedulerFactory.getScheduler()
     val props = schedulerFactory.props
+    val useDatadog = Try(props.getProperty("com.lucidchart.piezo.statsd.useDatadog", "false").toBoolean).getOrElse(false)
     val statsd = new NonBlockingStatsDClient(
       props.getProperty("com.lucidchart.piezo.statsd.prefix", "applications.piezo.worker"),
       props.getProperty("com.lucidchart.piezo.statsd.host", "localhost"),
       Try(props.getProperty("com.lucidchart.piezo.statsd.port").toInt).getOrElse(8125)
     )
-    scheduler.getListenerManager.addJobListener(new WorkerJobListener(props, statsd))
-    scheduler.getListenerManager.addTriggerListener(new WorkerTriggerListener(props, statsd))
+    scheduler.getListenerManager.addJobListener(new WorkerJobListener(props, statsd, useDatadog))
+    scheduler.getListenerManager.addTriggerListener(new WorkerTriggerListener(props, statsd, useDatadog))
     run(scheduler, props)
 
     logger.info("exiting")
