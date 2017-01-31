@@ -19,22 +19,22 @@ mainClass := Some("com.lucidchart.piezo.Worker")
 connectInput in run := true
 
 libraryDependencies ++= Seq(
-	"ch.qos.logback" % "logback-classic" % "1.0.7",
+  "ch.qos.logback" % "logback-classic" % "1.0.7",
   "net.databinder" %% "dispatch-http" % "0.8.10",
-	"org.quartz-scheduler" % "quartz" % "2.1.7",
+  "org.quartz-scheduler" % "quartz" % "2.1.7",
   "org.specs2" %% "specs2" % "2.3.13" % Test,
-	"mysql" % "mysql-connector-java" % "5.1.25",
-	"javax.transaction" % "jta" % "1.1",
+  "mysql" % "mysql-connector-java" % "5.1.25",
+  "javax.transaction" % "jta" % "1.1",
   "joda-time" % "joda-time" % "2.8.1",
   "org.joda" % "joda-convert" % "1.7",
-	"com.typesafe" % "config" % "1.0.0",
+  "com.typesafe" % "config" % "1.0.0",
   "com.datadoghq" % "java-dogstatsd-client" % "2.3"
 )
 
 resolvers ++= List(
-	DefaultMavenRepository,
-	"Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/",
-	"Staging Sonatype repository" at "https://oss.sonatype.org/content/groups/staging/"
+  DefaultMavenRepository,
+  "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/",
+  "Staging Sonatype repository" at "https://oss.sonatype.org/content/groups/staging/"
 )
 
 TaskKey[Set[File]]("stage") <<= (fullClasspath in Runtime, target) map { (cp, out) =>
