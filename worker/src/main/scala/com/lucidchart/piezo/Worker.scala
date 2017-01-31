@@ -1,6 +1,6 @@
 package com.lucidchart.piezo
 
-import com.lucidchart.util.statsd.StatsD
+import com.timgroup.statsd.NonBlockingStatsDClient
 import java.io._
 import java.util.Properties
 import java.util.concurrent.{Semaphore, TimeUnit}
@@ -9,7 +9,7 @@ import org.joda.time.format.ISODateTimeFormat
 import org.quartz.Scheduler
 import org.slf4j.LoggerFactory
 import scala.util.Try
-import scala.util.control.NonFatal
+import scala.util.control.NonFatal;
 
 /**
   * To stop the worker without stopping SBT: Ctrl+D Enter
@@ -31,10 +31,10 @@ object Worker {
     val schedulerFactory: WorkerSchedulerFactory = new WorkerSchedulerFactory()
     val scheduler = schedulerFactory.getScheduler()
     val props = schedulerFactory.props
-    val statsd = new StatsD(
-      "applications.piezo.worker",
-      port = Try(props.getProperty("com.lucidchart.piezo.statsd.port").toInt).getOrElse(8125),
-      multiMetrics = false
+    val statsd = new NonBlockingStatsDClient(
+      props.getProperty("com.lucidchart.piezo.statsd.prefix", "applications.piezo.worker"),
+      props.getProperty("com.lucidchart.piezo.statsd.host", "localhost"),
+      Try(props.getProperty("com.lucidchart.piezo.statsd.port").toInt).getOrElse(8125)
     )
     scheduler.getListenerManager.addJobListener(new WorkerJobListener(props, statsd))
     scheduler.getListenerManager.addTriggerListener(new WorkerTriggerListener(props, statsd))

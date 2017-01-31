@@ -1,15 +1,15 @@
 package com.lucidchart.piezo
 
-import com.lucidchart.util.statsd.StatsD
+import com.timgroup.statsd.StatsDClient
 import java.util.Properties
 import org.quartz.{JobExecutionContext, JobExecutionException, JobListener}
-import org.slf4j.LoggerFactory
+import org.slf4j.LoggerFactory;
 
 object WorkerJobListener {
   val logger = LoggerFactory.getLogger(this.getClass)
 }
 
-class WorkerJobListener(props: Properties, statsd: StatsD) extends JobListener {
+class WorkerJobListener(props: Properties, statsd: StatsDClient) extends JobListener {
   val jobHistoryModel = new JobHistoryModel(props)
   val triggerMonitoringPriorityModel = new TriggerMonitoringModel(props)
   def getName: String = "WorkerJobListener"

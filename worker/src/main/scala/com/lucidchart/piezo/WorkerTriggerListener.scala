@@ -1,6 +1,6 @@
 package com.lucidchart.piezo
 
-import com.lucidchart.util.statsd.StatsD
+import com.timgroup.statsd.StatsDClient;
 import java.util.Properties
 import org.quartz.Trigger.CompletedExecutionInstruction
 import org.quartz._
@@ -10,7 +10,7 @@ object WorkerTriggerListener {
   private val logger = LoggerFactory.getLogger(this.getClass)
 }
 
-class WorkerTriggerListener(props: Properties, statsd: StatsD) extends TriggerListener {
+class WorkerTriggerListener(props: Properties, statsd: StatsDClient) extends TriggerListener {
   val triggerHistoryModel = new TriggerHistoryModel(props)
   val triggerMonitoringPriorityModel = new TriggerMonitoringModel(props)
   def getName: String = "WorkerTriggerListener"

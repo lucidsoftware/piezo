@@ -27,7 +27,8 @@ libraryDependencies ++= Seq(
 	"javax.transaction" % "jta" % "1.1",
   "joda-time" % "joda-time" % "2.8.1",
   "org.joda" % "joda-convert" % "1.7",
-	"com.typesafe" % "config" % "1.0.0"
+	"com.typesafe" % "config" % "1.0.0",
+  "com.datadoghq" % "java-dogstatsd-client" % "2.3"
 )
 
 resolvers ++= List(
