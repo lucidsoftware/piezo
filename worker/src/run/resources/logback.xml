@@ -1,7 +1,5 @@
 <configuration debug="false">
 
-    <conversionRule conversionWord="coloredLevel" converterClass="play.api.Logger$ColoredLevel" />
-
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">
         <file>/tmp/worker.log</file>
         <encoder>
