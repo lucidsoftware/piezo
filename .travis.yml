@@ -1,28 +1,40 @@
-after_success:
-  - |
-    if [ -n "$TRAVIS_TAG" ]; then
-        mkdir ~/.pgp
-        echo $PGP_PUBLIC | base64 --decode > ~/.pgp/pubring
-        echo $PGP_SECRET | base64 --decode > ~/.pgp/secring
-        pushd worker && sbt +publishSigned sonatypeReleaseAll && popd
-    elif [ "$TRAVIS_PULL_REQUEST" == false ] && [ "$TRAVIS_BRANCH" == master ]; then
-        mkdir ~/.pgp
-        echo $PGP_PUBLIC | base64 --decode > ~/.pgp/pubring
-        echo $PGP_SECRET | base64 --decode > ~/.pgp/secring
-        pushd worker && sbt +publishSigned && popd
-    fi
+cache:
+  directories:
+    - $HOME/.ivy2
+    - $HOME/.sbt
 deploy:
-  api_key: $GITHUB_AUTH
-  file: worker/target/**/*.jar
-  file_glob: true
-  on:
-    tags: true
-  provider: releases
-  skip_cleanup: true
+  -
+    file: admin/target/bintray.json
+    key: $BINTRAY_KEY
+    on:
+      tags: true
+    provider: bintray
+    skip_cleanup: true
+    user: pauldraper
+  -
+    api_key: $GITHUB_AUTH
+    file:
+      - admin/target/*.deb
+      - worker/target/**/*.jar
+    file_glob: true
+    on:
+      tags: true
+    provider: releases
+    skip_cleanup: true
+git:
+  depth: 1
 jdk:
-  - openjdk7
+  - oraclejdk8
 language: scala
 script:
-  - pushd worker && sbt test && popd
-  - pushd worker && sbt publish-local && popd
-  - pushd admin && sbt test && popd
+  - '[ "$TRAVIS_PULL_REQUEST" != false ] || export SBT_OPTS=-Dbuild.version=${TRAVIS_TAG:-$TRAVIS_BRANCH-SNAPSHOT}'
+  - sbt 'all docs:compile test'
+  - |
+    if [ "$TRAVIS_SECURE_ENV_VARS" == true ]; then
+      echo "$PGP_SECRET" | base64 --decode | gpg --import
+      if [ -z "$TRAVIS_TAG" ]; then
+          sbt 'all admin/debian:packageBin worker/publishSigned'
+      else
+          sbt 'all admin/debian:bintrayDescriptor worker/packageBin' "sonatypeOpen piezo-$TRAVIS_TAG" worker/publishSigned sonatypeReleaseAll
+      fi
+    fi

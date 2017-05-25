@@ -24,44 +24,38 @@ Worker also expands the set of tables that quartz uses with additional tables to
 5. Run Piezo as specified in [Running](#running).
 
 ###Building
-You must have [sbt](http://www.scala-sbt.org/) version 0.13.0 or higher to build the worker project.
+You must have [sbt](http://www.scala-sbt.org/) 0.13.
 
-To compile the project run
+`sbt worker/compile` compiles sources.
 
-`make compile`.
-
-To package the project into a jar run
-
-`make package`.
-
-To collect all dependencies into a single folder (target/staged) run
-
-`make stage`
+`sbt worker/packageBin` creates a JAR.
 
 ###Configuration
 ####JVM properties
 * `org.quartz.properties` - [Quartz scheduler library config file](http://quartz-scheduler.org/documentation/quartz-2.2.x/configuration/)
-* `logback.configurationFile` - [Logback config file](http://logback.qos.ch/manual/configuration.html)
 * `pidfile.path` - path to file where PID should be written on startup
 
 ###Running
-The project includes a sample script for running a worker process. It depends on `make stage` having been run. It launches with the [sample worker quartz.properties file](worker/src/main/resources/quartz.properties) included in the project.
+
+When developing
+
+```sh
+sbt worker/run
+```
+
+This uses the quartz.properties file at the repo root and runs a heatbeat job.
+
+To use to run jobs add `com.lucidchart:piezo-worker:<version>` as a dependency to your project, and then run the
+com.lucidchart.piezo.Worker class. For example,
 
 ```
-./worker/src/main/resources/run.sh
-```
-
-Here also is a sample java command for running a single worker instance:
-
-```
-java -Dlogback.configurationFile=<path to logback config> -Dorg.quartz.properties=<path to quartz properties> -Dpidfile.path=<path to pid file> -Dnetworkaddress.cache.ttl=10 -Dnetworkaddress.cache.negative.ttl=10 -cp <path to jars> com.lucidchart.piezo.Worker
+java  -Dorg.quartz.properties=<path to quartz properties> -Dpidfile.path=<path to pid file> -cp <classpath> com.lucidchart.piezo.Worker
 ```
 
 ###Stats
 Worker reports statistics to a [StatsD](https://github.com/etsy/statsd/) server if available.
 
 It also stores historical job execution data in a pair of database tables defined in [create_history_tables.sql](worker/src/main/resources/create_history_tables.sql). These tables should be added to the same datasource as the standard quartz tables.
-
 
 ##Admin
 
@@ -70,16 +64,10 @@ Admin is a web interface for viewing and managing the scheduled jobs.
 ###Setup
 1. Follow the steps for the Worker [Setup](#setup) above.
 
-###Building
-You must have [play](http://www.playframework.com/) version 2.3 or higher to build the admin project.
+###<a name="adminBuilding">Building</a>
+You must have [sbt](http://www.scala-sbt.org/) 0.13.
 
-To compile the project run
-
-`sbt compile`.
-
-To collect all dependencies into a single folder (target/staged) run
-
-`make stage`
+`sbt admin/debian:packageBin` creates a .deb that includes all library dependencies, and installs piezo-admin as an Upstart service running as `piezo-admin`.
 
 ###Configuration
 ####JVM properties
@@ -89,20 +77,30 @@ To collect all dependencies into a single folder (target/staged) run
 * `http.port[s]` - [Play Framework production configuration](http://www.playframework.com/documentation/2.1.1/ProductionConfiguration)
 
 ####org.quartz.properties
-The [sample admin quartz.properties file](admin/conf/quartz.properties) includes the following property which needs to be included in the configured properties file that the admin is run with.
-`org.quartz.scheduler.classLoadHelper.class: com.lucidchart.piezo.GeneratorClassLoader`
+
+The properties file must have `org.quartz.scheduler.classLoadHelper.class: com.lucidchart.piezo.GeneratorClassLoader`.
 
 ###Running
-The project includes a sample script for running a worker process. It depends on `make stage` having been run. It launches with the [sample admin quartz.properties file](admin/conf/quartz.properties) included in the project.
 
-```
-./admin/bin/run.sh
-```
-After running the above script, go to http://localhost:8001/ to view the admin tool.
+When developing,
 
-Here also is a sample java command for running a single admin instance:
-
-```
-java -Dlogback.configurationFile=<path to logback config> -Dorg.quartz.properties=<path to quartz properties> -Dpidfile.path=<path to pid file> -Dnetworkaddress.cache.ttl=10 -Dnetworkaddress.cache.negative.ttl=10 -Dhttp.port=<port> -cp <path to jars> play.core.server.NettyServer
+```sh
+sbt admin/run
 ```
 
+Then go to [http://localhost:8001/](http://localhost:8001/) to view the admin.
+
+Piezo admin can be installed as an Upstart service from a .deb (see [Building](#adminBuilding)). By default, it will use
+/etc/piezo-admin/quartz.properties. Adjust runtime options using /etc/piezo-admin/application.ini:
+
+```
+# -J for for Java options
+-J-Xmx1g
+# -D for system propertis
+-Dorg.quartz.properties=path/to/quartz.properties
+# -jvm-debug to enable JVM debugging
+-jvm-debug 5005
+```
+
+For deploying to non-Debian platforms, run `sbt admin/universal:packageBin`. This produces a zip of JARs and scripts in
+admin/target/universal
