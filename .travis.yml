@@ -35,6 +35,6 @@ script:
       if [ -z "$TRAVIS_TAG" ]; then
           sbt 'all admin/debian:packageBin worker/publishSigned'
       else
-          sbt 'all admin/debian:bintrayDescriptor worker/packageBin' "sonatypeOpen piezo-$TRAVIS_TAG" worker/publishSigned sonatypeReleaseAll
+          sbt 'all debian:bintrayDescriptor admin/debian:packageBin worker/packageBin' "sonatypeOpen piezo-$TRAVIS_TAG" worker/publishSigned sonatypeReleaseAll
       fi
     fi

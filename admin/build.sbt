@@ -27,35 +27,3 @@ name := "piezo-admin"
 packageDescription := "Piezo web admin"
 
 PlayKeys.playDefaultPort := 8001
-
-inConfig(Debian)(Seq(
-  TaskKey[File]("bintray-descriptor") :=  {
-    val json = Json.obj(
-      "files" -> Json.arr(
-        Json.obj(
-          "includePattern" -> packageBin.value.relativeTo(baseDirectory.value).get.toString,
-          "matrixParams" -> Json.obj(
-            "deb_architecture" -> "amd64,i386",
-            "deb_component" -> "main",
-            "deb_distribution" -> "stable"
-          ),
-          "uploadPattern" -> s"pool/main/p/${name.value}/${name.value}_${version.value}.deb"
-        )
-      ),
-      "package" -> Json.obj(
-        "name" -> (packageName in Debian).value,
-        "repo" -> "apt",
-        "subject" -> "lucidsoftware"
-      ),
-      "publish" -> true,
-      "version" -> Json.obj(
-        "name" -> version.value,
-        "gpgSign" -> true,
-        "vcs_tag" -> version.value
-      )
-    )
-    val file = (target in Compile).value/ "bintray.json"
-    IO.write(file, json.toString)
-    file
-  }
-))
