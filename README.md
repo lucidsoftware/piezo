@@ -90,8 +90,19 @@ sbt admin/run
 
 Then go to [http://localhost:8001/](http://localhost:8001/) to view the admin.
 
-Piezo admin can be installed as an Upstart service from a .deb (see [Building](#adminBuilding)). By default, it will use
-/etc/piezo-admin/quartz.properties. Adjust runtime options using /etc/piezo-admin/application.ini:
+###Debian install
+
+Piezo admin can be installed as an Upstart service from a .deb (see [Building](#adminBuilding)).
+
+```sh
+apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 379CE192D401AB61
+echo 'deb http://dl.bintray.com/lucidsoftware/apt/ stable main' > /etc/apt/sources.list.d/lucidsoftware-stable-main.list
+
+apt-get update
+apt-get install piezo-admin
+```
+
+By default, it will use /etc/piezo-admin/quartz.properties. Adjust runtime options using /etc/piezo-admin/application.ini:
 
 ```
 # -J for for Java options
