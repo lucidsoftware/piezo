@@ -24,7 +24,7 @@ bintrayDescriptor in (ThisBuild, Debian) := {
   val json = Json.obj(
     "files" -> Json.arr(
       Json.obj(
-        "includePattern" -> "(?:.*/)?(.)(.*\\.deb)",
+        "includePattern" -> ".*/(.)(.*\\.deb)",
         "matrixParams" -> Json.obj(
           "deb_architecture" -> "amd64,i386",
           "deb_component" -> "main",

@@ -4,7 +4,7 @@ cache:
     - $HOME/.sbt
 deploy:
   -
-    file: admin/target/bintray.json
+    file: target/debian/bintray.json
     key: $BINTRAY_KEY
     on:
       tags: true
@@ -28,13 +28,14 @@ jdk:
 language: scala
 script:
   - '[ "$TRAVIS_PULL_REQUEST" != false ] || export SBT_OPTS=-Dbuild.version=${TRAVIS_TAG:-$TRAVIS_BRANCH-SNAPSHOT}'
-  - sbt 'all docs:compile test'
   - |
     if [ "$TRAVIS_SECURE_ENV_VARS" == true ]; then
       echo "$PGP_SECRET" | base64 --decode | gpg --import
       if [ -z "$TRAVIS_TAG" ]; then
           sbt 'all admin/debian:packageBin worker/publishSigned'
       else
-          sbt 'all debian:bintrayDescriptor admin/debian:packageBin worker/packageBin' "sonatypeOpen piezo-$TRAVIS_TAG" worker/publishSigned sonatypeReleaseAll
+          sbt 'all debian:bintrayDescriptor admin/debian:packageBin worker/packageBin docs:compile test' 'sonatypeOpen piezo-$TRAVIS_TAG' worker/publishSigned sonatypeReleaseAll
       fi
+    else
+      sbt 'all docs:compile test'
     fi
