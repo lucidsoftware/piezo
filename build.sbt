@@ -15,7 +15,8 @@ inThisBuild(Seq(
   homepage := Some(url("https://github.com/lucidsoftware/piezo")),
   organization := "com.lucidchart",
   scalaVersion := "2.11.8",
-  scmInfo := Some(ScmInfo(url("https://github.com/lucidsoftware/piezo"), "scm:git:git@github.com:lucidsoftware/piezo.git"))
+  scmInfo := Some(ScmInfo(url("https://github.com/lucidsoftware/piezo"), "scm:git:git@github.com:lucidsoftware/piezo.git")),
+  version := sys.props.getOrElse("build.version", "0-SNAPSHOT")
 ))
 
 val bintrayDescriptor = taskKey[File]("Descriptor for TravisCI release to Bintray")
