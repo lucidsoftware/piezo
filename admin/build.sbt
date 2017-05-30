@@ -3,9 +3,6 @@ import play.api.libs.json.Json
 enablePlugins(PlayScala)
 
 bashScriptExtraDefines ++= Seq(
-  "mkdir -m 664 /var/run/piezo-admin",
-  s"chown ${(daemonUser in Linux).value} /var/run/piezo-admin",
-  s"chown ${(daemonGroup in Linux).value} /var/run/piezo-admin",
   s"addJava -Dorg.quartz.properties=${defaultLinuxConfigLocation.value}/${(packageName in Linux).value}/quartz.properties",
   "addJava -Dpidfile.path=/var/run/piezo-admin/piezo-admin.pid",
   s"addJava -Dhttp.port=${PlayKeys.playDefaultPort.value}"
