@@ -11,6 +11,7 @@ javaOptions += s"-Dorg.quartz.properties=${(resourceDirectory in Compile).value 
 libraryDependencies ++= Seq(
   anorm,
   jdbc,
+  "asm" % "asm" % "3.3.1",
   "ch.qos.logback" % "logback-classic" % "1.0.7",
   "org.quartz-scheduler" % "quartz" % "2.1.7"
 )
