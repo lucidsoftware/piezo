@@ -32,9 +32,9 @@ script:
     if [ "$TRAVIS_SECURE_ENV_VARS" == true ]; then
       echo "$PGP_SECRET" | base64 --decode | gpg --import
       if [ -z "$TRAVIS_TAG" ]; then
-          sbt 'all admin/compile worker/publishSigned'
+          sbt test worker/publishSigned
       else
-          sbt 'all debian:bintrayDescriptor admin/debian:packageBin worker/packageBin docs:compile test' 'sonatypeOpen piezo-$TRAVIS_TAG' worker/publishSigned sonatypeReleaseAll
+          sbt 'all debian:bintrayDescriptor debian:packageBin worker/packageBin docs:compile test' 'sonatypeOpen piezo-$TRAVIS_TAG' worker/publishSigned sonatypeReleaseAll
       fi
     else
       sbt 'all docs:compile test'

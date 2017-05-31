@@ -92,11 +92,14 @@ Then go to [http://localhost:8001/](http://localhost:8001/) to view the admin.
 
 ###Debian install
 
-Piezo admin can be installed as an Upstart service from a .deb (see [Building](#adminBuilding)).
+Piezo admin can be installed as a service from a .deb (see [Building](#adminBuilding)).
 
 ```sh
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 379CE192D401AB61
-echo 'deb http://dl.bintray.com/lucidsoftware/apt/ stable main' > /etc/apt/sources.list.d/lucidsoftware-stable-main.list
+# Upstart service
+echo 'deb http://dl.bintray.com/lucidsoftware/apt/ trusty main' > /etc/apt/sources.list.d/lucidsoftware.list
+# Systemd service
+echo 'deb http://dl.bintray.com/lucidsoftware/apt/ xenial main' > /etc/apt/sources.list.d/lucidsoftware.list
 
 apt-get update
 apt-get install piezo-admin

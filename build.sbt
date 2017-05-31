@@ -1,6 +1,17 @@
+import com.lucidchart.sbtcross.{Axis, CrossableProject, DefaultAxis}
+import com.typesafe.sbt.packager.archetypes.ServerLoader
 import play.api.libs.json.Json
 
-lazy val admin = project.dependsOn(worker)
+val distributionAxis = new DefaultAxis {
+  def name = "dist"
+  def major(version: String) = version
+}
+
+lazy val admin = project.dependsOn(worker).cross(distributionAxis)
+lazy val `admin-trusty` = admin("trusty")
+lazy val `admin-xenial` = admin("xenial").settings(
+  serverLoading in Debian := ServerLoader.Systemd
+)
 
 lazy val worker = project
 
@@ -22,17 +33,19 @@ inThisBuild(Seq(
 val bintrayDescriptor = taskKey[File]("Descriptor for TravisCI release to Bintray")
 
 bintrayDescriptor in (ThisBuild, Debian) := {
+  def files(target: File, distribution: String) = Json.obj(
+    "includePattern" -> s"${target.relativeTo(baseDirectory.value).get}(.)(.*\\.deb)",
+    "matrixParams" -> Json.obj(
+      "deb_architecture" -> "amd64,i386",
+      "deb_component" -> "main",
+      "deb_distribution" -> distribution
+    ),
+    "uploadPattern" -> "pool/stable/$1/$1$2"
+  )
   val json = Json.obj(
     "files" -> Json.arr(
-      Json.obj(
-        "includePattern" -> "admin/target/(.)(.*\\.deb)",
-        "matrixParams" -> Json.obj(
-          "deb_architecture" -> "amd64,i386",
-          "deb_component" -> "main",
-          "deb_distribution" -> "stable"
-        ),
-        "uploadPattern" -> "pool/stable/$1/$1$2"
-      )
+      files((target in `admin-trusty`).value, "trusty"),
+      files((target in `admin-xenial`).value, "xenial")
     ),
     "package" -> Json.obj(
       "name" -> "piezo",

@@ -1,5 +1,3 @@
-import play.api.libs.json.Json
-
 enablePlugins(PlayScala)
 
 bashScriptExtraDefines ++= Seq(
