@@ -34,7 +34,7 @@ script:
       if [ -z "$TRAVIS_TAG" ]; then
           sbt 'all admin/docs:compile admin/test worker/docs:compile worker/test' worker/publishSigned
       else
-          sbt 'all admin/docs:compile admin/test debian:bintrayDescriptor debian:packageBin worker/packageBin worker/packageDoc worker/packageSrc worker/test' 'sonatypeOpen piezo-$TRAVIS_TAG' worker/publishSigned sonatypeReleaseAll
+          sbt 'all admin/docs:compile admin/test debian:bintrayDescriptor worker/packageBin worker/packageDoc worker/packageSrc worker/test' 'sonatypeOpen piezo-$TRAVIS_TAG' worker/publishSigned sonatypeReleaseAll
       fi
     else
       sbt 'all admin/docs:compile admin/test worker/docs:compile worker/test'
