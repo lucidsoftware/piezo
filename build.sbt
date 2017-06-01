@@ -35,13 +35,13 @@ val bintrayDescriptor = taskKey[File]("Descriptor for TravisCI release to Bintra
 
 bintrayDescriptor in (ThisBuild, Debian) := {
   def files(target: File, distribution: String) = Json.obj(
-    "includePattern" -> s"${target.relativeTo(baseDirectory.value).get}/piezo-admin(.*\\.deb)",
+    "includePattern" -> s"${target.relativeTo(baseDirectory.value).get}/piezo-admin_${version.value}_all\\.deb",
     "matrixParams" -> Json.obj(
       "deb_architecture" -> "amd64,i386",
       "deb_component" -> "main",
       "deb_distribution" -> distribution
     ),
-    "uploadPattern" -> s"pool/p/piezo-admin_$distribution$$1"
+    "uploadPattern" -> s"pool/p/piezo-admin_${distribution}_${version.value}_all.deb"
   )
   val json = Json.obj(
     "files" -> Json.arr(
