@@ -7,10 +7,11 @@ val distributionAxis = new DefaultAxis {
   def major(version: String) = version
 }
 
-lazy val admin = project.dependsOn(worker).cross(distributionAxis)
-lazy val `admin-trusty` = admin("trusty")
-lazy val `admin-xenial` = admin("xenial").settings(
-  serverLoading in Debian := ServerLoader.Systemd
+lazy val admin = project.dependsOn(worker)
+// there's probably a better way to also produce a Systemd deb
+lazy val `admin-xenial` = admin.copy(id = "admin-xenial").settings(
+  serverLoading in Debian := ServerLoader.Systemd,
+  target := baseDirectory.value / "target-xenial"
 )
 
 lazy val worker = project
@@ -34,17 +35,17 @@ val bintrayDescriptor = taskKey[File]("Descriptor for TravisCI release to Bintra
 
 bintrayDescriptor in (ThisBuild, Debian) := {
   def files(target: File, distribution: String) = Json.obj(
-    "includePattern" -> s"${target.relativeTo(baseDirectory.value).get}/(.*\\.deb)",
+    "includePattern" -> s"${target.relativeTo(baseDirectory.value).get}/piezo-admin(.*\\.deb)",
     "matrixParams" -> Json.obj(
       "deb_architecture" -> "amd64,i386",
       "deb_component" -> "main",
       "deb_distribution" -> distribution
     ),
-    "uploadPattern" -> "pool/p/$1"
+    "uploadPattern" -> s"pool/p/piezo-admin_$distribution$$1"
   )
   val json = Json.obj(
     "files" -> Json.arr(
-      files((target in `admin-trusty`).value, "trusty"),
+      files((target in admin).value, "trusty"),
       files((target in `admin-xenial`).value, "xenial")
     ),
     "package" -> Json.obj(
