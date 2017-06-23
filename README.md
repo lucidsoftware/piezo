@@ -28,7 +28,7 @@ Worker also expands the set of tables that quartz uses with additional tables to
     3. From the documentation:
         "JDBCJobStore works with nearly any database, it has been used widely with Oracle, PostgreSQL, MySQL, MS SQLServer, HSQLDB, and DB2. To use JDBCJobStore, you must first create a set of database tables for Quartz to use. You can find table-creation SQL scripts in the 'docs/dbTables' directory of the Quartz distribution. If there is not already a script for your database type, just look at one of the existing ones, and modify it in any way necessary for your DB."
 3. Create the Piezo job history tables. Use SQL scripts beginning with "piezo" in [worker/src/main/resources](/worker/src/main/resources).
-4. Modify the included [sample quartz.properties](/worker/src/main/resources/quartz.properties) to point to your database (see [Quartz scheduler library config file](http://quartz-scheduler.org/documentation/quartz-2.2.x/configuration/)).
+4. Modify the included [sample quartz.properties](/worker/src/test/resources/quartz_test.properties) to point to your database (see [Quartz scheduler library config file](http://quartz-scheduler.org/documentation/quartz-2.2.x/configuration/)).
 5. Run Piezo as specified in [Running](#running).
 
 ### Building
