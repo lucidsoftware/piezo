@@ -12,6 +12,10 @@ DELETE  /jobs/:group/:name            com.lucidchart.piezo.admin.controllers.Job
 GET     /jobs/:group/:name/editor     com.lucidchart.piezo.admin.controllers.Jobs.getEditJobAction(group: String, name: String)
 POST    /jobs                         com.lucidchart.piezo.admin.controllers.Jobs.postJob
 
+POST    /data/jobs                    com.lucidchart.piezo.admin.controllers.Jobs.postJobs
+GET     /data/jobs                    com.lucidchart.piezo.admin.controllers.Jobs.getJobsDetail
+GET     /data/jobs/:group/:name       com.lucidchart.piezo.admin.controllers.Jobs.getJobDetail(group: String, name: String)
+
 GET     /typeahead/jobs/:sofar        com.lucidchart.piezo.admin.controllers.Jobs.jobGroupTypeAhead(sofar: String)
 GET     /typeahead/jobs/:group/:sofar com.lucidchart.piezo.admin.controllers.Jobs.jobNameTypeAhead(group: String, sofar: String)
 

@@ -16,7 +16,11 @@ implicit request: play.api.mvc.Request[AnyContent]
 )
 
 @com.lucidchart.piezo.admin.views.html.jobsLayout(jobsByGroup, currentJob) {
-<h3>Select a job</h3>
+<h3 class="pull-left job-name">Select a job</h3>
+<a class="piezo-button pull-right" data-toggle="tooltip" title="Download All jobs" href="@{piezoRoutes.Jobs.getJobsDetail()}" download="allJobs.json">
+    <span class="glyphicon glyphicon-download"></span>
+</a>
+<div class="clearfix"></div>
 <table class="table table-condensed table-fixed-first-col table-bordered table-striped table-hover">
     <tbody>
     <tr>
@@ -29,6 +33,21 @@ implicit request: play.api.mvc.Request[AnyContent]
     </tr>
     </tbody>
 </table>
+    <h4>Import Jobs</h4>
+    <form class="form-inline" method="POST" enctype="multipart/form-data">
+    <div class="input-group">
+        <label class="input-group-addon btn btn-default">
+            Browse <input style="display:none;" type="file" name="file" id="file" onchange="fileSelected()" accept=".json, application/json"/>
+        </label>
+        <input type="text" id="file-name" class="form-control" readonly>
+    </div>
+    <input type="button" value="Import" onclick="importJobs()" class="btn btn-sm btn-primary"/>
+
+    </form>
+
+    <div id="import-result">
+    </div>
+
 
     @if(jobsHistory.isDefined) {
     <h4>Jobs History</h4>
@@ -65,7 +84,7 @@ implicit request: play.api.mvc.Request[AnyContent]
     }
     @if(!untriggeredJobs.isEmpty) {
     <h4>Untriggered Jobs</h4>
-    <table class="table table-bordered table-striped table-hover table-condensed">
+    <table class="table table-bordered table-condensed">
         <thead>
         <tr>
             <th>Job Group</th>
@@ -82,4 +101,55 @@ implicit request: play.api.mvc.Request[AnyContent]
         </tbody>
     </table>
     }
+
+    <script type="text/javascript">
+        function fileSelected() {
+            var files = document.getElementById("file").files
+            var input = document.getElementById("file-name");
+            input.setAttribute("value", files[0].name);
+        }
+
+        function importJobs() {
+            var files = document.getElementById("file").files
+            if(files.length > 0){
+                var form = new FormData();
+                form.append('file', files[0]);
+                $.ajax({
+                    url: "@{piezoRoutes.Jobs.postJobs()}",
+                    data: form,
+                    method: 'POST',
+                    dataType: 'json',
+                    processData: false,
+                    contentType: false,
+                    success: function(data) {
+                        var count = data['count'];
+                        var failures = data['failures'];
+                        var report;
+                        if(failures.length > 0) {
+                            report = failures.length + " out of "+ count + " jobs failed to import! <br/>";
+                            report += "<table class='table table-bordered table-striped table-condensed table-fixed-layout table-hover'>";
+                            report += "<tr><th>Job Group</th><th>Job Name </th> <th> Reason</th></tr>";
+                            for(var i=0;i<failures.length;i++){
+                                report += "<tr class='warning'>";
+                                report +=  "<td>" + failures[i]['jobGroup'] + "</td><td>" + failures[i]["jobName"] + "</td><td>" + failures[i]['errorMessage'] + "</td>";
+                                report += "</tr>";
+                            }
+                            report += "</table>";
+                        } else {
+                            if(count == 1){
+                                report = "1 job has been successfully imported!";
+                            } else {
+                                report = "All " + count + " jobs were successfully imported!";
+                            }
+                        }
+                        document.getElementById("import-result").innerHTML = report;
+                    },
+                    error: function(error, textStatus) {
+                        var report = "Something wrong happened! Got a response " + textStatus + " while importing jobs.";
+                        document.getElementById("import-result").innerHTML = report;
+                    }
+                })
+            }
+        }
+    </script>
 }

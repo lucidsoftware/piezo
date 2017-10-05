@@ -1,18 +1,39 @@
 package com.lucidchart.piezo.admin.controllers
 
 import com.lucidchart.piezo.admin.utils.JobUtils
-import play.api._
-import play.api.mvc._
-import com.lucidchart.piezo.{JobHistoryModel, TriggerHistoryModel, WorkerSchedulerFactory}
+import com.lucidchart.piezo.admin.utils.JobDetailHelper._
+import com.lucidchart.piezo.admin.views._
+import com.lucidchart.piezo.{JobHistoryModel, TriggerHistoryModel, TriggerMonitoringModel, WorkerSchedulerFactory}
+import org.quartz._
 import org.quartz.impl.matchers.GroupMatcher
+import play.api._
+import play.api.libs.functional.syntax._
+import play.api.libs.json._
+import play.api.mvc._
 import scala.collection.JavaConverters._
 import scala.collection.mutable
-import org.quartz._
 import scala.Some
-import scala.collection.JavaConverters._
-import com.lucidchart.piezo.admin.views._
-import play.api.libs.json._
-import play.api.libs.functional.syntax._
+import scala.io.Source
+
+trait ImportResult {
+  val jobKey: Option[JobKey]
+  val errorMessage: String
+  val success: Boolean
+  def toJson = {
+    Json.obj(
+      "success" -> success,
+      "errorMessage" -> errorMessage
+    ) ++ jobKey.map { jk =>
+        Json.obj(
+          "jobName" -> jk.getName,
+          "jobGroup" -> jk.getGroup
+        )
+    }.getOrElse(Json.obj())
+  }
+}
+
+case class ImportSuccess(val jobKey: Option[JobKey], val errorMessage: String = "", val success: Boolean=true) extends ImportResult
+case class ImportFailure(val jobKey: Option[JobKey], val errorMessage: String, val success: Boolean=false) extends ImportResult
 
 object Jobs extends Jobs(new WorkerSchedulerFactory())
 
@@ -23,7 +44,10 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory) extends Controller {
   val properties = schedulerFactory.props
   val jobHistoryModel = logExceptions(new JobHistoryModel(properties))
   val triggerHistoryModel = logExceptions(new TriggerHistoryModel(properties))
+  val triggerMonitoringPriorityModel = logExceptions(new TriggerMonitoringModel(properties))
+
   val jobFormHelper = new JobFormHelper()
+  val triggerFormHelper = new TriggerFormHelper(scheduler)
 
   def getJobsByGroup(): mutable.Buffer[(String, List[JobKey])] = {
     val jobsByGroup =
@@ -51,6 +75,8 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory) extends Controller {
     val jobKey = new JobKey(name, group)
     val jobExists = scheduler.checkExists(jobKey)
     if (!jobExists) {
+
+      request.accepts(HTML)
       val errorMsg = Some("Job " + group + " " + name + " not found")
       NotFound(com.lucidchart.piezo.admin.views.html.job(getJobsByGroup(), None, None, None, errorMsg)(request))
     } else {
@@ -103,6 +129,39 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory) extends Controller {
     }
   }
 
+  def getJobDetail(group: String, name: String) = Action { implicit request =>
+    if(request.accepts(JSON)) {
+      val jobKey = new JobKey(name, group)
+      if (scheduler.checkExists(jobKey)) {
+        val jobDetail = scheduler.getJobDetail(jobKey)
+        val triggers = scheduler.getTriggersOfJob(jobKey).asScala.toList
+        Ok(Json.toJson(Seq(jobDetail))(jobDetailSeqWrites(triggers, triggerMonitoringPriorityModel)))
+      } else {
+        NotFound(Json.obj("message" -> "specified job doesn't exist"))
+      }
+    } else {
+      UnsupportedMediaType
+    }
+  }
+
+  def getJobsDetail() = Action { implicit request =>
+    if (request.accepts(JSON)) {
+      Ok(
+        Json.toJson(
+          scheduler.getJobGroupNames().asScala.toList.flatMap { group =>
+            val jobKeys = scheduler.getJobKeys(GroupMatcher.jobGroupEquals(group)).asScala
+            jobKeys.map { jk =>
+              val triggers = scheduler.getTriggersOfJob(jk).asScala.toList
+              Json.toJson(scheduler.getJobDetail(jk))(jobDetailWrites(triggers, triggerMonitoringPriorityModel))
+            }
+          }
+        )
+      )
+    } else {
+      UnsupportedMediaType
+    }
+  }
+
   val submitNewMessage = "Create"
   val formNewAction = routes.Jobs.postJob()
   val submitEditMessage = "Save"
@@ -146,6 +205,81 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory) extends Controller {
           .flashing("message" -> "Successfully edited job.", "class" -> "")
       }
     )
+  }
+
+  def parseJson(json: JsValue): List[ImportResult] = {
+    def formErrorStr(formErrors: Seq[play.api.data.FormError]): String = {
+      formErrors.map { e =>
+        (if(e.key.nonEmpty) s"${e.key}:" else "") + e.message
+      }.mkString(",")
+    }
+
+    json.as[List[JsObject]].map { jsObject =>
+      jobFormHelper.buildJobForm.bind(jsObject).fold ( e => {
+        val jobKey = for {
+          name <- (jsObject \ "name").validate[String]
+          group <- (jsObject \ "group").validate[String]
+        } yield {
+          new JobKey(name, group)
+        }
+        val errorMessage = formErrorStr(e.errors)
+        logger.error(errorMessage)
+        ImportFailure(jobKey.asOpt, "Job Import Error:" + errorMessage)
+      }, value => {
+        try {
+          val jobDetail = JobUtils.cleanup(value)
+          scheduler.addJob(jobDetail, false)
+          val triggersOpt = (jsObject \ "triggers").asOpt[List[JsObject]]
+          val triggersBinding = triggersOpt.map(_.map(triggerFormHelper.buildTriggerForm.bind)).getOrElse(Nil)
+          if(triggersBinding.exists(b => b.hasErrors || b.hasGlobalErrors)) {
+            val errorMessage = formErrorStr(triggersBinding.filter(_.hasErrors).flatMap(_.errors))
+            logger.error(errorMessage)
+            ImportFailure(Some(jobDetail.getKey), "Trigger Import Error:"+errorMessage)
+          } else {
+            val triggers = triggersBinding.map(_.value).flatten
+              triggers.map { case (trigger, monitoringPriority, errorTime) =>
+                scheduler.scheduleJob(trigger)
+                triggerMonitoringPriorityModel.setTriggerMonitoringRecord(
+                  trigger,
+                  monitoringPriority,
+                  errorTime
+                )
+              }
+              ImportSuccess(Some(jobDetail.getKey))
+          }
+        } catch {
+          case _: ObjectAlreadyExistsException =>
+            logger.error(s"Failed to add Job ${value.getKey.getGroup} - ${value.getKey.getGroup} because it already exists")
+            ImportFailure(Some(value.getKey), "The Job Already Exists")
+        }
+      })
+    }
+  }
+
+  def postJobs() = Action { implicit request: Request[AnyContent] =>
+    val jsonOpt = request.body.asJson.orElse {
+      request.body.asMultipartFormData.flatMap { d =>
+        d.file("file").map { f =>
+          Json.parse(Source.fromFile(f.ref.file).getLines.mkString)
+        }
+      }
+    }
+    jsonOpt.map { json =>
+      val results = parseJson(json)
+      if(results.forall(_.success == true)) {
+        Created(Json.obj(
+          "count" -> results.size,
+          "failures" -> Json.arr()
+        ))
+      } else {
+        Created(Json.obj(
+          "count" -> results.size,
+          "failures" -> results.filter(_.success == false).map(_.toJson)
+        ))
+      }
+    }.getOrElse {
+      BadRequest
+    }
   }
 
   def postJob() = Action { implicit request =>
