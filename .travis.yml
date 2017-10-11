@@ -1,3 +1,7 @@
+addons:
+  apt:
+    packages:
+      - fakeroot
 cache:
   directories:
     - $HOME/.ivy2
