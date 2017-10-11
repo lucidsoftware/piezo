@@ -336,7 +336,13 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
           if(state.equalsIgnoreCase(TriggerState.PAUSED.toString)) {
             scheduler.pauseTrigger(triggerKey)
           } else {
-            scheduler.resumeTrigger(triggerKey)
+            val currentState = scheduler.getTriggerState(triggerKey).toString
+            if(currentState == TriggerState.ERROR.toString) {
+              val trigger = scheduler.getTrigger(triggerKey)
+              scheduler.rescheduleJob(triggerKey, trigger)
+            } else {
+              scheduler.resumeTrigger(triggerKey)
+            }
           }
           Ok(Json.obj("state" -> scheduler.getTriggerState(triggerKey).toString))
         }.getOrElse {

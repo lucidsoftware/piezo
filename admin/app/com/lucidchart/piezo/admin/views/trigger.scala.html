@@ -38,7 +38,7 @@ request: play.api.mvc.Request[AnyContent]
             <span class="glyphicon glyphicon-remove"></span>
         </a>
 
-        @if(triggerState.contains(TriggerState.PAUSED)) {
+        @if(triggerState.contains(TriggerState.PAUSED) || triggerState.contains(TriggerState.ERROR)) {
             <a id="resumeTrigger" class="piezo-button pull-right" data-toggle="tooltip" title="Resume trigger">
                 <span class="glyphicon glyphicon-play"></span>
             </a>
