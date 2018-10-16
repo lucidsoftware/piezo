@@ -51,7 +51,7 @@ bintrayDescriptor in (ThisBuild, Debian) := {
   val json = Json.obj(
     "files" -> Json.arr(
       files((packageBin in (admin, Debian)).value, "trusty"),
-      files((packageBin in (`admin-xenial`, Debian)).value, "xenial")
+      files((packageBin in (`admin-xenial`, Debian)).value, "xenial"),
       files((packageBin in (`admin-bionic`, Debian)).value, "bionic")
     ),
     "package" -> Json.obj(
