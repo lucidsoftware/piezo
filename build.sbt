@@ -13,6 +13,11 @@ lazy val `admin-xenial` = admin.copy(id = "admin-xenial").settings(
   serverLoading in Debian := ServerLoader.Systemd,
   target := baseDirectory.value / "target-xenial"
 )
+lazy val `admin-bionic` = admin.copy(id = "admin-bionic").settings(
+  serverLoading in Debian := ServerLoader.Systemd,
+  target := baseDirectory.value / "target-bionic"
+)
+
 
 lazy val worker = project
 
@@ -47,6 +52,7 @@ bintrayDescriptor in (ThisBuild, Debian) := {
     "files" -> Json.arr(
       files((packageBin in (admin, Debian)).value, "trusty"),
       files((packageBin in (`admin-xenial`, Debian)).value, "xenial")
+      files((packageBin in (`admin-bionic`, Debian)).value, "bionic")
     ),
     "package" -> Json.obj(
       "name" -> "piezo",
