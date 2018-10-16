@@ -100,6 +100,7 @@ apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 379CE192D401AB61
 echo 'deb http://dl.bintray.com/lucidsoftware/apt/ trusty main' > /etc/apt/sources.list.d/lucidsoftware.list
 # Systemd service
 echo 'deb http://dl.bintray.com/lucidsoftware/apt/ xenial main' > /etc/apt/sources.list.d/lucidsoftware.list
+echo 'deb http://dl.bintray.com/lucidsoftware/apt/ bionic main' > /etc/apt/sources.list.d/lucidsoftware.list
 
 apt-get update
 apt-get install piezo-admin
