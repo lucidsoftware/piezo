@@ -65,7 +65,7 @@ request: play.api.mvc.Request[AnyContent]
       <input type="text" class="job-name-type-ahead form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
     }
     }
-    @helper.select(triggerForm("triggerMonitoringPriority"), TriggerMonitoringPriority.values.toList.map(tp => tp.toString -> tp.toString), '_label -> "Monitoring Priority", 'labelClass -> "col-sm-2 text-right", 'inputDivClass -> "col-sm-4", 'class -> "form-control", 'value -> triggerForm.data.get("triggerMonitoringPriority").getOrElse(TriggerMonitoringPriority.Off), 'placeholder -> TriggerMonitoringPriority.Off)
+    @helper.select(triggerForm("triggerMonitoringPriority"), TriggerMonitoringPriority.values.toList.map(tp => tp.toString -> tp.toString), '_label -> "Monitoring Priority", 'labelClass -> "col-sm-2 text-right", 'inputDivClass -> "col-sm-4", 'class -> "form-control", 'value -> triggerForm.data.get("triggerMonitoringPriority").getOrElse(TriggerMonitoringPriority.Medium), 'placeholder -> TriggerMonitoringPriority.Medium)
     @helper.input(triggerForm("triggerMaxErrorTime"), '_label -> "Monitoring - Max Seconds Between Successes", 'labelClass -> "col-sm-2 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "", 'value -> triggerForm.data.get("triggerMaxErrorTime").getOrElse(300)) { (id, name, value, args) =>
       <input type="number" class="form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
     }
