@@ -54,7 +54,7 @@ object TriggerHelper {
       trigger
     ).map { monitoringRecord =>
       (monitoringRecord.priority, monitoringRecord.maxSecondsInError)
-    }.getOrElse((TriggerMonitoringPriority.Off, 300))
+    }.getOrElse((TriggerMonitoringPriority.Medium, 300))
     val jobDataMap = trigger.getJobDataMap
     val job = trigger.getJobKey
     Json.obj(

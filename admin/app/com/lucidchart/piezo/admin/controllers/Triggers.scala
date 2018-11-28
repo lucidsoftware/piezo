@@ -74,10 +74,10 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
             triggerDetail
           ).map { triggerMonitoringRecord =>
             (triggerMonitoringRecord.priority, triggerMonitoringRecord.maxSecondsInError)
-          }.getOrElse((TriggerMonitoringPriority.Off, 300))
+          }.getOrElse((TriggerMonitoringPriority.Medium, 300))
         }.getOrElse {
           logger.error("Failed to get trigger monitoring info")
-          (TriggerMonitoringPriority.Off, 300)
+          (TriggerMonitoringPriority.Medium, 300)
         }
 
         Ok(
@@ -151,7 +151,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
     jobName: String = "",
     templateGroup: Option[String] = None,
     templateName: Option[String] = None,
-    triggerMonitoringPriority: TriggerMonitoringPriority.Value = TriggerMonitoringPriority.Off,
+    triggerMonitoringPriority: TriggerMonitoringPriority.Value = TriggerMonitoringPriority.Medium,
     triggerMaxErrorTime: Int = 300
   ) = Action { implicit request =>
     templateGroup match {
@@ -162,7 +162,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
           case "simple" => new DummySimpleTrigger(jobGroup, jobName)
         }
         val newTriggerForm = triggerFormHelper.buildTriggerForm().fill(
-          (dummyTrigger, TriggerMonitoringPriority.Off, 300)
+          (dummyTrigger, TriggerMonitoringPriority.Medium, 300)
         )
         Ok(
           com.lucidchart.piezo.admin.views.html.editTrigger(
@@ -190,10 +190,10 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
           triggerDetail
         ).map { triggerMonitoringRecord =>
           (triggerMonitoringRecord.priority, triggerMonitoringRecord.maxSecondsInError)
-        }.getOrElse((TriggerMonitoringPriority.Off, 300))
+        }.getOrElse((TriggerMonitoringPriority.Medium, 300))
       }.getOrElse {
         logger.error("Failed to get trigger monitoring info")
-        (TriggerMonitoringPriority.Off, 300)
+        (TriggerMonitoringPriority.Medium, 300)
       }
       val editTriggerForm = triggerFormHelper.buildTriggerForm().fill(
         (triggerDetail, triggerMonitoringPriority, triggerMaxErrorTime)
