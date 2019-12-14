@@ -1,3 +1,4 @@
+dist: xenial
 addons:
   apt:
     packages:
@@ -28,7 +29,7 @@ deploy:
 git:
   depth: 1
 jdk:
-  - oraclejdk8
+  - openjdk8
 language: scala
 script:
   - '[ "$TRAVIS_PULL_REQUEST" != false ] || export SBT_OPTS=-Dbuild.version=${TRAVIS_TAG:-$TRAVIS_BRANCH-SNAPSHOT}'
@@ -36,10 +37,10 @@ script:
     if [ "$TRAVIS_SECURE_ENV_VARS" == true ]; then
       echo "$PGP_SECRET" | base64 --decode | gpg --import
       if [ -z "$TRAVIS_TAG" ]; then
-          sbt 'all admin/docs:compile admin/test worker/docs:compile worker/test' worker/publishSigned
+          sbt "compile" "test" "doc" "publishSigned"
       else
-          sbt 'all admin/docs:compile admin/test debian:bintrayDescriptor worker/packageBin worker/packageDoc worker/packageSrc worker/test' 'sonatypeOpen piezo-$TRAVIS_TAG' worker/publishSigned sonatypeReleaseAll
+          sbt "packageBin" "packageDoc" "packageSrc" "test" "debian:bintrayDescriptor" 'sonatypeOpen piezo-$TRAVIS_TAG' "publishSigned" "sonatypeReleaseAll"
       fi
     else
-      sbt 'all admin/docs:compile admin/test worker/docs:compile worker/test'
+      sbt "compile" "test"
     fi

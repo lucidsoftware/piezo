@@ -8,10 +8,9 @@ connectInput in run := true
 
 libraryDependencies ++= Seq(
   "ch.qos.logback" % "logback-classic" % "1.0.7" % Provided,
-  "net.databinder" %% "dispatch-http" % "0.8.10",
   "org.quartz-scheduler" % "quartz" % "2.1.7",
   "org.slf4j" % "slf4j-api" % "1.7.25",
-  "org.specs2" %% "specs2" % "2.3.13" % Test,
+  "org.specs2" %% "specs2-core" % "4.5.1" % Test,
   "mysql" % "mysql-connector-java" % "5.1.25",
   "javax.transaction" % "jta" % "1.1",
   "joda-time" % "joda-time" % "2.8.1",

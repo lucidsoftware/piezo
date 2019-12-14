@@ -7,19 +7,23 @@ val distributionAxis = new DefaultAxis {
   def major(version: String) = version
 }
 
-lazy val admin = project.dependsOn(worker)
+lazy val admin = project.dependsOn(worker_2_11).settings(scalaVersion := "2.11.8")
 // there's probably a better way to also produce a Systemd deb
 lazy val `admin-xenial` = admin.copy(id = "admin-xenial").settings(
   serverLoading in Debian := ServerLoader.Systemd,
-  target := baseDirectory.value / "target-xenial"
+  target := baseDirectory.value / "target-xenial",
+  scalaVersion := "2.11.8"
 )
 lazy val `admin-bionic` = admin.copy(id = "admin-bionic").settings(
   serverLoading in Debian := ServerLoader.Systemd,
-  target := baseDirectory.value / "target-bionic"
+  target := baseDirectory.value / "target-bionic",
+  scalaVersion := "2.11.8"
 )
 
 
-lazy val worker = project
+lazy val worker = project.cross
+lazy val worker_2_11 = worker("2.11.12")
+lazy val worker_2_12 = worker("2.12.8")
 
 PgpKeys.pgpPassphrase in Global := Some(Array.emptyCharArray)
 
@@ -31,7 +35,7 @@ inThisBuild(Seq(
   licenses += "Apache License, Version 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0"),
   homepage := Some(url("https://github.com/lucidsoftware/piezo")),
   organization := "com.lucidchart",
-  scalaVersion := "2.11.8",
+  scalaVersion := "2.11.12",
   scmInfo := Some(ScmInfo(url("https://github.com/lucidsoftware/piezo"), "scm:git:git@github.com:lucidsoftware/piezo.git")),
   version := sys.props.getOrElse("build.version", "0-SNAPSHOT")
 ))
