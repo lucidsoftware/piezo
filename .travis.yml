@@ -17,7 +17,8 @@ deploy:
     skip_cleanup: true
     user: pauldraper
   -
-    api_key: $GITHUB_AUTH
+    api_key:
+        secure: hQFlVi2OB1uVvSdtShD7bLlXxZH2mKIPL5kzcCMcbVRvUjXfdeG5AH7qHJtsxqX3WAkWYgo/z8h4w/Lb4P5i7ro6pwPiWgrCLJ245Zp69AQ8jLydNXqJpsh5i+VbHbS7TTOCXfOAtV9NeQuYKCKXc0cbVe79mZsbBWmzZlqRTAw=
     file:
       - admin/target/*.deb
       - worker/target/**/*.jar
