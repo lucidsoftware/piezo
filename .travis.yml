@@ -18,13 +18,14 @@ deploy:
     user: pauldraper
   -
     api_key:
-        secure: hQFlVi2OB1uVvSdtShD7bLlXxZH2mKIPL5kzcCMcbVRvUjXfdeG5AH7qHJtsxqX3WAkWYgo/z8h4w/Lb4P5i7ro6pwPiWgrCLJ245Zp69AQ8jLydNXqJpsh5i+VbHbS7TTOCXfOAtV9NeQuYKCKXc0cbVe79mZsbBWmzZlqRTAw=
+      secure: a9tSlQo82yPznMhBOo16ZB03BsLfvAyGHpFz1l9DqBctAstmb/LZoAaIyfwJXpRNOeIN8uXzsAPrytI9Lg75W9YdIVZjcW296VRzPVZCSgvRZYmVBzzpQZlLYX4YfUNI8tO/gRW8w5rQ0p7ZYCmfdtTgdVjBiIRlMWezDSLy2b4=
     file:
       - admin/target/*.deb
       - worker/target/**/*.jar
     file_glob: true
     on:
       tags: true
+      repo: lucidsoftware/piezo
     provider: releases
     skip_cleanup: true
 git:
