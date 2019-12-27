@@ -18,7 +18,7 @@ deploy:
     user: pauldraper
   -
     api_key:
-      secure: a9tSlQo82yPznMhBOo16ZB03BsLfvAyGHpFz1l9DqBctAstmb/LZoAaIyfwJXpRNOeIN8uXzsAPrytI9Lg75W9YdIVZjcW296VRzPVZCSgvRZYmVBzzpQZlLYX4YfUNI8tO/gRW8w5rQ0p7ZYCmfdtTgdVjBiIRlMWezDSLy2b4=
+      secure: eykUoy/ImC0ATe30a7QBwTCgRNc4X/EGV0EpxUXY/PFk69O562kcn/fTTbw2HDWbJoUFWFV75HP/RxTOqdvp5aywghGY8YGFfhS5k1px9vg/ypLGyJYse7SHc1t24EzP6T/wlrRgb7viGkgo6vxH91MThBolLCz0GPu5UN55Tqo=
     file:
       - admin/target/*.deb
       - worker/target/**/*.jar
