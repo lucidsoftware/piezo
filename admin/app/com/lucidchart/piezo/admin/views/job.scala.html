@@ -38,7 +38,7 @@ request: play.api.mvc.Request[AnyContent]
         <span class="glyphicon glyphicon-flash"></span>
       </a>
       @if(!pausableTriggers.isEmpty) {
-        <a id="pauseJob" class="piezo-button pull-right" data-toggle="tooltip" title="Pause job">
+        <a id="pauseJob" class="piezo-button pull-right" data-toggle="tooltip" title="Pause job" onclick="$('#pauseConfirm').show()">
             <span class="glyphicon glyphicon-pause"></span>
         </a>
       } else {
@@ -71,9 +71,17 @@ request: play.api.mvc.Request[AnyContent]
           <button type="button" class="btn btn-danger" onclick="deleteJob()">Delete</button>
           <button type="button" class="btn btn-default" onclick="$('#deleteConfirm').hide()">Cancel</button>
         </div>
+         <!-- Pause Job Alerts -->
+        <div id="pauseConfirm" style="display:none;" class="alert alert-warning fade in">
+            <h4>Are you sure you want to pause the job?</h4>
+            <button type="button" class="btn btn-warning" onclick="pauseJob()">Pause</button>
+            <button type="button" class="btn btn-default" onclick="$('#pauseConfirm').hide()">Cancel</button>
+        </div>
         <script>
             var deleteConfirm = $('#deleteError');
             var deleteError = $('#deleteConfirm');
+            var pauseConfirm = $('pauseError');
+            var pauseError = $('pauseConfirm');
             var runConfirm = $('#runConfirm');
             var runSuccess = $('#runSuccess');
             var runError = $('#runError');
@@ -84,6 +92,13 @@ request: play.api.mvc.Request[AnyContent]
                 setTimeout(function() {
                     $('#errorGrowl').fadeOut(1000);
                 }, 5000);
+            }
+
+            function pauseJob(){
+                pauseConfirm.hide();
+                @pausableTriggers.map { triggerKey =>
+                    setTrigger(true, "@piezoRoutes.Triggers.patchTrigger(triggerKey.getGroup(), triggerKey.getName())");
+                }
             }
 
             function deleteJob() {
@@ -140,11 +155,6 @@ request: play.api.mvc.Request[AnyContent]
                     }
                 });
             }
-            $('#pauseJob').click(function() {
-                @pausableTriggers.map { triggerKey =>
-                    setTrigger(true, "@piezoRoutes.Triggers.patchTrigger(triggerKey.getGroup(), triggerKey.getName())");
-                }
-            });
             $('#resumeJob').click(function() {
                 @resumableTriggers.map { triggerKey =>
                     setTrigger(false, "@piezoRoutes.Triggers.patchTrigger(triggerKey.getGroup(), triggerKey.getName())");
