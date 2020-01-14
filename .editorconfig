@@ -34,5 +34,8 @@ indent_style = tab
 [*.makefile]
 indent_style = tab
 
+[*.yml]
+indent_size = 2
+
 [makefile]
 indent_style = tab
