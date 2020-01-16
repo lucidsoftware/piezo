@@ -73,7 +73,7 @@ request: play.api.mvc.Request[AnyContent]
         </div>
          <!-- Pause Job Alerts -->
         <div id="pauseConfirm" style="display:none;" class="alert alert-warning fade in">
-            <h4>Are you sure you want to pause the job?</h4>
+            <h4>Are you sure you want to pause the job? (Current environment: @request.host)</h4>
             <button type="button" class="btn btn-warning" onclick="pauseJob()">Pause</button>
             <button type="button" class="btn btn-default" onclick="$('#pauseConfirm').hide()">Cancel</button>
         </div>
