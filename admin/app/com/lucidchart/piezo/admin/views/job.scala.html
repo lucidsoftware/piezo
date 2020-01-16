@@ -1,5 +1,6 @@
 @import com.lucidchart.piezo.admin.controllers.{routes=>piezoRoutes}
 @import com.lucidchart.piezo.admin.views
+@import play.api.Play.{current,configuration}
 @import java.net.URLEncoder
 @import org.quartz.TriggerKey
 @(
@@ -71,12 +72,15 @@ request: play.api.mvc.Request[AnyContent]
           <button type="button" class="btn btn-danger" onclick="deleteJob()">Delete</button>
           <button type="button" class="btn btn-default" onclick="$('#deleteConfirm').hide()">Cancel</button>
         </div>
-         <!-- Pause Job Alerts -->
-        <div id="pauseConfirm" style="display:none;" class="alert alert-warning fade in">
-            <h4>Are you sure you want to pause the job?</h4>
-            <button type="button" class="btn btn-warning" onclick="pauseJob()">Pause</button>
-            <button type="button" class="btn btn-default" onclick="$('#pauseConfirm').hide()">Cancel</button>
-        </div>
+        @defining(configuration.getBoolean("com.lucidchart.piezo.admin.production").contains(true)) { inProd =>
+            <!-- Pause Job Alerts -->
+            <div id="pauseConfirm" style="display: none;" class="alert alert-@if(inProd) {danger} else {warning} fade in">
+                <h4>Are you sure you want to pause the job?</h4>
+                @if(inProd) {<h2><b>THIS IS IN PRODUCTION!!!</b></h2>}
+                <button type="button" class="btn btn-@if(inProd) {danger} else {warning}" onclick="pauseJob()">Pause</button>
+                <button type="button" class="btn btn-default" onclick="$('#pauseConfirm').hide()">Cancel</button>
+            </div>
+        }
         <script>
             var deleteConfirm = $('#deleteError');
             var deleteError = $('#deleteConfirm');
