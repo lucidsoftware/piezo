@@ -3,7 +3,7 @@ package com.lucidchart.piezo.util
 import javax.tools.{ JavaFileObject, DiagnosticCollector, ToolProvider}
 import org.quartz.{JobExecutionContext, Job}
 
-import scala.collection.JavaConversions._
+import scala.jdk.CollectionConverters._
 import java.net.{URLClassLoader}
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -26,7 +26,7 @@ class DummyClassGenerator {
     Array(tempOutputDir.toURI().toURL()), Thread.currentThread().getContextClassLoader())
   val compiler = ToolProvider.getSystemJavaCompiler()
   val diagnostics: DiagnosticCollector[JavaFileObject] = new DiagnosticCollector[JavaFileObject]()
-  
+
   private def getClasspath() = {
     val dummyJob = new Job() {
       def execute(context: JobExecutionContext) {
@@ -54,10 +54,10 @@ class DummyClassGenerator {
         val compilationUnits = List[JavaFileObject](file)
         val classpath = getClasspath()
         val options = List("-d", tempOutputDirName, "-classpath", classpath)
-        val task = compiler.getTask(null, null, diagnostics, options, null, compilationUnits)
+        val task = compiler.getTask(null, null, diagnostics, options.asJava, null, compilationUnits.asJava)
         logger.debug(s"Compiling $name with options '$options'")
         val success = task.call()
-        for (diagnostic <- diagnostics.getDiagnostics) {
+        for (diagnostic <- diagnostics.getDiagnostics.asScala) {
           logger.debug("Result of compiling " + name)
           logger.debug(diagnostic.getCode)
           logger.debug(diagnostic.getKind.toString)
