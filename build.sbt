@@ -7,10 +7,12 @@ lazy val admin = project.dependsOn(worker_2_11).settings(
     scalaVersion := "2.11.8"
 )
 
+lazy val commonSettings = Seq(publishTo := sonatypePublishToBundle.value)
+
 lazy val worker = project.cross
-lazy val worker_2_11 = worker("2.11.12")
-lazy val worker_2_12 = worker("2.12.12")
-lazy val worker_2_13 = worker("2.13.2")
+lazy val worker_2_11 = worker("2.11.12").settings(commonSettings)
+lazy val worker_2_12 = worker("2.12.12").settings(commonSettings)
+lazy val worker_2_13 = worker("2.13.2").settings(commonSettings)
 
 PgpKeys.pgpPassphrase in Global := Some(Array.emptyCharArray)
 
@@ -60,3 +62,5 @@ bintrayDescriptor in (ThisBuild, Debian) := {
   IO.write(file, Json.prettyPrint(json))
   file
 }
+
+publishTo := sonatypePublishToBundle.value
