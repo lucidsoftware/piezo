@@ -8,7 +8,8 @@ errorMessage: Option[String] = None,
 scripts: List[String] = List[String]("js/jobData.js", "js/typeAhead.js")
 )(
 implicit
-request: play.api.mvc.Request[AnyContent]
+request: play.api.mvc.Request[AnyContent],
+messagesProvider: play.api.i18n.MessagesProvider
 )
 
 @import com.lucidchart.piezo.admin.controllers.{routes=>piezoRoutes}

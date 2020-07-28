@@ -1,8 +1,10 @@
 @import com.lucidchart.piezo.admin.controllers.{routes=>piezoRoutes}
 @import com.lucidchart.piezo.admin.views
-@import play.api.Play.{current,configuration}
+@import play.api.Configuration
 @import java.net.URLEncoder
 @import org.quartz.TriggerKey
+@this(configuration: Configuration)
+
 @(
 jobsByGroup: scala.collection.mutable.Buffer[(String, scala.collection.immutable.List[org.quartz.JobKey])],
 currentJob: Option[org.quartz.JobDetail],
@@ -72,7 +74,7 @@ request: play.api.mvc.Request[AnyContent]
           <button type="button" class="btn btn-danger" onclick="deleteJob()">Delete</button>
           <button type="button" class="btn btn-default" onclick="$('#deleteConfirm').hide()">Cancel</button>
         </div>
-        @defining(configuration.getBoolean("com.lucidchart.piezo.admin.production").contains(true)) { inProd =>
+        @defining(configuration.getOptional[Boolean]("com.lucidchart.piezo.admin.production").contains(true)) { inProd =>
             <!-- Pause Job Alerts -->
             <div id="pauseConfirm" style="display: none;" class="alert alert-@if(inProd) {danger} else {warning} fade in">
                 <h4>Are you sure you want to pause the job?</h4>

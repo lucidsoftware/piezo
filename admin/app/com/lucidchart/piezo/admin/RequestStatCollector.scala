@@ -1,12 +1,10 @@
 package com.lucidchart.piezo.admin
 
 import play.api.mvc._
-import play.api.Logger
-import play.api.libs.concurrent.Execution.Implicits._
+import play.api.Logging
+import scala.concurrent.ExecutionContext
 
-object RequestStatCollector extends EssentialFilter {
-  implicit val logger = Logger(this.getClass())
-
+class RequestStatCollector(ec: ExecutionContext) extends EssentialFilter with Logging {
 
   private def recordStats(request: RequestHeader, start: Long)(result: Result): Result = {
     val time = System.currentTimeMillis - start
@@ -18,6 +16,6 @@ object RequestStatCollector extends EssentialFilter {
     val start = System.currentTimeMillis
     next(request).map { value =>
       recordStats(request, start)(value)
-    }
+    }(ec)
   }
 }

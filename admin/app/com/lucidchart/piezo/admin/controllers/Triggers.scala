@@ -12,11 +12,10 @@ import com.lucidchart.piezo.admin.models._
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.util.Try
+import play.api.Logging
+import play.api.i18n.I18nSupport
 
-object Triggers extends Triggers(new WorkerSchedulerFactory())
-
-class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
-  implicit val logger = Logger(this.getClass())
+class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponents) extends AbstractController(cc) with Logging with ErrorLogging with play.api.i18n.I18nSupport {
 
   val scheduler = logExceptions(schedulerFactory.getScheduler())
   val properties = schedulerFactory.props
@@ -172,7 +171,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
             false,
             false
           )
-          (request)
+          (request, implicitly)
         )
     }
   }
@@ -206,7 +205,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
             formNewAction,
             false,
             isTemplate
-          )(request)
+          )(request, implicitly)
         )
       }
       else {
@@ -217,7 +216,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
             formEditAction(group, name),
             true,
             isTemplate
-          )(request)
+          )(request, implicitly)
         )
       }
     }
@@ -287,7 +286,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory) extends Controller {
                 false,
                 false,
                 errorMessage = Some("Please provide unique group-name pair")
-              )(request)
+              )(request, implicitly)
             )
         }
       }

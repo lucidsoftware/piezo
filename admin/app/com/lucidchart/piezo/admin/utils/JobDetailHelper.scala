@@ -9,7 +9,7 @@ object JobDetailHelper extends JobDataHelper {
   lazy val jobFormHelper = new JobFormHelper()
 
   implicit def jobDetailWrites(
-    triggers: List[Trigger],
+    triggers: Seq[Trigger],
     triggerMonitoringModel: TriggerMonitoringModel
   ): Writes[JobDetail] = Writes[JobDetail] { jobDetail =>
     val jobDataMap = jobDetail.getJobDataMap
@@ -28,6 +28,6 @@ object JobDetailHelper extends JobDataHelper {
     )
   }
 
-  implicit def jobDetailSeqWrites(triggers: List[Trigger], triggerMonitoringModel: TriggerMonitoringModel) = Writes.seq(jobDetailWrites(triggers, triggerMonitoringModel))
+  implicit def jobDetailSeqWrites(triggers: Seq[Trigger], triggerMonitoringModel: TriggerMonitoringModel) = Writes.seq(jobDetailWrites(triggers, triggerMonitoringModel))
 }
 

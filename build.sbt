@@ -1,5 +1,5 @@
 import com.lucidchart.sbtcross.{Axis, CrossableProject, DefaultAxis}
-import com.typesafe.sbt.packager.archetypes.ServerLoader
+// import com.typesafe.sbt.packager.archetypes.ServerLoader
 import play.api.libs.json.Json
 
 lazy val admin = project.dependsOn(worker_2_11).settings(

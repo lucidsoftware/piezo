@@ -35,11 +35,7 @@ trait ImportResult {
 case class ImportSuccess(val jobKey: Option[JobKey], val errorMessage: String = "", val success: Boolean=true) extends ImportResult
 case class ImportFailure(val jobKey: Option[JobKey], val errorMessage: String, val success: Boolean=false) extends ImportResult
 
-object Jobs extends Jobs(new WorkerSchedulerFactory())
-
-class Jobs(schedulerFactory: WorkerSchedulerFactory) extends Controller {
-  implicit val logger = Logger(this.getClass())
-
+class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: ControllerComponents) extends AbstractController(cc) with Logging with ErrorLogging with play.api.i18n.I18nSupport {
   val scheduler = logExceptions(schedulerFactory.getScheduler())
   val properties = schedulerFactory.props
   val jobHistoryModel = logExceptions(new JobHistoryModel(properties))
@@ -78,7 +74,7 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory) extends Controller {
 
       request.accepts(HTML)
       val errorMsg = Some("Job " + group + " " + name + " not found")
-      NotFound(com.lucidchart.piezo.admin.views.html.job(getJobsByGroup(), None, None, None, errorMsg)(request))
+      NotFound(jobView(getJobsByGroup(), None, None, None, errorMsg)(request))
     } else {
       try {
         val jobDetail: Option[JobDetail] = Some(scheduler.getJobDetail(jobKey))
@@ -99,12 +95,12 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory) extends Controller {
           scheduler.getTriggerState(triggerKey) == Trigger.TriggerState.PAUSED
         }
 
-        Ok(com.lucidchart.piezo.admin.views.html.job(getJobsByGroup(), jobDetail, history, Some(triggers), None, pausableTriggers, resumableTriggers)(request))
+        Ok(jobView(getJobsByGroup(), jobDetail, history, Some(triggers), None, pausableTriggers, resumableTriggers)(request))
       } catch {
         case e: Exception => {
           val errorMsg = "Exception caught getting job " + group + " " + name + ". -- " + e.getLocalizedMessage()
           logger.error(errorMsg, e)
-          InternalServerError(com.lucidchart.piezo.admin.views.html.job(getJobsByGroup(), None, None, None, Some(errorMsg))(request))
+          InternalServerError(jobView(getJobsByGroup(), None, None, None, Some(errorMsg))(request))
         }
       }
     }
@@ -114,16 +110,16 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory) extends Controller {
     val jobKey = new JobKey(name, group)
     if (!scheduler.checkExists(jobKey)) {
       val errorMsg = Some("Job %s $s not found".format(group, name))
-      NotFound(com.lucidchart.piezo.admin.views.html.job(mutable.Buffer(), None, None, None, errorMsg)(request))
+      NotFound(jobView(mutable.Buffer(), None, None, None, errorMsg)(request))
     } else {
       try {
         scheduler.deleteJob(jobKey)
-        Ok(com.lucidchart.piezo.admin.views.html.job(getJobsByGroup(), None, None, None)(request))
+        Ok(jobView(getJobsByGroup(), None, None, None)(request))
       } catch {
         case e: Exception => {
           val errorMsg = "Exception caught deleting job %s %s. -- %s".format(group, name, e.getLocalizedMessage())
           logger.error(errorMsg, e)
-          InternalServerError(com.lucidchart.piezo.admin.views.html.job(mutable.Buffer(), None, None, None, Some(errorMsg))(request))
+          InternalServerError(jobView(mutable.Buffer(), None, None, None, Some(errorMsg))(request))
         }
       }
     }
@@ -173,7 +169,7 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory) extends Controller {
       case Some(group) => getEditJob(group, templateName.get, true)
       case None =>
         val newJobForm = jobFormHelper.buildJobForm
-        Ok(com.lucidchart.piezo.admin.views.html.editJob(getJobsByGroup(), newJobForm, submitNewMessage, formNewAction, false)(request))
+        Ok(com.lucidchart.piezo.admin.views.html.editJob(getJobsByGroup(), newJobForm, submitNewMessage, formNewAction, false)(request, implicitly))
     }
 
   }
@@ -184,8 +180,8 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory) extends Controller {
     if (scheduler.checkExists(jobKey)) {
       val jobDetail = scheduler.getJobDetail(jobKey)
       val editJobForm = jobFormHelper.buildJobForm().fill(jobDetail)
-      if (isTemplate) Ok(com.lucidchart.piezo.admin.views.html.editJob(getJobsByGroup(), editJobForm, submitNewMessage, formNewAction, false)(request))
-      else Ok(com.lucidchart.piezo.admin.views.html.editJob(getJobsByGroup(), editJobForm, submitEditMessage, formEditAction(group, name), true)(request))
+      if (isTemplate) Ok(com.lucidchart.piezo.admin.views.html.editJob(getJobsByGroup(), editJobForm, submitNewMessage, formNewAction, false)(request, implicitly))
+      else Ok(com.lucidchart.piezo.admin.views.html.editJob(getJobsByGroup(), editJobForm, submitEditMessage, formEditAction(group, name), true)(request, implicitly))
     } else {
       val errorMsg = Some("Job %s %s not found".format(group, name))
       NotFound(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, None, errorMsg)(request))
@@ -301,7 +297,7 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory) extends Controller {
               formNewAction,
               false,
               errorMessage = Some("Please provide unique group-name pair")
-            )(request))
+            )(request, implicitly))
         }
       }
     )
