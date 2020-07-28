@@ -23,7 +23,8 @@ lazy val `admin-bionic` = admin.copy(id = "admin-bionic").settings(
 
 lazy val worker = project.cross
 lazy val worker_2_11 = worker("2.11.12")
-lazy val worker_2_12 = worker("2.12.8")
+lazy val worker_2_12 = worker("2.12.12")
+lazy val worker_2_13 = worker("2.13.2")
 
 PgpKeys.pgpPassphrase in Global := Some(Array.emptyCharArray)
 

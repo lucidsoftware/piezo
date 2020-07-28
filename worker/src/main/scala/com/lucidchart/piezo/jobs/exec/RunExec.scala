@@ -1,12 +1,9 @@
 package com.lucidchart.piezo.jobs.exec
 
 import java.util.Scanner
-
 import org.quartz.{Job, JobExecutionContext}
 import org.slf4j.LoggerFactory
-
-import scala.collection.JavaConversions._
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * When creating job's data map, choose keys in alphabetical order
@@ -17,7 +14,7 @@ class RunExec extends Job {
 
   def execute(context: JobExecutionContext) {
     val jobDataMap = context.getJobDetail.getJobDataMap
-    val sortedDataList = jobDataMap.entrySet.toList.sortBy(_.getKey)
+    val sortedDataList = jobDataMap.entrySet.asScala.toList.sortBy(_.getKey)
     val commands: java.util.List[String] = sortedDataList.map(entry => entry.getValue.toString).asJava
     val cmdProcess = new ProcessBuilder(commands).start
     cmdProcess.waitFor
