@@ -1,6 +1,6 @@
 package com.lucidchart.piezo
 
-import org.quartz.{JobKey, Trigger}
+import org.quartz.Trigger
 import java.sql.Timestamp
 
 import org.slf4j.LoggerFactory

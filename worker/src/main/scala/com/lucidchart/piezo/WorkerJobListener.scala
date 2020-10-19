@@ -4,7 +4,6 @@ import com.timgroup.statsd.StatsDClient
 import java.util.Properties
 import org.quartz.{JobExecutionContext, JobExecutionException, JobListener}
 import org.slf4j.LoggerFactory
-import scala.util.Try;
 
 object WorkerJobListener {
   val logger = LoggerFactory.getLogger(this.getClass)
