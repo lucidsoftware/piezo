@@ -2,24 +2,10 @@ import com.lucidchart.sbtcross.{Axis, CrossableProject, DefaultAxis}
 import com.typesafe.sbt.packager.archetypes.ServerLoader
 import play.api.libs.json.Json
 
-val distributionAxis = new DefaultAxis {
-  def name = "dist"
-  def major(version: String) = version
-}
-
-lazy val admin = project.dependsOn(worker_2_11).settings(scalaVersion := "2.11.8")
-// there's probably a better way to also produce a Systemd deb
-lazy val `admin-xenial` = admin.copy(id = "admin-xenial").settings(
-  serverLoading in Debian := ServerLoader.Systemd,
-  target := baseDirectory.value / "target-xenial",
-  scalaVersion := "2.11.8"
+lazy val admin = project.dependsOn(worker_2_11).settings(
+    serverLoading in Debian := ServerLoader.Systemd,
+    scalaVersion := "2.11.8"
 )
-lazy val `admin-bionic` = admin.copy(id = "admin-bionic").settings(
-  serverLoading in Debian := ServerLoader.Systemd,
-  target := baseDirectory.value / "target-bionic",
-  scalaVersion := "2.11.8"
-)
-
 
 lazy val worker = project.cross
 lazy val worker_2_11 = worker("2.11.12")
@@ -44,20 +30,18 @@ inThisBuild(Seq(
 val bintrayDescriptor = taskKey[File]("Descriptor for TravisCI release to Bintray")
 
 bintrayDescriptor in (ThisBuild, Debian) := {
-  def files(deb: File, distribution: String) = Json.obj(
+  def files(deb: File) = Json.obj(
     "includePattern" -> baseDirectory.value.toPath.relativize(deb.toPath.normalize).toString,
     "matrixParams" -> Json.obj(
       "deb_architecture" -> "amd64,i386",
       "deb_component" -> "main",
-      "deb_distribution" -> distribution
+      "deb_distribution" -> "piezo"
     ),
-    "uploadPattern" -> s"pool/p/piezo-admin_${version.value}_${distribution}_all.deb"
+    "uploadPattern" -> s"pool/p/piezo-admin_${version.value}_all.deb"
   )
   val json = Json.obj(
     "files" -> Json.arr(
-      files((packageBin in (admin, Debian)).value, "trusty"),
-      files((packageBin in (`admin-xenial`, Debian)).value, "xenial"),
-      files((packageBin in (`admin-bionic`, Debian)).value, "bionic")
+      files((packageBin in (admin, Debian)).value)
     ),
     "package" -> Json.obj(
       "name" -> "piezo",
