@@ -20,7 +20,7 @@ object Worker {
   private val shutdownSemaphore = new Semaphore(1)
   private[piezo] val dtf = ISODateTimeFormat.dateTimeNoMillis().withZoneUTC()
 
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
     logger.info("worker starting")
 
     shutdownSemaphore.acquire()
@@ -48,7 +48,7 @@ object Worker {
     System.exit(0)
   }
 
-  private[piezo] def run(scheduler: Scheduler, properties: Properties, heartbeatSeconds: Int = 60, semaphorePermitsToStop: Int = 1) {
+  private[piezo] def run(scheduler: Scheduler, properties: Properties, heartbeatSeconds: Int = 60, semaphorePermitsToStop: Int = 1): Unit = {
     val heartbeatFile = properties.getProperty("com.lucidchart.piezo.heartbeatFile")
     if (heartbeatFile == null) {
       logger.trace("No heartbeat file specified")
@@ -58,7 +58,6 @@ object Worker {
       scheduler.start()
       logger.info("scheduler started")
       val reader = new InputStreamReader(System.in)
-      val stdin = new BufferedReader(reader)
 
       var acquired = false
       while (!acquired) {
@@ -116,7 +115,7 @@ object Worker {
       if (pidFile.getAbsolutePath != "/dev/null") {
         new FileOutputStream(pidFile).write(pid.getBytes)
         Runtime.getRuntime.addShutdownHook(new Thread {
-          override def run {
+          override def run: Unit = {
             pidFile.delete()
           }
         })
@@ -124,9 +123,9 @@ object Worker {
     }
   }
 
-  private def setupShutdownHandler() {
+  private def setupShutdownHandler(): Unit = {
     Runtime.getRuntime.addShutdownHook(new Thread() {
-      override def run() {
+      override def run(): Unit = {
         logger.info("received shutdown signal")
         runSemaphore.release()
         shutdownSemaphore.acquire()

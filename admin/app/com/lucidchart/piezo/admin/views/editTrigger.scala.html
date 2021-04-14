@@ -52,26 +52,26 @@ messagesProvider: play.api.i18n.MessagesProvider
   <h4 class="text-danger">@triggerForm.errors.filter(_.key == "").map(_.message).mkString(", ")</h4>
   <form role="form" action="@formAction" method="POST">
     <div class="form-horizontal">
-    @defining(if(existing) {'readonly} else {'none}) { newEditOnly =>
-    @helper.input(triggerForm("group"), '_label -> "Group", 'labelClass -> "col-sm-2 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Group", 'value-> triggerForm.data.get("group").getOrElse(""), newEditOnly -> None) { (id, name, value, args) =>
+    @defining(if(existing) {Symbol("readonly")} else {Symbol("none")}) { newEditOnly =>
+    @helper.input(triggerForm("group"), Symbol("_label") -> "Group", Symbol("labelClass") -> "col-sm-2 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "Group", Symbol("value")-> triggerForm.data.get("group").getOrElse(""), newEditOnly -> None) { (id, name, value, args) =>
       <input type="text" class="trigger-group-type-ahead form-control form-inline-control" name="@name" id="@id" @toHtmlArgs(args)>
     }
-    @helper.input(triggerForm("name"), '_label -> "Name", 'labelClass -> "col-sm-2 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Name", 'value-> triggerForm.data.get("name").getOrElse(""), newEditOnly -> None) { (id, name, value, args) =>
+    @helper.input(triggerForm("name"), Symbol("_label") -> "Name", Symbol("labelClass") -> "col-sm-2 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "Name", Symbol("value")-> triggerForm.data.get("name").getOrElse(""), newEditOnly -> None) { (id, name, value, args) =>
       <input type="text" class="form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
     }
-    @helper.input(triggerForm("jobGroup"), '_label -> "Job group", 'labelClass -> "col-sm-2 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Job group", 'value-> triggerForm.data.get("jobGroup").getOrElse(""), newEditOnly -> None) { (id, name, value, args) =>
+    @helper.input(triggerForm("jobGroup"), Symbol("_label") -> "Job group", Symbol("labelClass") -> "col-sm-2 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "Job group", Symbol("value")-> triggerForm.data.get("jobGroup").getOrElse(""), newEditOnly -> None) { (id, name, value, args) =>
       <input type="text" class="job-group-type-ahead form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
     }
-    @helper.input(triggerForm("jobName"), '_label -> "Job name", 'labelClass -> "col-sm-2 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Job name", 'value-> triggerForm.data.get("jobName").getOrElse(""), newEditOnly -> None) { (id, name, value, args) =>
+    @helper.input(triggerForm("jobName"), Symbol("_label") -> "Job name", Symbol("labelClass") -> "col-sm-2 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "Job name", Symbol("value")-> triggerForm.data.get("jobName").getOrElse(""), newEditOnly -> None) { (id, name, value, args) =>
       <input type="text" class="job-name-type-ahead form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
     }
     }
-    @helper.select(triggerForm("triggerMonitoringPriority"), TriggerMonitoringPriority.values.toList.map(tp => tp.toString -> tp.toString), '_label -> "Monitoring Priority", 'labelClass -> "col-sm-2 text-right", 'inputDivClass -> "col-sm-4", 'class -> "form-control", 'value -> triggerForm.data.get("triggerMonitoringPriority").getOrElse(TriggerMonitoringPriority.Medium), 'placeholder -> TriggerMonitoringPriority.Medium)
-    @helper.input(triggerForm("triggerMaxErrorTime"), '_label -> "Monitoring - Max Seconds Between Successes", 'labelClass -> "col-sm-2 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "", 'value -> triggerForm.data.get("triggerMaxErrorTime").getOrElse(300)) { (id, name, value, args) =>
+    @helper.select(triggerForm("triggerMonitoringPriority"), TriggerMonitoringPriority.values.toList.map(tp => tp.toString -> tp.toString), Symbol("_label") -> "Monitoring Priority", Symbol("labelClass") -> "col-sm-2 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("class") -> "form-control", Symbol("value") -> triggerForm.data.get("triggerMonitoringPriority").getOrElse(TriggerMonitoringPriority.Medium), Symbol("placeholder") -> TriggerMonitoringPriority.Medium)
+    @helper.input(triggerForm("triggerMaxErrorTime"), Symbol("_label") -> "Monitoring - Max Seconds Between Successes", Symbol("labelClass") -> "col-sm-2 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "", Symbol("value") -> triggerForm.data.get("triggerMaxErrorTime").getOrElse(300)) { (id, name, value, args) =>
       <input type="number" class="form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
     }
 
-    @helper.input(triggerForm("description"), '_label -> "Description", 'labelClass -> "col-sm-2 text-right", 'inputDivClass -> "col-sm-10", 'placeholder -> "Description", 'value-> triggerForm.data.get("description").getOrElse("")) { (id, name, value, args) =>
+    @helper.input(triggerForm("description"), Symbol("_label") -> "Description", Symbol("labelClass") -> "col-sm-2 text-right", Symbol("inputDivClass") -> "col-sm-10", Symbol("placeholder") -> "Description", Symbol("value")-> triggerForm.data.get("description").getOrElse("")) { (id, name, value, args) =>
       <input type="text" class="form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
     }
     <input type="hidden" name="triggerType" id="triggerType" value="@triggerForm.data.get("triggerType")"/>
@@ -79,14 +79,14 @@ messagesProvider: play.api.i18n.MessagesProvider
     <div class="clearfix"></div>
     <div class="form-horizontal">
     @if(triggerForm.data.get("triggerType").getOrElse("") == "simple") {
-      @helper.input(triggerForm("simple.repeatCount"), '_label -> "Repeat count", 'labelClass -> "col-sm-2 text-right", '_class -> "form-horizontal-inline", 'inputDivClass -> "col-sm-2", 'placeholder -> "Repeat count", 'value-> triggerForm.data.get("simple.repeatCount").getOrElse("")) { (id, name, value, args) =>
+      @helper.input(triggerForm("simple.repeatCount"), Symbol("_label") -> "Repeat count", Symbol("labelClass") -> "col-sm-2 text-right", Symbol("_class") -> "form-horizontal-inline", Symbol("inputDivClass") -> "col-sm-2", Symbol("placeholder") -> "Repeat count", Symbol("value")-> triggerForm.data.get("simple.repeatCount").getOrElse("")) { (id, name, value, args) =>
         <input type="text" class="form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
       }
-      @helper.input(triggerForm("simple.repeatInterval"), '_label -> "Repeat interval (seconds)", 'labelClass -> "col-sm-2 text-right", '_class -> "form-horizontal-inline", 'inputDivClass -> "col-sm-2", 'placeholder -> "Repeat interval (seconds)", 'value-> triggerForm.data.get("simple.repeatInterval").getOrElse("")) { (id, name, value, args) =>
+      @helper.input(triggerForm("simple.repeatInterval"), Symbol("_label") -> "Repeat interval (seconds)", Symbol("labelClass") -> "col-sm-2 text-right", Symbol("_class") -> "form-horizontal-inline", Symbol("inputDivClass") -> "col-sm-2", Symbol("placeholder") -> "Repeat interval (seconds)", Symbol("value")-> triggerForm.data.get("simple.repeatInterval").getOrElse("")) { (id, name, value, args) =>
         <input type="text" class="form-control form-inline-control" name="@name" id="@id" @toHtmlArgs(args)>
       }
     } else {
-      @helper.input(triggerForm("cron.cronExpression"), '_label -> "Cron Expression", 'labelClass -> "col-sm-2 text-right", '_class -> "form-horizontal-inline", 'inputDivClass -> "col-sm-4", 'placeholder -> "Cron expression", 'value-> triggerForm.data.get("cron.cronExpression").getOrElse("")) { (id, name, value, args) =>
+      @helper.input(triggerForm("cron.cronExpression"), Symbol("_label") -> "Cron Expression", Symbol("labelClass") -> "col-sm-2 text-right", Symbol("_class") -> "form-horizontal-inline", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "Cron expression", Symbol("value")-> triggerForm.data.get("cron.cronExpression").getOrElse("")) { (id, name, value, args) =>
           <input type="text" class="form-control form-inline-control" name="@name" id="@id" @toHtmlArgs(args)>
       }
     }
@@ -102,8 +102,8 @@ messagesProvider: play.api.i18n.MessagesProvider
           }
         }
 
-        @helper.inputText(dataMap("key"), '_label -> "Key", 'labelClass -> "col-sm-2 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Key", 'class -> "job-data-key form-control form-inline-control")
-        @helper.inputText(dataMap("value"), '_label -> "Value", 'labelClass -> "col-sm-2 text-right", 'inputDivClass -> "col-sm-4", 'placeholder -> "Value", 'class -> "job-data-value form-control form-inline-control")
+        @helper.inputText(dataMap("key"), Symbol("_label") -> "Key", Symbol("labelClass") -> "col-sm-2 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "Key", Symbol("class") -> "job-data-key form-control form-inline-control")
+        @helper.inputText(dataMap("value"), Symbol("_label") -> "Value", Symbol("labelClass") -> "col-sm-2 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "Value", Symbol("class") -> "job-data-value form-control form-inline-control")
 
       }
 

@@ -30,7 +30,7 @@ class HealthCheck(configuration: Configuration, cc: ControllerComponents) extend
  }
 
   def areWorkersHealthy(): (Boolean, String) = {
-    val heartbeatFile = Source.fromFile(heartbeatFilename).getLines.toList
+    val heartbeatFile = Source.fromFile(heartbeatFilename).getLines().toList
     val heartbeatTimestamp = heartbeatFile(0)
     val formatter = ISODateTimeFormat.dateTimeNoMillis().withZoneUTC()
     val heartbeatTime = formatter.parseDateTime(heartbeatTimestamp)

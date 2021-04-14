@@ -9,8 +9,8 @@ import play.api._
 import play.api.libs.json._
 import play.api.mvc._
 import com.lucidchart.piezo.admin.models._
-import scala.collection.JavaConverters._
 import scala.collection.mutable
+import scala.jdk.CollectionConverters._
 import scala.util.Try
 import play.api.Logging
 import play.api.i18n.I18nSupport
@@ -160,7 +160,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
           case "cron" => new DummyCronTrigger(jobGroup, jobName)
           case "simple" => new DummySimpleTrigger(jobGroup, jobName)
         }
-        val newTriggerForm = triggerFormHelper.buildTriggerForm().fill(
+        val newTriggerForm = triggerFormHelper.buildTriggerForm.fill(
           (dummyTrigger, TriggerMonitoringPriority.Medium, 300)
         )
         Ok(
@@ -194,7 +194,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
         logger.error("Failed to get trigger monitoring info")
         (TriggerMonitoringPriority.Medium, 300)
       }
-      val editTriggerForm = triggerFormHelper.buildTriggerForm().fill(
+      val editTriggerForm = triggerFormHelper.buildTriggerForm.fill(
         (triggerDetail, triggerMonitoringPriority, triggerMaxErrorTime)
       )
       if (isTemplate) {
@@ -227,7 +227,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
   }
 
   def putTrigger(group: String, name: String) = Action { implicit request =>
-    triggerFormHelper.buildTriggerForm.bindFromRequest.fold(
+    triggerFormHelper.buildTriggerForm.bindFromRequest().fold(
       formWithErrors =>
         BadRequest(
           com.lucidchart.piezo.admin.views.html.editTrigger(
@@ -251,7 +251,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
   }
 
   def postTrigger() = Action { implicit request =>
-    triggerFormHelper.buildTriggerForm.bindFromRequest.fold(
+    triggerFormHelper.buildTriggerForm.bindFromRequest().fold(
       formWithErrors =>
         BadRequest(
           com.lucidchart.piezo.admin.views.html.editTrigger(

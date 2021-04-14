@@ -17,7 +17,7 @@ implicit request: play.api.mvc.Request[AnyContent]
 
 @com.lucidchart.piezo.admin.views.html.jobsLayout(jobsByGroup, currentJob) {
 <h3 class="pull-left job-name">Select a job</h3>
-<a class="piezo-button pull-right" data-toggle="tooltip" title="Download All jobs" href="@{piezoRoutes.Jobs.getJobsDetail()}" download="allJobs.json">
+<a class="piezo-button pull-right" data-toggle="tooltip" title="Download All jobs" href="@{piezoRoutes.Jobs.getJobsDetail}" download="allJobs.json">
     <span class="glyphicon glyphicon-download"></span>
 </a>
 <div class="clearfix"></div>
@@ -115,7 +115,7 @@ implicit request: play.api.mvc.Request[AnyContent]
                 var form = new FormData();
                 form.append('file', files[0]);
                 $.ajax({
-                    url: "@{piezoRoutes.Jobs.postJobs()}",
+                    url: "@{piezoRoutes.Jobs.postJobs}",
                     data: form,
                     method: 'POST',
                     dataType: 'json',

@@ -73,7 +73,7 @@ request: play.api.mvc.Request[AnyContent]
                 deleteRequest.onreadystatechange = function() {
                     if (deleteRequest.readyState === 4) {
                         if (deleteRequest.status === 200) {
-                            window.location.assign("@piezoRoutes.Triggers.getIndex()");
+                            window.location.assign("@piezoRoutes.Triggers.getIndex");
                         } else {
                             showErrorMessage('Failed to delete trigger.');
                         }
@@ -115,7 +115,7 @@ request: play.api.mvc.Request[AnyContent]
             </tr>
             <tr>
                 <td class="text-right">Trigger name:</td>
-                <td>@currentTrigger.get.getKey.getName()</td>
+                <td>@currentTrigger.get.getKey.getName</td>
             </tr>
             @if(currentTrigger.get.getJobKey() != null) {
             <tr>

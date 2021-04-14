@@ -20,7 +20,7 @@ class JobHistoryModel(props: Properties) {
   val logger = LoggerFactory.getLogger(this.getClass)
   val connectionProvider = new ConnectionProvider(props)
 
-  def addJob(context: JobExecutionContext, success:Boolean) {
+  def addJob(context: JobExecutionContext, success:Boolean): Unit = {
     val connection = connectionProvider.getConnection
     try {
       val prepared = connection.prepareStatement(

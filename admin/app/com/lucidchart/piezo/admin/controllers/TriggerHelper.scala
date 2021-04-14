@@ -2,7 +2,7 @@ package com.lucidchart.piezo.admin.controllers
 
 import com.lucidchart.piezo.{TriggerMonitoringModel, TriggerMonitoringPriority}
 import com.lucidchart.piezo.admin.models.TriggerType
-import collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 import org.quartz.TriggerKey
 import org.quartz.{CronTrigger, SimpleTrigger}

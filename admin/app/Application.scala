@@ -44,7 +44,7 @@ class PiezoAdminComponents(context: Context) extends BuiltInComponentsFromContex
   val logger = Logger("com.lucidchart.piezo.Global")
 
 
-  override lazy val httpErrorHandler: HttpErrorHandler = new DefaultHttpErrorHandler(environment, configuration, sourceMapper, Some(router)) {
+  override lazy val httpErrorHandler: HttpErrorHandler = new DefaultHttpErrorHandler(environment, configuration, devContext.map(_.sourceMapper), Some(router)) {
       /**
      * Invoked when a handler or resource is not found.
      *

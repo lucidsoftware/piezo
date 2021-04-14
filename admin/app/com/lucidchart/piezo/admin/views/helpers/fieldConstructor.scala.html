@@ -1,8 +1,8 @@
 @(elements: helper.FieldElements)
 
-<div class="form-group @elements.args.get('_class) @if(elements.hasErrors) {has-error}">
-    <label for="@elements.id" class="piezo-label @elements.args.get('labelClass)">@elements.label</label>
-    <div class="input @elements.args.get('inputDivClass)">
+<div class="form-group @elements.args.get(Symbol("_class")) @if(elements.hasErrors) {has-error}">
+    <label for="@elements.id" class="piezo-label @elements.args.get(Symbol("labelClass"))">@elements.label</label>
+    <div class="input @elements.args.get(Symbol("inputDivClass"))">
         @elements.input
         <span class="errors">@elements.errors.mkString(", ")</span>
     </div>

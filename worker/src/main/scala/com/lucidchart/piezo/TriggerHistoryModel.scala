@@ -1,6 +1,6 @@
 package com.lucidchart.piezo
 
-import org.quartz.{JobKey, Trigger}
+import org.quartz.Trigger
 import java.sql.Timestamp
 
 import org.slf4j.LoggerFactory
@@ -20,7 +20,7 @@ class TriggerHistoryModel(props: Properties) {
   val logger = LoggerFactory.getLogger(this.getClass)
   val connectionProvider = new ConnectionProvider(props)
 
-  def addTrigger(trigger: Trigger, actualStart: Option[Date], misfire: Boolean, fireInstanceId: Option[String]) {
+  def addTrigger(trigger: Trigger, actualStart: Option[Date], misfire: Boolean, fireInstanceId: Option[String]): Unit = {
     val connection = connectionProvider.getConnection
     try {
       val prepared = connection.prepareStatement(

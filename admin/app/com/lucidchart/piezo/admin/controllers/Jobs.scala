@@ -10,7 +10,7 @@ import play.api._
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.mvc._
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.collection.mutable
 import scala.Some
 import scala.io.Source
@@ -44,6 +44,9 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: Cont
 
   val jobFormHelper = new JobFormHelper()
   val triggerFormHelper = new TriggerFormHelper(scheduler)
+
+  // Allow up to 1M
+  private val maxFormSize = 1024 * 1024
 
   def getJobsByGroup(): mutable.Buffer[(String, List[JobKey])] = {
     val jobsByGroup =
@@ -140,7 +143,7 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: Cont
     }
   }
 
-  def getJobsDetail() = Action { implicit request =>
+  def getJobsDetail = Action { implicit request =>
     if (request.accepts(JSON)) {
       Ok(
         Json.toJson(
@@ -159,7 +162,7 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: Cont
   }
 
   val submitNewMessage = "Create"
-  val formNewAction = routes.Jobs.postJob()
+  val formNewAction = routes.Jobs.postJob
   val submitEditMessage = "Save"
   def formEditAction(group: String, name: String): Call = routes.Jobs.putJob(group, name)
 
@@ -179,7 +182,7 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: Cont
 
     if (scheduler.checkExists(jobKey)) {
       val jobDetail = scheduler.getJobDetail(jobKey)
-      val editJobForm = jobFormHelper.buildJobForm().fill(jobDetail)
+      val editJobForm = jobFormHelper.buildJobForm.fill(jobDetail)
       if (isTemplate) Ok(com.lucidchart.piezo.admin.views.html.editJob(getJobsByGroup(), editJobForm, submitNewMessage, formNewAction, false)(request, implicitly))
       else Ok(com.lucidchart.piezo.admin.views.html.editJob(getJobsByGroup(), editJobForm, submitEditMessage, formEditAction(group, name), true)(request, implicitly))
     } else {
@@ -191,7 +194,7 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: Cont
   def getEditJobAction(group: String, name: String) = Action { implicit request => getEditJob(group, name, false) }
 
   def putJob(group: String, name: String) = Action { implicit request =>
-    jobFormHelper.buildJobForm.bindFromRequest.fold(
+    jobFormHelper.buildJobForm.bindFromRequest().fold(
       formWithErrors =>
         BadRequest(html.editJob(getJobsByGroup(), formWithErrors, submitNewMessage, formNewAction, false)),
       value => {
@@ -211,7 +214,7 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: Cont
     }
 
     json.as[List[JsObject]].map { jsObject =>
-      jobFormHelper.buildJobForm.bind(jsObject).fold ( e => {
+      jobFormHelper.buildJobForm.bind(jsObject, maxFormSize).fold ( e => {
         val jobKey = for {
           name <- (jsObject \ "name").validate[String]
           group <- (jsObject \ "group").validate[String]
@@ -226,7 +229,7 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: Cont
           val jobDetail = JobUtils.cleanup(value)
           scheduler.addJob(jobDetail, false)
           val triggersOpt = (jsObject \ "triggers").asOpt[List[JsObject]]
-          val triggersBinding = triggersOpt.map(_.map(triggerFormHelper.buildTriggerForm.bind)).getOrElse(Nil)
+          val triggersBinding = triggersOpt.map(_.map(triggerFormHelper.buildTriggerForm.bind(_, maxFormSize))).getOrElse(Nil)
           if(triggersBinding.exists(b => b.hasErrors || b.hasGlobalErrors)) {
             val errorMessage = formErrorStr(triggersBinding.filter(_.hasErrors).flatMap(_.errors))
             logger.error(errorMessage)
@@ -252,11 +255,11 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: Cont
     }
   }
 
-  def postJobs() = Action { implicit request: Request[AnyContent] =>
+  def postJobs = Action { implicit request: Request[AnyContent] =>
     val jsonOpt = request.body.asJson.orElse {
       request.body.asMultipartFormData.flatMap { d =>
         d.file("file").map { f =>
-          Json.parse(Source.fromFile(f.ref.file).getLines.mkString)
+          Json.parse(Source.fromFile(f.ref.path.toFile()).getLines().mkString)
         }
       }
     }
@@ -278,8 +281,8 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: Cont
     }
   }
 
-  def postJob() = Action { implicit request =>
-    jobFormHelper.buildJobForm.bindFromRequest.fold(
+  def postJob = Action { implicit request =>
+    jobFormHelper.buildJobForm.bindFromRequest().fold(
       formWithErrors =>
         BadRequest(com.lucidchart.piezo.admin.views.html.editJob(getJobsByGroup(), formWithErrors, submitNewMessage, formNewAction, false)),
       value => {

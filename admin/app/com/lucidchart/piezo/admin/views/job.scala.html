@@ -114,7 +114,7 @@ request: play.api.mvc.Request[AnyContent]
                 deleteRequest.onreadystatechange = function() {
                     if (deleteRequest.readyState === 4) {
                         if (deleteRequest.status === 200) {
-                            window.location.assign("@piezoRoutes.Jobs.getIndex()");
+                            window.location.assign("@piezoRoutes.Jobs.getIndex");
                         } else {
                             showErrorMessage('Failed to delete job.');
                         }
