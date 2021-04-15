@@ -22,7 +22,8 @@ inThisBuild(Seq(
   organization := "com.lucidchart",
   scalaVersion := "2.11.12",
   scmInfo := Some(ScmInfo(url("https://github.com/lucidsoftware/piezo"), "scm:git:git@github.com:lucidsoftware/piezo.git")),
-  version := sys.props.getOrElse("build.version", "0-SNAPSHOT")
+  version := sys.props.getOrElse("build.version", "0-SNAPSHOT"),
+  versionScheme := Some("early-semver"),
 ))
 
 publishTo := sonatypePublishToBundle.value

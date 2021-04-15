@@ -24,3 +24,5 @@ name := "piezo-admin"
 packageDescription := "Piezo web admin"
 
 PlayKeys.playDefaultPort := 8001
+
+publishTo := sonatypePublishToBundle.value
