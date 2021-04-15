@@ -1,7 +1,6 @@
 package com.lucidchart.piezo
 
 import java.io.{BufferedReader, FileReader, File}
-import java.util.concurrent.Semaphore
 
 import org.specs2.mutable._
 import org.quartz._
@@ -9,8 +8,7 @@ import org.quartz.JobBuilder._
 import org.quartz.TriggerBuilder._
 import org.quartz.SimpleScheduleBuilder._
 import org.quartz.impl.StdSchedulerFactory
-import java.util.{UUID, Date, Properties}
-import org.joda.time.DateTime
+import java.util.Properties
 
 import scala.util.Random
 
