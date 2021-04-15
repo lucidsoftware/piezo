@@ -1,12 +1,12 @@
 enablePlugins(PlayScala)
 
 bashScriptExtraDefines ++= Seq(
-  s"addJava -Dorg.quartz.properties=${defaultLinuxConfigLocation.value}/${(packageName in Linux).value}/quartz.properties",
+  s"addJava -Dorg.quartz.properties=${defaultLinuxConfigLocation.value}/${(Linux / packageName).value}/quartz.properties",
   "addJava -Dpidfile.path=/var/run/piezo-admin/piezo-admin.pid",
   s"addJava -Dhttp.port=${PlayKeys.playDefaultPort.value}"
 )
 
-javaOptions += s"-Dorg.quartz.properties=${(resourceDirectory in Compile).value / "quartz.properties"}"
+javaOptions += s"-Dorg.quartz.properties=${(Compile / resourceDirectory).value / "quartz.properties"}"
 
 libraryDependencies ++= Seq(
   jdbc,
