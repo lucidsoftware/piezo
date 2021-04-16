@@ -1,7 +1,6 @@
 package com.lucidchart.piezo
 
 import java.io.{BufferedReader, FileReader, File}
-import java.util.concurrent.Semaphore
 
 import org.specs2.mutable._
 import org.quartz._
@@ -9,8 +8,7 @@ import org.quartz.JobBuilder._
 import org.quartz.TriggerBuilder._
 import org.quartz.SimpleScheduleBuilder._
 import org.quartz.impl.StdSchedulerFactory
-import java.util.{UUID, Date, Properties}
-import org.joda.time.DateTime
+import java.util.Properties
 
 import scala.util.Random
 
@@ -20,7 +18,7 @@ object WorkerStopJob {
 }
 
 class WorkerStopJob() extends Job {
-  def execute(context: JobExecutionContext) {
+  def execute(context: JobExecutionContext): Unit = {
     println("upping semaphore")
     WorkerStopJob.runCount += 1
     Worker.runSemaphore.release()
@@ -47,7 +45,7 @@ class WorkerTest extends Specification {
       val propertiesStream = getClass().getResourceAsStream("/quartz_test.properties")
       val properties = new Properties
       properties.load(propertiesStream)
-      properties.setProperty("org.quartz.scheduler.instanceName", "testScheduler" + Random.nextInt)
+      properties.setProperty("org.quartz.scheduler.instanceName", "testScheduler" + Random.nextInt())
       val schedulerFactory = new StdSchedulerFactory(properties)
       val scheduler = schedulerFactory.getScheduler
       scheduler.scheduleJob(job, trigger)
@@ -78,7 +76,7 @@ class WorkerTest extends Specification {
       properties.setProperty("com.lucidchart.piezo.heartbeatFile", heartbeatFilePath)
 
       println("running worker")
-      properties.setProperty("org.quartz.scheduler.instanceName", "testScheduler" + Random.nextInt)
+      properties.setProperty("org.quartz.scheduler.instanceName", "testScheduler" + Random.nextInt())
       val schedulerFactory = new StdSchedulerFactory(properties)
       val scheduler = schedulerFactory.getScheduler
       scheduler.scheduleJob(job, trigger)

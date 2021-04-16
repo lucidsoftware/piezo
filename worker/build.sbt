@@ -2,9 +2,9 @@ import java.io.File
 
 name := "piezo-worker"
 
-mainClass := Some("com.lucidchart.piezo.Worker")
+Compile / mainClass := Some("com.lucidchart.piezo.Worker")
 
-connectInput in run := true
+run / connectInput := true
 
 libraryDependencies ++= Seq(
   "ch.qos.logback" % "logback-classic" % "1.0.7" % Provided,
@@ -34,6 +34,6 @@ scalacOptions ++= Seq(
   "-Xlint"
 )
 
-unmanagedClasspath in Compile += sourceDirectory.value / "run" / "resources"
+Compile / unmanagedClasspath += sourceDirectory.value / "run" / "resources"
 
 version := sys.props.getOrElse("build.version", "0.0-SNAPSHOT")

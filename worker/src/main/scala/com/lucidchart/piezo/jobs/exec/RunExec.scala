@@ -12,7 +12,7 @@ import scala.jdk.CollectionConverters._
 class RunExec extends Job {
   val logger = LoggerFactory.getLogger(this.getClass)
 
-  def execute(context: JobExecutionContext) {
+  def execute(context: JobExecutionContext): Unit = {
     val jobDataMap = context.getJobDetail.getJobDataMap
     val sortedDataList = jobDataMap.entrySet.asScala.toList.sortBy(_.getKey)
     val commands: java.util.List[String] = sortedDataList.map(entry => entry.getValue.toString).asJava

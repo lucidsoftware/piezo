@@ -2,6 +2,8 @@ package test
 
 import org.specs2.mutable._
 
+import com.lucidchart.piezo.admin.PiezoAdminApplicationLoader
+
 import play.api.test._
 import play.api.test.Helpers._
 
@@ -10,11 +12,11 @@ import play.api.test.Helpers._
  * An integration test will fire up a whole play application in a real (or headless) browser
  */
 class IntegrationSpec extends Specification {
-  
+
   "Application" should {
-    
-    "work from within a browser" in {
-      running(TestServer(3333), HTMLUNIT) { browser =>
+
+    "work from within a browser" in new WithApplicationLoader(new PiezoAdminApplicationLoader) {
+      running(TestServer(3333, app), HTMLUNIT) { browser =>
 
         // Getting selenium exception
         // https://groups.google.com/forum/#!msg/play-framework/ueXtbcG1oIo/Gc9yKQ4gd10J
@@ -24,7 +26,7 @@ class IntegrationSpec extends Specification {
         success
       }
     }
-    
+
   }
-  
+
 }

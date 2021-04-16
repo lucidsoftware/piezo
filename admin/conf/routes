@@ -3,7 +3,7 @@
 # ~~~~
 
 # Home page
-GET     /                             com.lucidchart.piezo.admin.controllers.Application.index
+GET     /                             com.lucidchart.piezo.admin.controllers.ApplicationController.index
 GET     /jobs                         com.lucidchart.piezo.admin.controllers.Jobs.getIndex
 GET     /jobs/new                     com.lucidchart.piezo.admin.controllers.Jobs.getNewJobForm(templateGroup: Option[String] ?= None, templateName: Option[String] ?= None)
 GET     /jobs/:group/:name            com.lucidchart.piezo.admin.controllers.Jobs.getJob(group: String, name: String)
@@ -31,7 +31,7 @@ PATCH   /triggers/:group/:name        com.lucidchart.piezo.admin.controllers.Tri
 
 GET     /typeahead/triggers/:sofar    com.lucidchart.piezo.admin.controllers.Triggers.triggerGroupTypeAhead(sofar: String)
 
-GET     /favicon.ico                  com.lucidchart.piezo.admin.controllers.Application.favicon
+GET     /favicon.ico                  controllers.Assets.at(path="/public/img", file="favicon.ico")
 
 # Worker Health Check
 GET     /health                       com.lucidchart.piezo.admin.controllers.HealthCheck.main()

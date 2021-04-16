@@ -5,7 +5,6 @@ import java.util.Properties
 import org.quartz.Trigger.CompletedExecutionInstruction
 import org.quartz._
 import org.slf4j.LoggerFactory
-import scala.util.Try
 
 object WorkerTriggerListener {
   private val logger = LoggerFactory.getLogger(this.getClass)

@@ -18,20 +18,20 @@ implicit request: RequestHeader
 
     <link rel="shortcut icon" href="/favicon.ico" type="image/png">
 
-    <link rel="stylesheet" type="text/css" href="@routes.Assets.at("jquery-ui-1.10.3/core/themes/base/minified/jquery-ui.min.css")" />
-    <link rel="stylesheet" type="text/css" href="@routes.Assets.at("bootstrap-3.3.6/css/bootstrap.min.css")" />
-    <link rel="stylesheet" type="text/css" href="@routes.Assets.at("stylesheets/main.css")" />
+    <link rel="stylesheet" type="text/css" href="@routes.Assets.at(path="/public","jquery-ui-1.10.3/core/themes/base/minified/jquery-ui.min.css")" />
+    <link rel="stylesheet" type="text/css" href="@routes.Assets.at(path="/public","bootstrap-3.3.6/css/bootstrap.min.css")" />
+    <link rel="stylesheet" type="text/css" href="@routes.Assets.at(path="/public","stylesheets/main.css")" />
 
     @for(style <- styles) {
-    <link rel="stylesheet" type="text/css" href="@routes.Assets.at(style)" />
+    <link rel="stylesheet" type="text/css" href="@routes.Assets.at(path="/public",style)" />
     }
 
-    <script type="text/javascript" src="@routes.Assets.at("js/jquery-2.0.3.min.js")"></script>
-    <script type="text/javascript" src="@routes.Assets.at("jquery-ui-1.10.3/core/ui/minified/jquery-ui.min.js")"></script>
-    <script type="text/javascript" src="@routes.Assets.at("bootstrap-3.3.6/js/bootstrap.min.js")"></script>
+    <script type="text/javascript" src="@routes.Assets.at(path="/public","js/jquery-2.0.3.min.js")"></script>
+    <script type="text/javascript" src="@routes.Assets.at(path="/public","jquery-ui-1.10.3/core/ui/minified/jquery-ui.min.js")"></script>
+    <script type="text/javascript" src="@routes.Assets.at(path="/public","bootstrap-3.3.6/js/bootstrap.min.js")"></script>
 
     @for(script <- scripts) {
-      <script type="text/javascript" src="@routes.Assets.at(script)"></script>
+      <script type="text/javascript" src="@routes.Assets.at(path="/public",script)"></script>
     }
 
 </head>
@@ -95,12 +95,12 @@ $('ul.nav a').filter(function() {
 <hr />
 <footer>
     <p class="text-muted pull-left">&copy; Apache License Version 2.0</p>
-    <div class="text-muted pull-right">Created by&nbsp;&nbsp;&nbsp;<img src="@routes.Assets.at("img/LucidLogo.png")"></div>
+    <div class="text-muted pull-right">Created by&nbsp;&nbsp;&nbsp;<img src="@routes.Assets.at(path="/public","img/LucidLogo.png")"></div>
 </footer>
 </div>
 
 @for(script <- scripts) {
-<script type="text/javascript" src="@routes.Assets.at(script)"></script>
+<script type="text/javascript" src="@routes.Assets.at(path="/public",script)"></script>
 }
 </body>
 </html>

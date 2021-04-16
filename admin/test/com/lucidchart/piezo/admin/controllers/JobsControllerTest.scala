@@ -6,7 +6,6 @@ import play.api.test._
 import play.api.test.Helpers._
 import com.lucidchart.piezo.jobs.monitoring.HeartBeat
 import com.lucidchart.piezo.WorkerSchedulerFactory
-import play.api.test.FakeApplication
 import TestUtil._
 import ch.qos.logback.classic.{Level, Logger}
 import org.slf4j.LoggerFactory

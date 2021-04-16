@@ -5,7 +5,7 @@ import org.quartz.Job
 import org.quartz.spi.ClassLoadHelper
 import org.slf4j.LoggerFactory
 
-class GeneratorClassLoader extends ClassLoader(getClass.getClassLoader) with ClassLoadHelper {
+class GeneratorClassLoader extends ClassLoader(classOf[GeneratorClassLoader].getClass.getClassLoader) with ClassLoadHelper {
   val logger = LoggerFactory.getLogger(this.getClass)
 
   private[this] def generate(name: String) = {
@@ -14,7 +14,7 @@ class GeneratorClassLoader extends ClassLoader(getClass.getClassLoader) with Cla
 
     val constructorWriter = classWriter.visitMethod(Opcodes.ACC_PUBLIC, "<init>", "()V", null, null)
     constructorWriter.visitVarInsn(Opcodes.ALOAD, 0)
-    constructorWriter.visitMethodInsn(Opcodes.INVOKESPECIAL, Type.getInternalName(classOf[Object]), "<init>", "()V")
+    constructorWriter.visitMethodInsn(Opcodes.INVOKESPECIAL, Type.getInternalName(classOf[Object]), "<init>", "()V", false)
     constructorWriter.visitInsn(Opcodes.RETURN)
     constructorWriter.visitMaxs(0, 0)
     constructorWriter.visitEnd()
@@ -23,7 +23,7 @@ class GeneratorClassLoader extends ClassLoader(getClass.getClassLoader) with Cla
       val methodWriter = classWriter.visitMethod(Opcodes.ACC_PUBLIC, method.getName, Type.getMethodDescriptor(method), null, null)
       methodWriter.visitTypeInsn(Opcodes.NEW, Type.getInternalName(classOf[UnsupportedOperationException]))
       methodWriter.visitInsn(Opcodes.DUP)
-      methodWriter.visitMethodInsn(Opcodes.INVOKESPECIAL, Type.getInternalName(classOf[UnsupportedOperationException]), "<init>", "()V")
+      methodWriter.visitMethodInsn(Opcodes.INVOKESPECIAL, Type.getInternalName(classOf[UnsupportedOperationException]), "<init>", "()V", false)
       methodWriter.visitInsn(Opcodes.ATHROW)
       methodWriter.visitMaxs(0, 0)
       methodWriter.visitEnd()

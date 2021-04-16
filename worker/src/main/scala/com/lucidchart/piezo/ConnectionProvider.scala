@@ -3,7 +3,6 @@ package com.lucidchart.piezo
 import org.quartz.utils.PoolingConnectionProvider
 import java.util.Properties
 import org.slf4j.LoggerFactory
-import java.io._
 
 class ConnectionProvider(props: Properties) {
   val logger = LoggerFactory.getLogger(this.getClass)

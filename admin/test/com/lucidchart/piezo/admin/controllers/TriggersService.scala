@@ -5,7 +5,6 @@ import org.specs2.mutable._
 import play.api.test._
 import play.api.test.Helpers._
 import com.lucidchart.piezo.WorkerSchedulerFactory
-import play.api.test.FakeApplication
 import TestUtil._
 import java.util.Properties
 import play.api.mvc.{AnyContentAsEmpty, Result}
@@ -20,22 +19,20 @@ class TriggersService extends Specification {
    "Triggers" should {
 
      "send 404 on a non-existent trigger request" in {
-       running(FakeApplication()) {
-         val schedulerFactory: WorkerSchedulerFactory = new WorkerSchedulerFactory()
+       val schedulerFactory: WorkerSchedulerFactory = new WorkerSchedulerFactory()
 
-         val propertiesStream = getClass().getResourceAsStream("/quartz_test.properties")
-         val properties = new Properties
-         properties.load(propertiesStream)
-         schedulerFactory.initialize(properties)
+       val propertiesStream = getClass().getResourceAsStream("/quartz_test.properties")
+       val properties = new Properties
+       properties.load(propertiesStream)
+       schedulerFactory.initialize(properties)
 
-         val triggersController = new Triggers(schedulerFactory)
-         val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/triggers/missinggroup/missingname")
-         val missingTrigger: Future[Result] = triggersController.getTrigger("missinggroup", "missingname")(request)
+       val triggersController = new Triggers(schedulerFactory, Helpers.stubControllerComponents())
+       val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/triggers/missinggroup/missingname")
+       val missingTrigger: Future[Result] = triggersController.getTrigger("missinggroup", "missingname")(request)
 
-         status(missingTrigger) must equalTo(NOT_FOUND)
-         contentType(missingTrigger) must beSome.which(_ == "text/html")
-         contentAsString(missingTrigger) must contain ("Trigger missinggroup missingname not found")
-       }
+       status(missingTrigger) must equalTo(NOT_FOUND)
+       contentType(missingTrigger) must beSome.which(_ == "text/html")
+       contentAsString(missingTrigger) must contain ("Trigger missinggroup missingname not found")
      }
 
      "send valid trigger details" in {
@@ -47,16 +44,14 @@ class TriggersService extends Specification {
        val scheduler = schedulerFactory.getScheduler()
        createJob(scheduler)
 
-       running(FakeApplication()) {
-         val triggersController = new Triggers(schedulerFactory)
-         val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/triggers/" + jobGroup + "/" + jobName)
-         val validTrigger: Future[Result] = triggersController.getTrigger(triggerGroup, triggerName)(request)
+       val triggersController = new Triggers(schedulerFactory, Helpers.stubControllerComponents())
+       val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/triggers/" + jobGroup + "/" + jobName)
+       val validTrigger: Future[Result] = triggersController.getTrigger(triggerGroup, triggerName)(request)
 
-         status(validTrigger) must equalTo(OK)
-         contentType(validTrigger) must beSome.which(_ == "text/html")
-         contentAsString(validTrigger) must contain (triggerGroup)
-         contentAsString(validTrigger) must contain (triggerName)
-       }
+       status(validTrigger) must equalTo(OK)
+       contentType(validTrigger) must beSome.which(_ == "text/html")
+       contentAsString(validTrigger) must contain (triggerGroup)
+       contentAsString(validTrigger) must contain (triggerName)
      }
    }
  }

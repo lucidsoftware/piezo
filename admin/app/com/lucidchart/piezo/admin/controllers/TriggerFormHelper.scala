@@ -119,7 +119,7 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
     }
   }
 
-  def buildTriggerForm() = Form[(Trigger, TriggerMonitoringPriority, Int)](
+  def buildTriggerForm = Form[(Trigger, TriggerMonitoringPriority, Int)](
     mapping(
       "triggerType" -> nonEmptyText(),
       "group" -> nonEmptyText(),

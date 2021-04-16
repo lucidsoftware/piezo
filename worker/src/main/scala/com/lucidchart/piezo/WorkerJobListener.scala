@@ -4,7 +4,6 @@ import com.timgroup.statsd.StatsDClient
 import java.util.Properties
 import org.quartz.{JobExecutionContext, JobExecutionException, JobListener}
 import org.slf4j.LoggerFactory
-import scala.util.Try;
 
 object WorkerJobListener {
   val logger = LoggerFactory.getLogger(this.getClass)
@@ -15,11 +14,11 @@ class WorkerJobListener(props: Properties, statsd: StatsDClient, useDatadog: Boo
 
   def getName: String = "WorkerJobListener"
 
-  def jobToBeExecuted(context: JobExecutionContext) {}
+  def jobToBeExecuted(context: JobExecutionContext): Unit = {}
 
-  def jobExecutionVetoed(context: JobExecutionContext) {}
+  def jobExecutionVetoed(context: JobExecutionContext): Unit = {}
 
-  def jobWasExecuted(context: JobExecutionContext, jobException: JobExecutionException) {
+  def jobWasExecuted(context: JobExecutionContext, jobException: JobExecutionException): Unit = {
     try {
       val success = jobException == null
       jobHistoryModel.addJob(context, success = success)

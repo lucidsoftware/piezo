@@ -29,7 +29,7 @@ class DummyClassGenerator {
 
   private def getClasspath() = {
     val dummyJob = new Job() {
-      def execute(context: JobExecutionContext) {
+      def execute(context: JobExecutionContext): Unit = {
       }}
     val classLoader = dummyJob.getClass.getClassLoader
     val urls = classLoader.asInstanceOf[URLClassLoader].getURLs()
