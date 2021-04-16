@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -e
+
+if ! getent passwd piezo-admin 2>&1 >/dev/null; then
+    echo "piezo-admin user doesn't exist, creating..."
+    useradd --system --shell /bin/false --gid nogroup --comment "Piezo admin user" --home /usr/share/piezo-admin piezo-admin
+fi
+
+#DEBHELPER#
+

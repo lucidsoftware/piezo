@@ -1,0 +1,19 @@
+[Unit]
+Description=piezo-admin
+Requires=network.target
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/usr/share/piezo-admin
+EnvironmentFile=/etc/default/piezo-admin
+ExecStart=/usr/bin/piezo-admin
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=60
+User=piezo-admin
+RuntimeDirectory=piezo-admin
+LogsDirectory=piezo-admin
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,7 @@
+piezo-admin (2.0~alpha1) piezo; urgency=low
+
+  * Upgrade to use Play 2.8
+  * Upgrade to using scala 2.13
+  * Create new Deb packaging system
+
+ -- Lucid Software, Inc. <ops@lucidchart.com>  Thu, 15 Apr 2021 23:38:42 -0600

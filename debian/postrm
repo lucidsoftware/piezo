@@ -1,0 +1,9 @@
+#!/bin/sh
+
+#DEBHELPER#
+
+if [ "$1" = purge ]; then
+    rm -rf /var/log/piezo-admin
+    rm -rf /run/piezo-admin
+    userdel piezo-admin
+fi

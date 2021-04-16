@@ -1,5 +1,7 @@
 *.class
 *.log
+/sbt
+/sbt.tgz
 
 # sbt specific
 dist/*

@@ -1,0 +1,15 @@
+Source: piezo-admin
+Section: java
+Priority: optional
+Maintainer: Lucid Software <ops@lucidchart.com>
+Build-Depends: debhelper-compat (= 12), wget, java8-sdk
+Standards-Version: 4.4.1
+Homepage: https://github.com/lucidsoftware/piezo
+Vcs-Browser: https://github.com/lucidsoftware/piezo
+Vcs-Git: https://github.com/lucidsoftware/piezo
+
+Package: piezo-admin
+Architecture: all
+Depends: java8-runtime, ${misc:Depends}
+Description: Piezo Web Admin Service
+ Admin dashboard for the Piezo project

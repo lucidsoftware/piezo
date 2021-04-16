@@ -1,0 +1,14 @@
+#!/bin/sh
+set -e
+
+if ! getent group piezo-admin 2>&1 >/dev/null; then
+    echo "piezo-admin group doesn't exist, creating..."
+    groupadd --system piezo-admin
+fi
+
+if ! getent passwd piezo-admin 2>&1 >/dev/null; then
+    echo "piezo-admin user doesn't exist, creating..."
+    useradd --system --shell /bin/false --gid piezo-admin --comment "Piezo admin user" piezo-admin
+fi
+
+#DEBHELPER#

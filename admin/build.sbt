@@ -2,7 +2,7 @@ enablePlugins(PlayScala)
 
 bashScriptExtraDefines ++= Seq(
   s"addJava -Dorg.quartz.properties=${defaultLinuxConfigLocation.value}/${(Linux / packageName).value}/quartz.properties",
-  "addJava -Dpidfile.path=/var/run/piezo-admin/piezo-admin.pid",
+  "addJava -Dpidfile.path=/run/piezo-admin/piezo-admin.pid",
   s"addJava -Dhttp.port=${PlayKeys.playDefaultPort.value}"
 )
 
