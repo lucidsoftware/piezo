@@ -5,7 +5,7 @@ import org.quartz.Job
 import org.quartz.spi.ClassLoadHelper
 import org.slf4j.LoggerFactory
 
-class GeneratorClassLoader extends ClassLoader(classOf[GeneratorClassLoader].getClass.getClassLoader) with ClassLoadHelper {
+class GeneratorClassLoader extends ClassLoader(classOf[GeneratorClassLoader].getClassLoader) with ClassLoadHelper {
   val logger = LoggerFactory.getLogger(this.getClass)
 
   private[this] def generate(name: String) = {
