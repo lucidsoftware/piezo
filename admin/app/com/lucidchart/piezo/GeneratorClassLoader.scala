@@ -1,33 +1,30 @@
 package com.lucidchart.piezo
 
 import org.objectweb.asm.{ClassWriter, Opcodes, Type}
-import org.quartz.Job
+import org.quartz.{Job, JobExecutionContext}
 import org.quartz.spi.ClassLoadHelper
 import org.slf4j.LoggerFactory
+
+class DummyJob extends Job {
+  def execute(context: JobExecutionContext): Unit = {
+    throw new UnsupportedOperationException()
+  }
+}
 
 class GeneratorClassLoader extends ClassLoader(classOf[GeneratorClassLoader].getClassLoader) with ClassLoadHelper {
   val logger = LoggerFactory.getLogger(this.getClass)
 
   private[this] def generate(name: String) = {
     val classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS)
-    classWriter.visit(Opcodes.V1_5, Opcodes.ACC_PUBLIC, name.replace('.', '/'), null, Type.getInternalName(classOf[Object]), Array(Type.getInternalName(classOf[Job])))
+    classWriter.visit(Opcodes.V1_8, Opcodes.ACC_PUBLIC, name.replace('.', '/'), null, Type.getInternalName(classOf[DummyJob]), null)
 
+    // Minimal constructor that just calls the super constructor and returns.
     val constructorWriter = classWriter.visitMethod(Opcodes.ACC_PUBLIC, "<init>", "()V", null, null)
     constructorWriter.visitVarInsn(Opcodes.ALOAD, 0)
     constructorWriter.visitMethodInsn(Opcodes.INVOKESPECIAL, Type.getInternalName(classOf[Object]), "<init>", "()V", false)
     constructorWriter.visitInsn(Opcodes.RETURN)
     constructorWriter.visitMaxs(0, 0)
     constructorWriter.visitEnd()
-
-    classOf[Job].getDeclaredMethods.foreach { method =>
-      val methodWriter = classWriter.visitMethod(Opcodes.ACC_PUBLIC, method.getName, Type.getMethodDescriptor(method), null, null)
-      methodWriter.visitTypeInsn(Opcodes.NEW, Type.getInternalName(classOf[UnsupportedOperationException]))
-      methodWriter.visitInsn(Opcodes.DUP)
-      methodWriter.visitMethodInsn(Opcodes.INVOKESPECIAL, Type.getInternalName(classOf[UnsupportedOperationException]), "<init>", "()V", false)
-      methodWriter.visitInsn(Opcodes.ATHROW)
-      methodWriter.visitMaxs(0, 0)
-      methodWriter.visitEnd()
-    }
 
     classWriter.visitEnd()
 
