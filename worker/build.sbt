@@ -8,7 +8,7 @@ run / connectInput := true
 
 libraryDependencies ++= Seq(
   "ch.qos.logback" % "logback-classic" % "1.0.7" % Provided,
-  "org.quartz-scheduler" % "quartz" % "2.1.7",
+  "org.quartz-scheduler" % "quartz" % "2.3.2",
   "org.slf4j" % "slf4j-api" % "1.7.25",
   "org.specs2" %% "specs2-core" % "4.5.1" % Test,
   "mysql" % "mysql-connector-java" % "5.1.25",
