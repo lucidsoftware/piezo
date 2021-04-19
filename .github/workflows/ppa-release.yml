@@ -1,0 +1,21 @@
+name: PPA
+on:
+  push:
+    tags:
+      - "*.*.*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: GPG setup
+        env:
+          PGP_SECRET: ${{ secrets.PGP_SECRET }}
+        run: echo "$PGP_SECRET" | base64 --decode  | gpg --import
+      - name: Build deb
+        run: make source-deb
+      - name: Upload deb
+        run: dput ppa:lucidsoftware/piezo ../piezo-admin*.changes
+
+
