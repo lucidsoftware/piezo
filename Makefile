@@ -5,7 +5,7 @@ SBT = sbt
 SBT_DEPS =
 SBT_VERSION = 1.5.0
 
-ifeq "$(shell which sbt3 2>/dev/null)" ""
+ifeq "$(shell which $(SBT) 2>/dev/null)" ""
 	SBT_DEPS = sbt/bin/sbt
 	SBT = sbt/bin/sbt
 endif
@@ -26,6 +26,10 @@ install:
 	ln -sf /usr/share/piezo-admin/bin/piezo-admin "$(DESTDIR)/usr/bin/piezo-admin"
 	ln -sfn /usr/share/piezo-admin/conf "$(DESTDIR)/etc/piezo-admin"
 	ln -sfn /var/log/piezo-admin "$(DESTDIR)/usr/share/piezo-admin/logs"
+
+clean:
+	rm -rf */target/ target/ sbt/ sbt.tgz project/project/
+
 
 source-deb:
 	debuild --no-tgz-check -S --diff-ignore --tar-ignore

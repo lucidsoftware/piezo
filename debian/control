@@ -2,7 +2,7 @@ Source: piezo-admin
 Section: java
 Priority: optional
 Maintainer: Lucid Software <ops@lucidchart.com>
-Build-Depends: debhelper-compat (= 12), wget, java8-sdk
+Build-Depends: debhelper-compat (= 12), wget, openjdk-8-jdk | java8-sdk
 Standards-Version: 4.4.1
 Homepage: https://github.com/lucidsoftware/piezo
 Vcs-Browser: https://github.com/lucidsoftware/piezo

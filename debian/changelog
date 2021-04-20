@@ -1,4 +1,4 @@
-piezo-admin (2.0~alpha1) piezo; urgency=low
+piezo-admin (2.0~alpha3) focal; urgency=low
 
   * Upgrade to use Play 2.8
   * Upgrade to using scala 2.13
