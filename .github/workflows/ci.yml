@@ -20,9 +20,10 @@ jobs:
           else
             version="${GITHUB_REF#refs/branches/}-SNAPSHOT"
           fi
+          echo "VERSION=$version" >> $GITHUB_ENV
           echo "SBT_OPTS=-Dbuild.version=$version" >> $GITHUB_ENV
       - name: Test
-        run: sbt compile test doc
+        run: sbt compile test doc Debian/packageBin
       - name: Publish to Sonatype
         if: ${{ github.repository == 'lucidsoftware/piezo' }}
         env:
@@ -36,12 +37,18 @@ jobs:
           else
             sbt publishSigned
           fi
+      - name: Publish Deb to Artifactory
+        if: ${{ github.action_name == 'push' && startsWith(github.ref, 'refs/tags/') && github.repository == 'lucidsoftware/piezo' }}
+        env:
+          ARTIFACTORY_TOKEN: ${{ secrets.ARTIFACTORY_TOKEN }}
+        run: |
+          curl --silent --fail --show-error -H "Authorization: Bearer $ARTIFACTORY_TOKEN" --upload-file "admin/target/piezo-admin_${VERSION}_all.deb" \
+              "https://lucidsoftware.jfrog.io/artifactory/piezo/pool/piezo-admin_${VERSION}_all.deb;deb.distribution=piezo;deb.component=main;deb.architecture=all"
       - name: Upload assets to Github
         if: ${{ github.action_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -x
-          tag="${GITHUB_REF#refs/tags/}"
           args=$(printf -- "-a %q " {admin,worker}/target/**/*.jar)
-          hub release create $args -m "Release $tag" $tag
+          hub release create $args -m "Release $VERSION" $VERSION
