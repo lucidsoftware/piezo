@@ -24,6 +24,12 @@ inThisBuild(Seq(
   scmInfo := Some(ScmInfo(url("https://github.com/lucidsoftware/piezo"), "scm:git:git@github.com:lucidsoftware/piezo.git")),
   version := sys.props.getOrElse("build.version", "0-SNAPSHOT"),
   versionScheme := Some("early-semver"),
+  scalacOptions ++= Seq(
+      "-Xfatal-warnings",
+      "-deprecation",
+      "-feature",
+      "-Xlint",
+  )
 ))
 
 publishTo := sonatypePublishToBundle.value

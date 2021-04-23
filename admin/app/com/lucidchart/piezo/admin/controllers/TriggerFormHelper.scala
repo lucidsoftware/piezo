@@ -7,6 +7,7 @@ import org.quartz._
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
+import scala.language.existentials
 
 class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
 
@@ -72,7 +73,7 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
       )
     ] = {
     val trigger = tp._1
-    val (triggerType: String, simple, cron) = trigger match {
+    val (triggerType: String, simple, cron) = (trigger: @unchecked) match {
       case cron: CronTrigger => ("cron", None, Some(cron.getScheduleBuilder))
       case simple: SimpleTrigger => ("simple", Some(simple.getScheduleBuilder), None)
     }

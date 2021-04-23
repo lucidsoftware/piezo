@@ -5,15 +5,12 @@ import java.util.Date
 import org.quartz.Trigger.TriggerState
 import org.quartz._
 import org.quartz.impl.triggers.{CronTriggerImpl, SimpleTriggerImpl}
-import play.api._
 import play.api.libs.json._
 import play.api.mvc._
-import com.lucidchart.piezo.admin.models._
 import scala.collection.mutable
 import scala.jdk.CollectionConverters._
 import scala.util.Try
 import play.api.Logging
-import play.api.i18n.I18nSupport
 
 class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponents) extends AbstractController(cc) with Logging with ErrorLogging with play.api.i18n.I18nSupport {
 
@@ -293,7 +290,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
     )
   }
 
-  def triggerGroupTypeAhead(sofar: String) = Action { implicit request =>
+  def triggerGroupTypeAhead(sofar: String) = Action { request =>
     val groups = scheduler.getTriggerGroupNames().asScala.toList
 
     Ok(Json.obj("groups" -> groups.filter{ group =>
@@ -301,7 +298,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
     }))
   }
 
-  def triggerJob(group: String, name: String) = Action { implicit request =>
+  def triggerJob(group: String, name: String) = Action { request =>
     val jobKey = new JobKey(name, group)
 
     if (scheduler.checkExists(jobKey)) {

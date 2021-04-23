@@ -17,6 +17,11 @@ libraryDependencies ++= Seq(
    specs2 % Test
 )
 
+scalacOptions ++= Seq(
+    "-Wconf:cat=unused-imports&src=(routes|twirl)/.*:info-summary",
+    "-Wconf:cat=other-match-analysis&src=routes/.*:silent",
+)
+
 maintainer := "Lucid Software Team <ops@lucidchart.com>"
 
 name := "piezo-admin"

@@ -1,6 +1,5 @@
 package com.lucidchart.piezo.admin
 
-import com.lucidchart.piezo.util.DummyClassGenerator
 import com.softwaremill.macwire._
 import play.api.ApplicationLoader.Context
 import play.api._
@@ -12,7 +11,7 @@ import play.api.Mode
 import play.api.routing.Router
 import router.Routes
 import scala.concurrent.Future
-import com.lucidchart.piezo.admin.models._
+import scala.annotation.nowarn
 import com.lucidchart.piezo.admin.controllers._
 import com.lucidchart.piezo.WorkerSchedulerFactory
 import _root_.controllers.AssetsComponents
@@ -38,7 +37,7 @@ class PiezoAdminComponents(context: Context) extends BuiltInComponentsFromContex
   override val httpFilters: Seq[EssentialFilter] = {
     val ec = controllerComponents.executionContext
     Seq(
-      wire[RequestStatCollector]
+      new RequestStatCollector(ec)
     )
   }
   val logger = Logger("com.lucidchart.piezo.Global")
@@ -72,6 +71,7 @@ class PiezoAdminComponents(context: Context) extends BuiltInComponentsFromContex
 
   lazy val router: Router = {
     // add the prefix string in local scope for the Routes constructor
+    @nowarn
     val prefix: String = "/"
     wire[Routes]
   }

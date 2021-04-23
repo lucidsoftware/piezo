@@ -7,7 +7,6 @@ import com.lucidchart.piezo.{JobHistoryModel, TriggerHistoryModel, TriggerMonito
 import org.quartz._
 import org.quartz.impl.matchers.GroupMatcher
 import play.api._
-import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.api.mvc._
 import scala.jdk.CollectionConverters._
@@ -306,7 +305,7 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: Cont
     )
   }
 
-  def jobGroupTypeAhead(sofar: String) = Action { implicit request =>
+  def jobGroupTypeAhead(sofar: String) = Action { request =>
     val groups = scheduler.getJobGroupNames().asScala.toList
 
     Ok(Json.obj("groups" -> groups.filter{ group =>
@@ -314,7 +313,7 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: Cont
     }))
   }
 
-  def jobNameTypeAhead(group: String, sofar: String) = Action { implicit request =>
+  def jobNameTypeAhead(group: String, sofar: String) = Action { request =>
     val jobs = scheduler.getJobKeys(GroupMatcher.jobGroupEquals(group)).asScala.toSet
 
     Ok(Json.obj("jobs" -> jobs.filter(_.getName.toLowerCase.contains(sofar.toLowerCase)).map(_.getName)))

@@ -28,11 +28,7 @@ javaOptions ++= Seq(
   "-Dorg.quartz.properties=quartz.properties"
 )
 
-scalacOptions ++= Seq(
-  "-deprecation",
-  "-feature",
-  "-Xlint"
-)
+scalacOptions += "-Xlint"
 
 Compile / unmanagedClasspath += sourceDirectory.value / "run" / "resources"
 

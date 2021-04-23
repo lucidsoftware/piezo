@@ -2,7 +2,6 @@ package com.lucidchart.piezo.admin.controllers
 
 import org.quartz.JobDataMap
 import play.api.libs.json._
-import play.api.data.Form
 import play.api.data.Forms._
 
 case class DataMap(key: String, value: String)

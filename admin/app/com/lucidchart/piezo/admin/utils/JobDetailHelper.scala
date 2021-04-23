@@ -1,7 +1,6 @@
 package com.lucidchart.piezo.admin.utils
 import play.api.libs.json._
 import org.quartz._
-import scala.collection.JavaConverters._
 import com.lucidchart.piezo.admin.controllers.{JobFormHelper, JobDataHelper, TriggerHelper}
 import com.lucidchart.piezo.TriggerMonitoringModel
 
