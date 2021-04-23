@@ -102,12 +102,12 @@ Then go to [http://localhost:8001/](http://localhost:8001/) to view the admin.
 
 Piezo admin can be installed as a service from a .deb (see [Building](#adminBuilding)).
 
-```sh
-apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 379CE192D401AB61
-echo 'deb http://dl.bintray.com/lucidsoftware/apt/ piezo main' > /etc/apt/sources.list.d/piezo.list
+Starting with version 2.0.0, the deb is available on the release page. (See also [Issue #91](https://github.com/lucidsoftware/piezo/issues/91).)
 
-apt-get update
-apt-get install piezo-admin
+You can install by running
+
+```sh
+sudo dpkg --install piezo-admin*.deb
 ```
 
 By default, it will use /etc/piezo-admin/quartz.properties. Adjust runtime options using /etc/piezo-admin/application.ini:
