@@ -18,6 +18,15 @@ libraryDependencies ++= Seq(
    specs2 % Test
 )
 
+Debian/version := {
+    val noDashVersion = (Compile/version).value.replace("-", "~")
+    if (noDashVersion.matches("^\\d.*")) {
+        noDashVersion
+    } else {
+        "0~" + noDashVersion
+    }
+}
+
 maintainer := "Lucid Software, Inc. <ops@lucidchart.com>"
 
 name := "piezo-admin"
