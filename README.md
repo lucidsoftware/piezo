@@ -121,5 +121,11 @@ By default, it will use /etc/piezo-admin/quartz.properties. Adjust runtime optio
 -jvm-debug 5005
 ```
 
-For deploying to non-Debian platforms, run `sbt admin/universal:packageBin`. This produces a zip of JARs and scripts in
-admin/target/universal
+
+### Generic install
+
+For deploying to non-Debian platforms, you can use the zip file on the releases page. This is a zip of JARs and contains launcher
+scripts in the `bin` folder.
+
+
+You can also create this zip yourself by runing `sbt admin/universal:packageBin` which produces the zip at admin/target/universal.
