@@ -37,6 +37,7 @@ jobs:
           else
             sbt publishSigned
           fi
+      - run: 'echo "ref: ${{ github.ref }} action: ${{ github.action_name }}"'
       - name: Publish Deb to Artifactory
         if: ${{ github.action_name == 'push' && startsWith(github.ref, 'refs/tags/') && github.repository == 'lucidsoftware/piezo' }}
         env:
