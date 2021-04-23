@@ -1,8 +1,9 @@
 enablePlugins(PlayScala)
+enablePlugins(SystemdPlugin)
 
 bashScriptExtraDefines ++= Seq(
   s"addJava -Dorg.quartz.properties=${defaultLinuxConfigLocation.value}/${(Linux / packageName).value}/quartz.properties",
-  "addJava -Dpidfile.path=/var/run/piezo-admin/piezo-admin.pid",
+  "addJava -Dpidfile.path=/run/piezo-admin/piezo-admin.pid",
   s"addJava -Dhttp.port=${PlayKeys.playDefaultPort.value}"
 )
 
@@ -17,12 +18,23 @@ libraryDependencies ++= Seq(
    specs2 % Test
 )
 
-maintainer := "Lucid Software Team <ops@lucidchart.com>"
+Debian/version := {
+    val noDashVersion = (Compile/version).value.replace("-", "~")
+    if (noDashVersion.matches("^\\d.*")) {
+        noDashVersion
+    } else {
+        "0~" + noDashVersion
+    }
+}
+
+maintainer := "Lucid Software, Inc. <ops@lucidchart.com>"
 
 name := "piezo-admin"
 
 packageDescription := "Piezo web admin"
 
 PlayKeys.playDefaultPort := 8001
+
+Debian/defaultLinuxStartScriptLocation  := "/lib/systemd/system"
 
 publishTo := sonatypePublishToBundle.value
