@@ -18,6 +18,9 @@ libraryDependencies ++= Seq(
    specs2 % Test
 )
 
+Compile / doc / sources := Seq.empty
+Compile / packageDoc / publishArtifact := false
+
 Debian/version := {
     val noDashVersion = (Compile/version).value.replace("-", "~")
     if (noDashVersion.matches("^\\d.*")) {

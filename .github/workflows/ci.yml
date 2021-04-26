@@ -12,6 +12,10 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-java@v2
+        with:
+          java-version: '8'
+          distribution: 'adopt'
       - name: Set Env
         if: ${{ github.repository == 'lucidsoftware/piezo' }}
         run: |
@@ -50,5 +54,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -x
-          args=$(printf -- "-a %q " {admin,worker}/target/**/*.jar admin/target/*.deb)
+          sbt Universal/packageBin
+          args=$(printf -- "-a %q " {admin,worker}/target/**/*.jar admin/target/*.deb admin/target/universal/piezo-admin*.zip)
           hub release create $args -m "Release $VERSION" $VERSION
