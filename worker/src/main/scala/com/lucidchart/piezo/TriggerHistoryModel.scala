@@ -34,6 +34,14 @@ class TriggerHistoryModel(props: Properties) {
             misfire,
             fire_instance_id
           ) VALUES(?, ?, ?, ?, ?, ?, ?)
+          ON DUPLICATE KEY UPDATE
+            trigger_name = Values(trigger_name),
+            trigger_group = Values(trigger_group),
+            scheduled_start = Values(scheduled_start),
+            actual_start = Values(actual_start),
+            finish = Values(finish),
+            misfire = Values(misfire),
+            fire_instance_id = Values(fire_instance_id)
         """.stripMargin
       )
       prepared.setString(1, trigger.getKey.getName)
