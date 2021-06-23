@@ -30,12 +30,18 @@ class HealthCheck(configuration: Configuration, cc: ControllerComponents) extend
  }
 
   def areWorkersHealthy(): (Boolean, String) = {
-    val heartbeatFile = Source.fromFile(heartbeatFilename).getLines().toList
-    val heartbeatTimestamp = heartbeatFile(0)
-    val formatter = ISODateTimeFormat.dateTimeNoMillis().withZoneUTC()
-    val heartbeatTime = formatter.parseDateTime(heartbeatTimestamp)
-    val currentTime = new DateTime
-    val isTimestampRecent = Minutes.minutesBetween(heartbeatTime, currentTime).getMinutes < minutesBetweenBeats
-    (isTimestampRecent, formatter.print(heartbeatTime))
+    val heartbeatFile = Source.fromFile(heartbeatFilename)
+    try {
+      val heartbeatFileLines = heartbeatFile.getLines().toList
+      val heartbeatTimestamp = heartbeatFileLines(0)
+      val formatter = ISODateTimeFormat.dateTimeNoMillis().withZoneUTC()
+      val heartbeatTime = formatter.parseDateTime(heartbeatTimestamp)
+      val currentTime = new DateTime
+      val isTimestampRecent = Minutes.minutesBetween(heartbeatTime, currentTime).getMinutes < minutesBetweenBeats
+      (isTimestampRecent, formatter.print(heartbeatTime))
+    }
+    finally {
+      heartbeatFile.close()
+    }
  }
 }
