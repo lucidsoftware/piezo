@@ -1,8 +1,9 @@
 package com.lucidchart.piezo
 
 import com.timgroup.statsd.StatsDClient
+
 import java.util.Properties
-import org.quartz.Trigger.CompletedExecutionInstruction
+import org.quartz.Trigger.{CompletedExecutionInstruction, TriggerState}
 import org.quartz._
 import org.slf4j.LoggerFactory
 
@@ -15,7 +16,20 @@ class WorkerTriggerListener(props: Properties, statsd: StatsDClient, useDatadog:
 
   def getName: String = "WorkerTriggerListener"
 
-  def vetoJobExecution(trigger: Trigger, context: JobExecutionContext): Boolean = false
+  def vetoJobExecution(trigger: Trigger, context: JobExecutionContext): Boolean = {
+    // Called right before the job is about to execute on the worker.
+
+    /*
+     Under certain conditions, a job may come up for execution after a trigger
+      has been paused, leading to unexpected additional executions.
+
+     To fix this, right before Quartz starts the job, we check the _current_ trigger
+     state to ensure that job wasn't paused after the execution was queued.
+    */
+
+    // Veto if current trigger state is paused
+    context.getScheduler.getTriggerState(trigger.getKey) == TriggerState.PAUSED
+  }
 
   def triggerFired(trigger: Trigger, context: JobExecutionContext):  Unit = {
     val triggerKey = s"${trigger.getKey.getGroup}.${trigger.getKey.getName}"
