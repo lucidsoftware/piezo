@@ -1,6 +1,6 @@
 package com.lucidchart.piezo
 
-import com.timgroup.statsd.NonBlockingStatsDClient
+import com.timgroup.statsd.{NonBlockingStatsDClient, NonBlockingStatsDClientBuilder}
 import java.io._
 import java.util.Properties
 import java.util.concurrent.{Semaphore, TimeUnit}
@@ -32,10 +32,10 @@ object Worker {
     val scheduler = schedulerFactory.getScheduler()
     val props = schedulerFactory.props
     val useDatadog = Try(props.getProperty("com.lucidchart.piezo.statsd.useDatadog", "false").toBoolean).getOrElse(false)
-    val statsd = new NonBlockingStatsDClient(
-      props.getProperty("com.lucidchart.piezo.statsd.prefix", "applications.piezo.worker"),
-      props.getProperty("com.lucidchart.piezo.statsd.host", "localhost"),
-      Try(props.getProperty("com.lucidchart.piezo.statsd.port").toInt).getOrElse(8125)
+    val statsd = new NonBlockingStatsDClient( new NonBlockingStatsDClientBuilder()
+      .prefix(props.getProperty("com.lucidchart.piezo.statsd.prefix", "applications.piezo.worker"))
+      .hostname(props.getProperty("com.lucidchart.piezo.statsd.host", "localhost"))
+      .port(Try(props.getProperty("com.lucidchart.piezo.statsd.port").toInt).getOrElse(8125))
     )
     scheduler.getListenerManager.addJobListener(new WorkerJobListener(props, statsd, useDatadog))
     scheduler.getListenerManager.addTriggerListener(new WorkerTriggerListener(props, statsd, useDatadog))
