@@ -16,7 +16,7 @@ libraryDependencies ++= Seq(
   "joda-time" % "joda-time" % "2.8.1",
   "org.joda" % "joda-convert" % "1.7",
   "com.typesafe" % "config" % "1.0.0",
-  "com.datadoghq" % "java-dogstatsd-client" % "2.3",
+  "com.datadoghq" % "java-dogstatsd-client" % "4.1.0",
   "org.scala-lang.modules" %% "scala-collection-compat" % "2.1.6"
 )
 
