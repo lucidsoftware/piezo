@@ -1,6 +1,6 @@
 package com.lucidchart.piezo
 
-import org.quartz.utils.PoolingConnectionProvider
+import org.quartz.utils.C3p0PoolingConnectionProvider
 import java.util.Properties
 import org.slf4j.LoggerFactory
 
@@ -8,7 +8,7 @@ class ConnectionProvider(props: Properties) {
   val logger = LoggerFactory.getLogger(this.getClass)
   private val dataSource = props.getProperty("org.quartz.jobStore.dataSource")
   private val provider = if(dataSource != null) {
-    Some(new PoolingConnectionProvider(
+    Some(new C3p0PoolingConnectionProvider(
       props.getProperty("org.quartz.dataSource." + dataSource + ".driver"),
       props.getProperty("org.quartz.dataSource." + dataSource + ".URL"),
       props.getProperty("org.quartz.dataSource." + dataSource + ".user"),
