@@ -104,7 +104,7 @@ class TriggerMonitoringModel(props: Properties) {
       prepared.setString(1, trigger.getKey.getName)
       prepared.setString(2, trigger.getKey.getGroup)
       val rs = prepared.executeQuery()
-      if (rs.first()) {
+      if (rs.next()) {
         TriggerMonitoringPriority.values.find(_.id == rs.getInt("priority")).map { priority =>
           TriggerMonitoringRecord(
             rs.getString("trigger_name"),
