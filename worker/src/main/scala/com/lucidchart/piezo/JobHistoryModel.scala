@@ -123,7 +123,7 @@ class JobHistoryModel(props: Properties) {
       prepared.setString(1, triggerName)
       prepared.setString(2, triggerGroup)
       val rs = prepared.executeQuery()
-      if (rs.first()) {
+      if (rs.next()) {
         Some(parseJob(rs))
       } else {
         None
