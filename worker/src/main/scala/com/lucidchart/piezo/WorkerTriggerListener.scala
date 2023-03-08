@@ -47,7 +47,8 @@ class WorkerTriggerListener(props: Properties, statsd: StatsDClient, useDatadog:
   ): Unit = {
     try {
       triggerHistoryModel.addTrigger(
-        trigger,
+        trigger.getKey,
+        Option(trigger.getPreviousFireTime),
         Some(context.getFireTime),
         misfire = false, Some(context.getFireInstanceId)
       )
@@ -65,7 +66,13 @@ class WorkerTriggerListener(props: Properties, statsd: StatsDClient, useDatadog:
 
   def triggerMisfired(trigger: Trigger): Unit = {
     try {
-      triggerHistoryModel.addTrigger(trigger, None, misfire = true, None)
+      triggerHistoryModel.addTrigger(
+        trigger.getKey,
+        Option(trigger.getPreviousFireTime),
+        None,
+        misfire = true,
+        None
+      )
 
       val triggerKey = s"${trigger.getKey.getGroup}.${trigger.getKey.getName}"
       if (useDatadog) {

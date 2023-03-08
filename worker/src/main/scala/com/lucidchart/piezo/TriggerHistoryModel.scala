@@ -1,8 +1,7 @@
 package com.lucidchart.piezo
 
-import org.quartz.Trigger
 import java.sql.Timestamp
-
+import org.quartz.TriggerKey
 import org.slf4j.LoggerFactory
 import java.util.{Date, Properties}
 
@@ -10,7 +9,7 @@ case class TriggerRecord(
   name: String,
   group: String,
   scheduled_start: Date,
-  actual_start: Date,
+  actual_start: Option[Date],
   finish: Date,
   misfire: Int,
   fire_instance_id: String
@@ -20,7 +19,7 @@ class TriggerHistoryModel(props: Properties) {
   val logger = LoggerFactory.getLogger(this.getClass)
   val connectionProvider = new ConnectionProvider(props)
 
-  def addTrigger(trigger: Trigger, actualStart: Option[Date], misfire: Boolean, fireInstanceId: Option[String]): Unit = {
+  def addTrigger(triggerKey: TriggerKey, triggerFireTime: Option[Date], actualStart: Option[Date], misfire: Boolean, fireInstanceId: Option[String]): Unit = {
     val connection = connectionProvider.getConnection
     try {
       val prepared = connection.prepareStatement(
@@ -44,9 +43,9 @@ class TriggerHistoryModel(props: Properties) {
             fire_instance_id = Values(fire_instance_id)
         """.stripMargin
       )
-      prepared.setString(1, trigger.getKey.getName)
-      prepared.setString(2, trigger.getKey.getGroup)
-      prepared.setTimestamp(3, new Timestamp(Option(trigger.getPreviousFireTime).getOrElse(new Date).getTime))
+      prepared.setString(1, triggerKey.getName)
+      prepared.setString(2, triggerKey.getGroup)
+      prepared.setTimestamp(3, new Timestamp(triggerFireTime.getOrElse(new Date).getTime))
       prepared.setTimestamp(4, actualStart.map(date => new Timestamp(date.getTime)).getOrElse(null))
       prepared.setTimestamp(5, new Timestamp(System.currentTimeMillis))
       prepared.setBoolean(6, misfire)
@@ -74,13 +73,13 @@ class TriggerHistoryModel(props: Properties) {
     }
   }
 
-  def getTrigger(name: String, group: String): List[TriggerRecord] = {
+  def getTrigger(triggerKey: TriggerKey): List[TriggerRecord] = {
     val connection = connectionProvider.getConnection
 
     try {
       val prepared = connection.prepareStatement("""SELECT * FROM trigger_history WHERE trigger_name=? AND trigger_group=? ORDER BY scheduled_start DESC LIMIT 100""")
-      prepared.setString(1, name)
-      prepared.setString(2, group)
+      prepared.setString(1, triggerKey.getName)
+      prepared.setString(2, triggerKey.getGroup)
       val rs = prepared.executeQuery()
 
       var result = List[TriggerRecord]()
@@ -89,7 +88,7 @@ class TriggerHistoryModel(props: Properties) {
           rs.getString("trigger_name"),
           rs.getString("trigger_group"),
           rs.getTimestamp("scheduled_start"),
-          rs.getTimestamp("actual_start"),
+          Option(rs.getTimestamp("actual_start")),
           rs.getTimestamp("finish"),
           rs.getInt("misfire"),
           rs.getString("fire_instance_id")

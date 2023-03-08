@@ -2,7 +2,7 @@ package com.lucidchart.piezo
 
 import com.lucidchart.piezo.TriggerMonitoringPriority.TriggerMonitoringPriority
 import java.util.{Date, Properties}
-import org.quartz.{Trigger, TriggerKey}
+import org.quartz.TriggerKey
 import org.slf4j.LoggerFactory
 
 object TriggerMonitoringPriority extends Enumeration {
@@ -27,7 +27,7 @@ class TriggerMonitoringModel(props: Properties) {
   val connectionProvider = new ConnectionProvider(props)
 
   def setTriggerMonitoringRecord(
-    trigger: Trigger,
+    triggerKey: TriggerKey,
     triggerMonitoringPriority: TriggerMonitoringPriority,
     maxSecondsInError: Int
   ): Int = {
@@ -42,25 +42,21 @@ class TriggerMonitoringModel(props: Properties) {
           priority = values(priority),
           max_error_time = values(max_error_time)
       """)
-      prepared.setString(1, trigger.getKey.getName)
-      prepared.setString(2, trigger.getKey.getGroup)
+      prepared.setString(1, triggerKey.getName)
+      prepared.setString(2, triggerKey.getGroup)
       prepared.setInt(3, triggerMonitoringPriority.id)
       prepared.setInt(4, maxSecondsInError)
       prepared.executeUpdate()
     } catch {
       case e: Exception => logger.error(
         s"Error setting trigger monitoring priority. " +
-        s"Trigger name: ${trigger.getKey.getName} group: ${trigger.getKey.getGroup}",
+        s"Trigger name: ${triggerKey.getName} group: ${triggerKey.getGroup}",
         e
       )
       0
     } finally {
       connection.close()
     }
-  }
-
-  def deleteTriggerMonitoringRecord(trigger: Trigger): Int = {
-    deleteTriggerMonitoringRecord(trigger.getKey)
   }
 
   def deleteTriggerMonitoringRecord(triggerKey: TriggerKey): Int = {
@@ -90,7 +86,7 @@ class TriggerMonitoringModel(props: Properties) {
     }
   }
 
-  def getTriggerMonitoringRecord(trigger: Trigger): Option[TriggerMonitoringRecord] = {
+  def getTriggerMonitoringRecord(triggerKey: TriggerKey): Option[TriggerMonitoringRecord] = {
     val connection = connectionProvider.getConnection
 
     try {
@@ -101,8 +97,8 @@ class TriggerMonitoringModel(props: Properties) {
           trigger_name = ?
           AND trigger_group = ?
       """)
-      prepared.setString(1, trigger.getKey.getName)
-      prepared.setString(2, trigger.getKey.getGroup)
+      prepared.setString(1, triggerKey.getName)
+      prepared.setString(2, triggerKey.getGroup)
       val rs = prepared.executeQuery()
       if (rs.next()) {
         TriggerMonitoringPriority.values.find(_.id == rs.getInt("priority")).map { priority =>
@@ -122,7 +118,7 @@ class TriggerMonitoringModel(props: Properties) {
       case e: Exception => {
         logger.error(
           s"Error retrieving trigger monitoring priority. " +
-          s"Trigger name: ${trigger.getKey.getName} group: ${trigger.getKey.getGroup}",
+          s"Trigger name: ${triggerKey.getName} group: ${triggerKey.getGroup}",
           e
         )
         None
@@ -132,4 +128,3 @@ class TriggerMonitoringModel(props: Properties) {
     }
   }
 }
-

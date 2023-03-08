@@ -59,7 +59,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
 
         val history = {
           try {
-            Some(triggerHistoryModel.getTrigger(name, group))
+            Some(triggerHistoryModel.getTrigger(triggerKey))
           } catch {
             case e: Exception => {
               logger.error("Failed to get trigger history")
@@ -70,7 +70,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
 
         val (triggerMonitoringPriority, triggerMaxErrorTime) = Try {
           triggerMonitoringPriorityModel.getTriggerMonitoringRecord(
-            triggerDetail
+            triggerDetail.getKey
           ).map { triggerMonitoringRecord =>
             (triggerMonitoringRecord.priority, triggerMonitoringRecord.maxSecondsInError)
           }.getOrElse((TriggerMonitoringPriority.Medium, 300))
@@ -186,7 +186,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
       val triggerDetail: Trigger = scheduler.getTrigger(triggerKey)
       val (triggerMonitoringPriority, triggerMaxErrorTime) = Try {
         triggerMonitoringPriorityModel.getTriggerMonitoringRecord(
-          triggerDetail
+          triggerDetail.getKey,
         ).map { triggerMonitoringRecord =>
           (triggerMonitoringRecord.priority, triggerMonitoringRecord.maxSecondsInError)
         }.getOrElse((TriggerMonitoringPriority.Medium, 300))
@@ -242,7 +242,9 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
         val (trigger, triggerMonitoringPriority, triggerMaxErrorTime) = value
         scheduler.rescheduleJob(trigger.getKey(), trigger)
         triggerMonitoringPriorityModel.setTriggerMonitoringRecord(
-          trigger, triggerMonitoringPriority, triggerMaxErrorTime
+          trigger.getKey,
+          triggerMonitoringPriority,
+          triggerMaxErrorTime
         )
         Redirect(routes.Triggers.getTrigger(trigger.getKey.getGroup(), trigger.getKey.getName()))
           .flashing("message" -> "Successfully added trigger.", "class" -> "")
@@ -267,7 +269,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
         try {
           scheduler.scheduleJob(trigger)
           triggerMonitoringPriorityModel.setTriggerMonitoringRecord(
-            trigger,
+            trigger.getKey,
             triggerMonitoringPriority,
             triggerMaxErrorTime
           )
