@@ -22,6 +22,7 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
     val testDb = dbUrl.split("/").last
     val mysqlUrl = dbUrl.split("/").dropRight(1).mkString("/")
     Class.forName("com.mysql.cj.jdbc.Driver")
+
     override def afterAll(): Unit = {
         val newConnection = DriverManager.getConnection(mysqlUrl, username, password)
         val statement = newConnection.createStatement
@@ -35,7 +36,6 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
             Files.readAllLines(path).asScala.mkString("\n")
         }.mkString("\n").split(";")
         val connection:Connection = DriverManager.getConnection(mysqlUrl, username, password)
-        val testDb = "test_jobs"
         try {
             val statement = connection.createStatement
             statement.executeUpdate(s"CREATE DATABASE IF NOT EXISTS $testDb")
@@ -53,7 +53,6 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
         }
     }
 
-
     "JobHistoryModel" should {
         "work correctly" in {
           properties.setProperty("org.quartz.scheduler.instanceName", "testScheduler" + Random.nextInt())
@@ -62,7 +61,6 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
           jobHistoryModel.getJob("blah", "blah").headOption must beSome
           jobHistoryModel.getLastJobSuccessByTrigger("blah", "blah") must beSome
           jobHistoryModel.getJobs()
-            true mustEqual true
         }
     }
 }
