@@ -21,7 +21,16 @@ class WorkerJobListener(props: Properties, statsd: StatsDClient, useDatadog: Boo
   def jobWasExecuted(context: JobExecutionContext, jobException: JobExecutionException): Unit = {
     try {
       val success = jobException == null
-      jobHistoryModel.addJob(context, success = success)
+      jobHistoryModel.addJob(
+        context.getFireInstanceId, 
+        context.getTrigger.getJobKey.getName, 
+        context.getTrigger.getJobKey.getGroup, 
+        context.getTrigger.getKey.getName,
+        context.getTrigger.getKey.getGroup,
+        context.getFireTime,
+        context.getJobRunTime,
+        success = success
+      )
 
       val suffix = if (success) "succeeded" else "failed"
       val jobKey = s"${context.getTrigger.getJobKey.getGroup}.${context.getTrigger.getJobKey.getName}"

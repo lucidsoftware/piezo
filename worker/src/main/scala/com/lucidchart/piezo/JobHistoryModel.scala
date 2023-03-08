@@ -1,6 +1,5 @@
 package com.lucidchart.piezo
 
-import org.quartz.JobExecutionContext
 import java.sql.{ResultSet, Timestamp}
 import org.slf4j.LoggerFactory
 import java.util.{Date, Properties}
@@ -20,7 +19,16 @@ class JobHistoryModel(props: Properties) {
   val logger = LoggerFactory.getLogger(this.getClass)
   val connectionProvider = new ConnectionProvider(props)
 
-  def addJob(context: JobExecutionContext, success:Boolean): Unit = {
+  def addJob(
+    fireInstanceId: String,
+    jobName: String,
+    jobGroup: String,
+    triggerName: String,
+    triggerGroup: String,
+    fireTime: Date,
+    instanceDurationInMillis: Long,
+    success:Boolean
+  ): Unit = {
     val connection = connectionProvider.getConnection
     try {
       val prepared = connection.prepareStatement(
@@ -38,14 +46,14 @@ class JobHistoryModel(props: Properties) {
           VALUES(?, ?, ?, ?, ?, ?, ?, ?)
         """.stripMargin
       )
-      prepared.setString(1, context.getFireInstanceId)
-      prepared.setString(2, context.getTrigger.getJobKey.getName)
-      prepared.setString(3, context.getTrigger.getJobKey.getGroup)
-      prepared.setString(4, context.getTrigger.getKey.getName)
-      prepared.setString(5, context.getTrigger.getKey.getGroup)
+      prepared.setString(1, fireInstanceId)
+      prepared.setString(2, jobName)
+      prepared.setString(3, jobGroup)
+      prepared.setString(4, triggerName)
+      prepared.setString(5, triggerGroup)
       prepared.setBoolean(6, success)
-      prepared.setTimestamp(7, new Timestamp(context.getFireTime.getTime))
-      prepared.setTimestamp(8, new Timestamp(context.getFireTime.getTime + context.getJobRunTime))
+      prepared.setTimestamp(7, new Timestamp(fireTime.getTime))
+      prepared.setTimestamp(8, new Timestamp(fireTime.getTime + instanceDurationInMillis))
       prepared.executeUpdate()
     } catch {
       case e:Exception => logger.error("error in recording start of job",e)
