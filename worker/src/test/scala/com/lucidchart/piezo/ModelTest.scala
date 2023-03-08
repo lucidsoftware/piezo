@@ -60,7 +60,7 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
           jobHistoryModel.addJob("ab", "blah", "blah", "blah", "blah", new Date(), 1000, true)
           jobHistoryModel.getJob("blah", "blah").headOption must beSome
           jobHistoryModel.getLastJobSuccessByTrigger("blah", "blah") must beSome
-          jobHistoryModel.getJobs()
+          jobHistoryModel.getJobs().nonEmpty must beTrue
         }
     }
 }
