@@ -51,7 +51,7 @@ object TriggerHelper {
     }
 
     val (monitoringPriority, maxSecondsInError) = monitoringModel.getTriggerMonitoringRecord(
-      trigger
+      trigger.getKey,
     ).map { monitoringRecord =>
       (monitoringRecord.priority, monitoringRecord.maxSecondsInError)
     }.getOrElse((TriggerMonitoringPriority.Medium, 300))

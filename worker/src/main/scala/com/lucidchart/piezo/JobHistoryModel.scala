@@ -1,9 +1,9 @@
 package com.lucidchart.piezo
 
-import org.quartz.JobExecutionContext
 import java.sql.{ResultSet, Timestamp}
-import org.slf4j.LoggerFactory
 import java.util.{Date, Properties}
+import org.quartz.{JobKey, TriggerKey}
+import org.slf4j.LoggerFactory
 
 case class JobRecord(
   name: String,
@@ -20,7 +20,14 @@ class JobHistoryModel(props: Properties) {
   val logger = LoggerFactory.getLogger(this.getClass)
   val connectionProvider = new ConnectionProvider(props)
 
-  def addJob(context: JobExecutionContext, success:Boolean): Unit = {
+  def addJob(
+    fireInstanceId: String,
+    jobKey: JobKey,
+    triggerKey: TriggerKey,
+    fireTime: Date,
+    instanceDurationInMillis: Long,
+    success:Boolean
+  ): Unit = {
     val connection = connectionProvider.getConnection
     try {
       val prepared = connection.prepareStatement(
@@ -38,14 +45,14 @@ class JobHistoryModel(props: Properties) {
           VALUES(?, ?, ?, ?, ?, ?, ?, ?)
         """.stripMargin
       )
-      prepared.setString(1, context.getFireInstanceId)
-      prepared.setString(2, context.getTrigger.getJobKey.getName)
-      prepared.setString(3, context.getTrigger.getJobKey.getGroup)
-      prepared.setString(4, context.getTrigger.getKey.getName)
-      prepared.setString(5, context.getTrigger.getKey.getGroup)
+      prepared.setString(1, fireInstanceId)
+      prepared.setString(2, jobKey.getName)
+      prepared.setString(3, jobKey.getGroup)
+      prepared.setString(4, triggerKey.getName)
+      prepared.setString(5, triggerKey.getGroup)
       prepared.setBoolean(6, success)
-      prepared.setTimestamp(7, new Timestamp(context.getFireTime.getTime))
-      prepared.setTimestamp(8, new Timestamp(context.getFireTime.getTime + context.getJobRunTime))
+      prepared.setTimestamp(7, new Timestamp(fireTime.getTime))
+      prepared.setTimestamp(8, new Timestamp(fireTime.getTime + instanceDurationInMillis))
       prepared.executeUpdate()
     } catch {
       case e:Exception => logger.error("error in recording start of job",e)
@@ -75,7 +82,7 @@ class JobHistoryModel(props: Properties) {
     }
   }
 
-  def getJob(name: String, group: String): List[JobRecord] = {
+  def getJob(jobKey: JobKey): List[JobRecord] = {
     val connection = connectionProvider.getConnection
 
     try {
@@ -90,8 +97,8 @@ class JobHistoryModel(props: Properties) {
           LIMIT 100
         """.stripMargin
       )
-      prepared.setString(1, name)
-      prepared.setString(2, group)
+      prepared.setString(1, jobKey.getName)
+      prepared.setString(2, jobKey.getGroup)
       val rs = prepared.executeQuery();
       parseJobs(rs)
     } catch {
@@ -104,7 +111,7 @@ class JobHistoryModel(props: Properties) {
     }
   }
 
-  def getLastJobSuccessByTrigger(triggerName: String, triggerGroup: String): Option[JobRecord] = {
+  def getLastJobSuccessByTrigger(triggerKey: TriggerKey): Option[JobRecord] = {
     val connection = connectionProvider.getConnection
 
     try {
@@ -120,8 +127,8 @@ class JobHistoryModel(props: Properties) {
           LIMIT 1
         """.stripMargin
       )
-      prepared.setString(1, triggerName)
-      prepared.setString(2, triggerGroup)
+      prepared.setString(1, triggerKey.getName)
+      prepared.setString(2, triggerKey.getGroup)
       val rs = prepared.executeQuery()
       if (rs.next()) {
         Some(parseJob(rs))

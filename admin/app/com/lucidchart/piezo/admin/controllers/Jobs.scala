@@ -39,7 +39,6 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: Cont
   val scheduler = logExceptions(schedulerFactory.getScheduler())
   val properties = schedulerFactory.props
   val jobHistoryModel = logExceptions(new JobHistoryModel(properties))
-  val triggerHistoryModel = logExceptions(new TriggerHistoryModel(properties))
   val triggerMonitoringPriorityModel = logExceptions(new TriggerMonitoringModel(properties))
 
   val jobFormHelper = new JobFormHelper()
@@ -61,7 +60,7 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: Cont
   def getIndex = Action { implicit request =>
     val allJobs: List[JobKey] = getJobsByGroup().flatMap(_._2).toList
     val jobHistories = allJobs.flatMap({ job =>
-      jobHistoryModel.getJob(job.getName, job.getGroup).headOption
+      jobHistoryModel.getJob(job).headOption
     }).sortWith(_.start after _.start)
     val triggeredJobs: List[JobKey] = TriggerHelper.getTriggersByGroup(scheduler).flatMap { case (group, triggerKeys) =>
       triggerKeys.map(triggerKey => scheduler.getTrigger(triggerKey).getJobKey)
@@ -84,7 +83,7 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: Cont
 
         val history = {
           try {
-            Some(jobHistoryModel.getJob(name, group))
+            Some(jobHistoryModel.getJob(jobKey))
           } catch {
             case e: Exception => {
               logger.error("Failed to get job history")
@@ -239,7 +238,7 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: Cont
               triggers.map { case (trigger, monitoringPriority, errorTime) =>
                 scheduler.scheduleJob(trigger)
                 triggerMonitoringPriorityModel.setTriggerMonitoringRecord(
-                  trigger,
+                  trigger.getKey,
                   monitoringPriority,
                   errorTime
                 )
