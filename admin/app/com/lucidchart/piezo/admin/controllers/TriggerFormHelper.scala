@@ -2,16 +2,20 @@ package com.lucidchart.piezo.admin.controllers
 
 import com.lucidchart.piezo.TriggerMonitoringPriority
 import com.lucidchart.piezo.TriggerMonitoringPriority.TriggerMonitoringPriority
+import com.lucidchart.piezo.admin.utils.CronHelper
 import java.text.ParseException
 import org.quartz._
-import play.api.data.Form
+import play.api.data.{Form, FormError}
 import play.api.data.Forms._
+import play.api.data.format.Formats.parsing
+import play.api.data.format.Formatter
 import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
 
 class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
 
   private def simpleScheduleFormApply(repeatCount: Int, repeatInterval: Int): SimpleScheduleBuilder = {
-    SimpleScheduleBuilder.simpleSchedule()
+    SimpleScheduleBuilder
+      .simpleSchedule()
       .withRepeatCount(repeatCount)
       .withIntervalInSeconds(repeatInterval)
   }
@@ -41,14 +45,14 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
     cron: Option[CronScheduleBuilder],
     jobDataMap: Option[JobDataMap],
     triggerMonitoringPriority: String,
-    triggerMaxErrorTime: Int
+    triggerMaxErrorTime: Int,
   ): (Trigger, TriggerMonitoringPriority, Int) = {
-    val newTrigger: Trigger = TriggerBuilder.newTrigger()
+    val newTrigger: Trigger = TriggerBuilder
+      .newTrigger()
       .withIdentity(name, group)
       .withDescription(description)
-      .withSchedule(
-      triggerType match {
-        case "cron" => cron.get
+      .withSchedule(triggerType match {
+        case "cron"   => cron.get
         case "simple" => simple.get
       })
       .forJob(jobName, jobGroup)
@@ -57,23 +61,24 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
     (newTrigger, TriggerMonitoringPriority.withName(triggerMonitoringPriority), triggerMaxErrorTime)
   }
 
-  private def triggerFormUnapply(tp: (Trigger, TriggerMonitoringPriority, Int)):
-    Option[
-      (
-        String,
-        String,
-        String,
-        String,
-        String,
-        String,
-        Option[SimpleScheduleBuilder],
-        Option[CronScheduleBuilder],
-        Option[JobDataMap], String, Int
-      )
-    ] = {
+  private def triggerFormUnapply(tp: (Trigger, TriggerMonitoringPriority, Int)): Option[
+    (
+      String,
+      String,
+      String,
+      String,
+      String,
+      String,
+      Option[SimpleScheduleBuilder],
+      Option[CronScheduleBuilder],
+      Option[JobDataMap],
+      String,
+      Int,
+    ),
+  ] = {
     val trigger = tp._1
     val (triggerType: String, simple, cron) = trigger match {
-      case cron: CronTrigger => ("cron", None, Some(cron.getScheduleBuilder))
+      case cron: CronTrigger     => ("cron", None, Some(cron.getScheduleBuilder))
       case simple: SimpleTrigger => ("simple", Some(simple.getScheduleBuilder), None)
     }
     val description = if (trigger.getDescription() == null) "" else trigger.getDescription()
@@ -89,8 +94,8 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
         cron.asInstanceOf[Option[CronScheduleBuilder]],
         Some(trigger.getJobDataMap),
         tp._2.toString,
-        tp._3
-      )
+        tp._3,
+      ),
     )
   }
 
@@ -119,6 +124,11 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
     }
   }
 
+  def greaterThan(greaterThanValue: Int): Constraint[Int] = Constraint[Int]("constraints.greaterThan") { value =>
+    if (value > greaterThanValue) Valid
+    else Invalid(ValidationError(s"Value must be greater than $greaterThanValue"))
+  }
+
   def buildTriggerForm = Form[(Trigger, TriggerMonitoringPriority, Int)](
     mapping(
       "triggerType" -> nonEmptyText(),
@@ -127,20 +137,62 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
       "jobGroup" -> nonEmptyText(),
       "jobName" -> nonEmptyText(),
       "description" -> text(),
-      "simple" -> optional(mapping(
-        "repeatCount" -> number(),
-        "repeatInterval" -> number()
-      )(simpleScheduleFormApply)(simpleScheduleFormUnapply)),
-      "cron" -> optional(mapping(
-        "cronExpression" -> nonEmptyText().verifying(validCronExpression)
-      )(cronScheduleFormApply)(cronScheduleFormUnapply)),
+      "simple" -> optional(
+        mapping(
+          "repeatCount" -> number(),
+          "repeatInterval" -> number(),
+        )(simpleScheduleFormApply)(simpleScheduleFormUnapply),
+      ),
+      "cron" -> optional(
+        mapping(
+          "cronExpression" -> nonEmptyText().verifying(validCronExpression),
+        )(cronScheduleFormApply)(cronScheduleFormUnapply),
+      ),
       "job-data-map" -> jobDataMap,
       "triggerMonitoringPriority" -> nonEmptyText(),
-      "triggerMaxErrorTime" -> number()
-    )(triggerFormApply)(triggerFormUnapply).verifying("Job does not exist", fields => {
-      scheduler.checkExists(fields._1.getJobKey)
-    }).verifying("Max time between successes must be greater than 0", fields => {
-      fields._3 > 0
-    })
+      "triggerMaxErrorTime" -> of(MaxSecondsBetweenSuccessesFormatter).verifying(greaterThan(0)),
+    )(triggerFormApply)(triggerFormUnapply)
+      .verifying(
+        "Job does not exist",
+        fields => {
+          scheduler.checkExists(fields._1.getJobKey)
+        },
+      )
+      .verifying(
+        "Max time between successes must be greater than 0",
+        fields => {
+          fields._3 > 0
+        },
+      ),
   )
+}
+
+object MaxSecondsBetweenSuccessesFormatter extends Formatter[Int] {
+  override val format = Some(("format.triggerMaxErrorTime", Nil))
+  override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], Int] = {
+    for {
+      maxSecondsBetweenSuccesses <- parsing(_.toInt, "Numeric value expected", Nil)(key, data)
+      maxIntervalTime <- {
+        if (data.contains("cron.cronExpression")) {
+          parsing(expr => CronHelper.getMaxInterval(new CronExpression(expr)), "try again.", Nil)(
+            "cron.cronExpression",
+            data,
+          )
+        } else {
+          parsing(_.toLong, "try again.", Nil)("simple.repeatInterval", data)
+        }
+      }
+      _ <- Either.cond(
+        maxSecondsBetweenSuccesses > maxIntervalTime,
+        maxSecondsBetweenSuccesses,
+        List(
+          FormError(
+            "triggerMaxErrorTime",
+            s"Must be greater than the maximum trigger interval ($maxIntervalTime seconds)",
+          ),
+        ),
+      )
+    } yield maxSecondsBetweenSuccesses
+  }
+  override def unbind(key: String, value: Int) = Map(key -> value.toString)
 }
