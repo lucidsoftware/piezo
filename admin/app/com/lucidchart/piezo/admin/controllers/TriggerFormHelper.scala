@@ -9,7 +9,7 @@ import play.api.data.{Form, FormError}
 import play.api.data.Forms._
 import play.api.data.format.Formats.parsing
 import play.api.data.format.Formatter
-import play.api.data.validation.{Constraint, Invalid, Valid, ValidationError}
+import play.api.data.validation.{Constraint, Constraints, Invalid, Valid, ValidationError}
 
 class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
 
@@ -124,11 +124,6 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
     }
   }
 
-  def greaterThan(greaterThanValue: Int): Constraint[Int] = Constraint[Int]("constraints.greaterThan") { value =>
-    if (value > greaterThanValue) Valid
-    else Invalid(ValidationError(s"Value must be greater than $greaterThanValue"))
-  }
-
   def buildTriggerForm = Form[(Trigger, TriggerMonitoringPriority, Int)](
     mapping(
       "triggerType" -> nonEmptyText(),
@@ -150,18 +145,12 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
       ),
       "job-data-map" -> jobDataMap,
       "triggerMonitoringPriority" -> nonEmptyText(),
-      "triggerMaxErrorTime" -> of(MaxSecondsBetweenSuccessesFormatter).verifying(greaterThan(0)),
+      "triggerMaxErrorTime" -> of(MaxSecondsBetweenSuccessesFormatter).verifying(Constraints.min(0)),
     )(triggerFormApply)(triggerFormUnapply)
       .verifying(
         "Job does not exist",
         fields => {
           scheduler.checkExists(fields._1.getJobKey)
-        },
-      )
-      .verifying(
-        "Max time between successes must be greater than 0",
-        fields => {
-          fields._3 > 0
         },
       ),
   )
@@ -174,7 +163,7 @@ object MaxSecondsBetweenSuccessesFormatter extends Formatter[Int] {
       maxSecondsBetweenSuccesses <- parsing(_.toInt, "Numeric value expected", Nil)(key, data)
       maxIntervalTime <- {
         if (data.contains("cron.cronExpression")) {
-          parsing(expr => CronHelper.getMaxInterval(new CronExpression(expr)), "try again.", Nil)(
+          parsing(expr => CronHelper.getMaxInterval(expr), "try again.", Nil)(
             "cron.cronExpression",
             data,
           )

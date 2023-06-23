@@ -1,24 +1,48 @@
 package com.lucidchart.piezo.admin.utils
 
+import java.time.temporal.{ChronoUnit, TemporalUnit}
+import java.time.{Instant, LocalDate, Month, ZoneOffset}
 import java.util.{Date, TimeZone}
-import org.quartz.{CronExpression, CronScheduleBuilder, CronTrigger, TriggerBuilder}
+import org.quartz.CronExpression
 import play.api.Logging
+import scala.annotation.tailrec
 import scala.util.control.NonFatal
 
 object CronHelper extends Logging {
+  val IMPOSSIBLE_MAX_INTERVAL: Long = Long.MaxValue
   val DEFAULT_MAX_INTERVAL = 0
-  val NUM_COMPLEX_SAMPLES = 8000
+  val NON_EXISTENT: Int = -1
 
   /**
-   * Determines the max interval for a cron expression. The operation fails silently because it's not crucial.
+   * Approximates the largest interval between two trigger events for a given cron expression. This is a difficult
+   * problem to solve perfectly, so this represents a "best effort approach" - the goal is to handle the most
+   * expressions with the least amount of complexity.
+   *
+   * Known limitations:
+   *   1. Daylight savings
+   *   1. Complex year subexpressions
    * @param cronExpression
    */
-  def getMaxInterval(cronExpression: CronExpression): Long = getMaxInterval(cronExpression, None)
-  def getMaxInterval(cronExpression: CronExpression, timeZone: Option[TimeZone]): Long = {
+  def getMaxInterval(cronExpression: String): Long = {
     try {
-      val subexpressions = cronExpression.getCronExpression.split("\\s")
-      val isComplex = !subexpressions.drop(3).forall(expr => expr == "*" || expr == "?")
-      if (isComplex) getComplexMaxInterval(subexpressions, timeZone) else getSimpleMaxInterval(subexpressions, timeZone)
+      val (secondsMinutesHourStrings, dayStrings) = cronExpression.split("\\s+").splitAt(3)
+      val subexpressions = getSubexpressions(secondsMinutesHourStrings :+ dayStrings.mkString(" ")).reverse
+
+      // find the largest subexpression that is not continuously triggering (*)
+      val outermostIndex = subexpressions.indexWhere(!_.isContinuouslyTriggering)
+      if (outermostIndex == NON_EXISTENT) 1
+      else {
+        // get the max interval for this expression
+        val outermost = subexpressions(outermostIndex)
+        if (outermost.maxInterval == IMPOSSIBLE_MAX_INTERVAL) IMPOSSIBLE_MAX_INTERVAL
+        else {
+          // subtract the inner intervals of the smaller, nested subexpressions
+          val nested = subexpressions.slice(outermostIndex + 1, subexpressions.size)
+          val innerIntervalsOfNested = nested.collect { case expr: BoundSubexpression => expr.innerInterval }.sum
+          outermost.maxInterval - innerIntervalsOfNested
+        }
+      }
+
     } catch {
       case NonFatal(e) =>
         logger.error("Failed to validate cron expression", e)
@@ -26,160 +50,120 @@ object CronHelper extends Logging {
     }
   }
 
-  /**
-   * Determines the max interval by deduction. Is only used when seconds, minutes, and hours are specified. If days,
-   * months, or years are specified, use getComplexMaxInterval instead.
-   */
-  private def getSimpleMaxInterval(subexpressions: Array[String], timeZone: Option[TimeZone]): Long = {
-    val cronContainers = getCronContainers(subexpressions.take(3), timeZone) // seconds, minutes, hours
-    val outermostContainer = cronContainers.findLast(!_.areAllUnitsMarked)
-    outermostContainer.fold(1L) { outermost =>
-      val innerContainers = cronContainers.takeWhile(_.unitType != outermost.unitType)
-      val innerIntervalSeconds = innerContainers.map(_.wrapIntervalInSeconds).sum
-      outermost.maxIntervalInSeconds + innerIntervalSeconds
-    }
+  private def getSubexpressions(parts: Array[String]): IndexedSeq[Subexpression] = {
+    parts
+      .zip(List(Seconds, Minutes, Hours, Days))
+      .map { case (str, cronType) => cronType(str) }
+      .toIndexedSeq
   }
+}
 
-  /**
-   * Estimates the max interval using a combination of deduction (for the seconds and minutes), and sampling (for
-   * everything else). We remove the seconds and minutes from the cron expression that is used for sampling so we can
-   * effectively decrease the number of samples needed for a good estimate.
-   */
-  private def getComplexMaxInterval(subexpressions: Array[String], timeZone: Option[TimeZone]): Long = {
-    val (secondsAndMinutes, everythingElse) = subexpressions.splitAt(2)
+case class Seconds(str: String) extends BoundSubexpression(str, x => s"$x * * ? * *", ChronoUnit.SECONDS, 60)
+case class Minutes(str: String) extends BoundSubexpression(str, x => s"0 $x * ? * *", ChronoUnit.MINUTES, 60)
+case class Hours(str: String) extends BoundSubexpression(str, x => s"0 0 $x ? * *", ChronoUnit.HOURS, 24)
+case class Days(str: String) extends UnboundSubexpression(str, x => s"0 0 0 $x", 400)
 
-    // set up the dummy trigger
-    val simplifiedComplexCron = everythingElse.mkString(s"0 0 ", " ", "")
-    val selectedTimeZone = timeZone.getOrElse(TimeZone.getDefault)
-    val cronSchedule = CronScheduleBuilder.cronSchedule(simplifiedComplexCron).inTimeZone(selectedTimeZone)
-    val dummyTrigger: CronTrigger = TriggerBuilder.newTrigger().withSchedule(cronSchedule).build()
-    val initialFireTime = Option(dummyTrigger.getFireTimeAfter(new Date()))
+abstract class Subexpression(str: String, getSimplifiedCron: String => String) {
+  def maxInterval: Long
+  def isContinuouslyTriggering: Boolean
 
-    // get the interval
-    initialFireTime.fold(Long.MaxValue) { initialFireTime =>
-      logger.debug(s"sample cron expression: $simplifiedComplexCron")
-      val sampledMaxIntervalInSeconds = getSampledMaxInterval(initialFireTime, NUM_COMPLEX_SAMPLES, dummyTrigger)
-      val innerMaxIntervalSeconds = getCronContainers(secondsAndMinutes, timeZone).map(_.wrapIntervalInSeconds).sum
-      // subtract an hour to avoid double counting innerMaxIntervalSeconds
-      sampledMaxIntervalInSeconds - HourUnitType.secondsPerUnit + innerMaxIntervalSeconds
-    }
+  protected def startDate: Date
+  final protected lazy val cron: CronExpression = {
+    val newCron = new CronExpression(getSimplifiedCron(str))
+    newCron.setTimeZone(TimeZone.getTimeZone("UTC")) // use a timezone without daylight savings
+    newCron
   }
+}
+
+/**
+ * Represents a subexpression in which the range over which the triggers occur is bound or fixed. For example, seconds
+ * always occur within a minute, minutes always occur within an hour, and hours always occur within a day. Because the
+ * range is fixed, we can determine all possibilities by sampling over the entire range.
+ */
+abstract class BoundSubexpression(
+  str: String,
+  getSimplifiedCron: String => String,
+  temporalUnit: TemporalUnit,
+  val numUnitsInContainer: Long,
+) extends Subexpression(str, getSimplifiedCron) {
+
+  final override protected val startDate = new Date(BoundSubexpression.startInstant.toEpochMilli)
+  final protected val endDate = Date.from(
+    BoundSubexpression.startInstant.plus(numUnitsInContainer, temporalUnit),
+  )
+  final override lazy val maxInterval: Long = getMaxInterval(cron, startDate, endDate, 0)
+  final override lazy val isContinuouslyTriggering: Boolean = maxInterval == temporalUnit.getDuration.getSeconds
 
   /**
-   * Estimates the max interval for a given cron expression. The more samples, the better the estimate.
+   * The interval between the first and last trigger within the range, or "everything but the ends". Should encompass
+   * every trigger produced by the subexpression.
    */
-  private def getSampledMaxInterval(prev: Date, numSamples: Long, trigger: CronTrigger, maxInterval: Long = 0): Long = {
-    Option(trigger.getFireTimeAfter(prev)) match {
-      case Some(next) if numSamples > 0 =>
-        val intervalInSeconds = next.toInstant.getEpochSecond - prev.toInstant.getEpochSecond
-        if (intervalInSeconds > maxInterval) {
-          val sampleId = NUM_COMPLEX_SAMPLES - numSamples
-          logger.debug(s"Seconds:$intervalInSeconds Sample:$sampleId Interval:$prev -> $next")
-        }
-        getSampledMaxInterval(next, numSamples - 1, trigger, Math.max(intervalInSeconds, maxInterval))
+  final lazy val innerInterval: Long = getInnerInterval(cron, startDate, endDate)
+
+  @tailrec
+  private def getMaxInterval(expr: CronExpression, prev: Date, end: Date, maxInterval: Long): Long = {
+    Option(expr.getTimeAfter(prev)) match {
+      case Some(curr) if !prev.after(end) => // iterate once past the "end" in order to wrap around
+        val currentInterval = (curr.getTime - prev.getTime) / 1000
+        val newMax = Math.max(currentInterval, maxInterval)
+        getMaxInterval(expr, curr, end, newMax)
       case _ => maxInterval
     }
   }
 
-  private def getCronContainers(parts: Array[String], timeZone: Option[TimeZone]): List[CronContainer] = {
-    parts
-      .zip(List(SecondUnitType, MinuteUnitType, HourUnitType))
-      .map { case (str, cronType) => CronContainer(str, cronType, timeZone) }
-      .toList
-  }
-
-}
-
-sealed abstract class UnitType(val secondsPerUnit: Long, val numUnitsInContainer: Long)
-case object SecondUnitType extends UnitType(1, 60)
-case object MinuteUnitType extends UnitType(60, 60)
-case object HourUnitType extends UnitType(3600, 24)
-
-/**
- * A cron container is composed of "units". The "unitType" determines how many units are in the container, and how many
- * seconds are in each unit. "Marked units" describe when the trigger is set to fire. "Intervals" describe the number of
- * units between (but not including) marked units.
- */
-case class CronContainer(str: String, unitType: UnitType, markedUnits: List[Long], timeZone: TimeZone) {
-  lazy val areAllUnitsMarked: Boolean = markedUnits.size == unitType.numUnitsInContainer
-
-  // the "wrap interval" is the interval that wraps around both ends of the container
-  private lazy val wrapInterval = (unitType.numUnitsInContainer - markedUnits.last) + markedUnits.head
-  lazy val wrapIntervalInSeconds: Long = unitsToSeconds(wrapInterval)
-
-  // the max interval is the longest interval between any two marked units in the container, including the wrap interval
-  lazy val maxIntervalInSeconds: Long = {
-    val otherIntervals = markedUnits.zipWithIndex
-      .take(markedUnits.size - 1)
-      .map { case (value, index) => markedUnits(index + 1) - value }
-    val units = (otherIntervals :+ wrapInterval).max
-    val unitsWithDaylightSavings = units + (if (unitType == HourUnitType) getDaylightSavings(units, markedUnits) else 0)
-    unitsToSeconds(unitsWithDaylightSavings)
-  }
-
-  /**
-   * We multiply the number of units by the number of seconds in a single unit. We also subtract 1 unit to avoid double
-   * counting the seconds in sub-intervals that are within a single unit. For example:
-   *   - We subtract 1 hour when counting hours because the minutes make up the last hour
-   *   - We subtract 1 minute when counting minutes because the seconds make up the last minute
-   *   - We don't subtract 1 second when counting seconds because there are no smaller units
-   */
-  private def unitsToSeconds(units: Long): Long = {
-    if (unitType == SecondUnitType) units else (units - 1) * unitType.secondsPerUnit
-  }
-
-  /**
-   * Returns the number of seconds to add to the interval if daylight savings is being observed.
-   */
-  private def getDaylightSavings(currentNumUnits: Long, hourInstants: List[Long]): Long = {
-    if (timeZone.observesDaylightTime()) {
-      val extraSpringForwardHours = if (hourInstants.contains(2)) {
-        val allBut2am = hourInstants.filter(_ != 2) // when springing forward, 2am is skipped for a day
-        if (allBut2am.isEmpty) {
-          23 // if we only trigger at 2am and 2am is skipped, we won't trigger for another 23 hours
-        } else {
-          // calculate the unique wrap interval when we spring forward
-          // (number of hours remaining in the day, plus the number of hours until the first trigger in the next day)
-          (24 - allBut2am.last) + (allBut2am.head - 1) - currentNumUnits
-        }
-      } else -1
-      val extraFallbackHours = 1 // we always gain an extra hour when falling back (1am is delayed until 2am)
-      Math.max(extraFallbackHours, extraSpringForwardHours)
-    } else 0
-  }
-
-}
-
-object CronContainer {
-  def apply(str: String, cronType: UnitType, timeZone: Option[TimeZone]): CronContainer = {
-    val markedUnits = CronContainer.getMarkedUnits(str, cronType.numUnitsInContainer)
-    CronContainer(str, cronType, markedUnits, timeZone.getOrElse(TimeZone.getDefault))
-  }
-
-  def getMarkedUnits(str: String, unitsInContainer: Long): List[Long] = {
-    val slash = """(\d{1,2}|\*)/(\d{1,2})""".r
-    val dash = """(\d{1,2})-(\d{1,2})""".r
-    str match {
-      case "*" => (for (i <- 0L until unitsInContainer) yield i).toList
-      case slash(start, interval) => {
-        val startInt = if (start == "*") 0 else start.toLong
-        getMarkedUnitsForSlash(startInt, interval.toLong, unitsInContainer, List(startInt))
-      }
-      case dash(first, second) =>
-        val smallest = Math.min(first.toLong, second.toLong)
-        val largest = Math.max(first.toLong, second.toLong)
-        (for (i <- smallest to largest) yield i).toList
-      case _ => str.split(",").map(_.toLong).toList.sorted
+  private def getInnerInterval(expr: CronExpression, prev: Date, end: Date): Long = {
+    Option(expr.getTimeAfter(prev)).fold(Long.MaxValue) { firstTriggerDate =>
+      val firstTriggerTime = firstTriggerDate.getTime / 1000
+      val lastTriggerTime = getLastTriggerTime(expr, firstTriggerDate, end)
+      lastTriggerTime - firstTriggerTime
     }
   }
 
-  private def getMarkedUnitsForSlash(
-    start: Long,
-    interval: Long,
-    unitsInContainer: Long,
-    result: List[Long] = Nil,
-  ): List[Long] = {
-    if (start + interval >= unitsInContainer) result
-    else getMarkedUnitsForSlash(start + interval, interval, unitsInContainer, result :+ (start + interval))
+  @tailrec
+  private def getLastTriggerTime(expr: CronExpression, prev: Date, end: Date): Long = {
+    Option(expr.getTimeAfter(prev)) match { // stop iterating before going past the "end"
+      case Some(curr) if !curr.after(end) => getLastTriggerTime(expr, curr, end)
+      case _                              => prev.getTime / 1000
+    }
+  }
+}
+
+object BoundSubexpression {
+  final protected val startInstant: Instant = LocalDate
+    .of(2010, Month.SEPTEMBER, 3)
+    .atStartOfDay
+    .toInstant(ZoneOffset.UTC)
+    .minus(1, ChronoUnit.SECONDS)
+}
+
+/**
+ * Represents a subexpression that is unbound, meaning that the range over which triggers occur is unknown, or is
+ * variable. For example, days can occur within a week, month, or year, and each of these ranges can vary in size.
+ * Because we can't determine the range over which days are triggered, we estimate the max interval by sampling a
+ * certain number of times. The larger the number of samples, the more accurate the estimate.
+ */
+abstract class UnboundSubexpression(
+  str: String,
+  getSimplifiedCron: String => String,
+  val maxNumSamples: Long,
+) extends Subexpression(str, getSimplifiedCron)
+    with Logging {
+
+  final override protected val startDate = new Date
+  final override lazy val maxInterval: Long = getSampledMaxInterval(startDate, maxNumSamples, cron)
+  final override lazy val isContinuouslyTriggering: Boolean = str.split(" ").forall(expr => expr == "*" || expr == "?")
+
+  @tailrec
+  private def getSampledMaxInterval(prev: Date, numSamples: Long, expr: CronExpression, maxInterval: Long = 0): Long = {
+    Option(expr.getTimeAfter(prev)) match {
+      case Some(next) if numSamples > 0 =>
+        val intervalInSeconds = (next.getTime - prev.getTime) / 1000
+        if (intervalInSeconds > maxInterval) {
+          val sampleId = maxNumSamples - numSamples
+          logger.debug(s"Seconds:$intervalInSeconds Sample:$sampleId Interval:$prev -> $next")
+        }
+        getSampledMaxInterval(next, numSamples - 1, expr, Math.max(intervalInSeconds, maxInterval))
+      case _ => if (prev.equals(startDate)) CronHelper.IMPOSSIBLE_MAX_INTERVAL else maxInterval
+    }
   }
 }
