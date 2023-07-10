@@ -31,7 +31,7 @@ jobs:
       - name: Test
         run: sbt compile test doc Debian/packageBin
       - name: Publish to Sonatype
-        if: ${{ github.repository == 'lucidsoftware/piezo' }}
+        if: ${{ github.repository == 'lucidsoftware/piezo'  &&  github.event_name != 'pull_request' }}
         env:
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
