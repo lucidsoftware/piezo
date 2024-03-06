@@ -73,10 +73,10 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
             triggerDetail.getKey
           ).map { triggerMonitoringRecord =>
             (triggerMonitoringRecord.priority, triggerMonitoringRecord.maxSecondsInError)
-          }.getOrElse((TriggerMonitoringPriority.Medium, 300))
+          }.getOrElse((TriggerMonitoringPriority.Low, 300))
         }.getOrElse {
           logger.error("Failed to get trigger monitoring info")
-          (TriggerMonitoringPriority.Medium, 300)
+          (TriggerMonitoringPriority.Low, 300)
         }
 
         Ok(
@@ -149,9 +149,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
     jobGroup: String = "",
     jobName: String = "",
     templateGroup: Option[String] = None,
-    templateName: Option[String] = None,
-    triggerMonitoringPriority: TriggerMonitoringPriority.Value = TriggerMonitoringPriority.Medium,
-    triggerMaxErrorTime: Int = 300
+    templateName: Option[String] = None
   ) = Action { implicit request =>
     templateGroup match {
       case Some(group) => getEditTrigger(group, templateName.get, true)
@@ -161,7 +159,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
           case "simple" => new DummySimpleTrigger(jobGroup, jobName)
         }
         val newTriggerForm = triggerFormHelper.buildTriggerForm.fill(
-          (dummyTrigger, TriggerMonitoringPriority.Medium, 300)
+          (dummyTrigger, TriggerMonitoringPriority.Low, 300)
         )
         Ok(
           com.lucidchart.piezo.admin.views.html.editTrigger(
@@ -189,10 +187,10 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
           triggerDetail.getKey,
         ).map { triggerMonitoringRecord =>
           (triggerMonitoringRecord.priority, triggerMonitoringRecord.maxSecondsInError)
-        }.getOrElse((TriggerMonitoringPriority.Medium, 300))
+        }.getOrElse((TriggerMonitoringPriority.Low, 300))
       }.getOrElse {
         logger.error("Failed to get trigger monitoring info")
-        (TriggerMonitoringPriority.Medium, 300)
+        (TriggerMonitoringPriority.Low, 300)
       }
       val editTriggerForm = triggerFormHelper.buildTriggerForm.fill(
         (triggerDetail, triggerMonitoringPriority, triggerMaxErrorTime)

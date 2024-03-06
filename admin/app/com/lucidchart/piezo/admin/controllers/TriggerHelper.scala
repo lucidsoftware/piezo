@@ -54,7 +54,7 @@ object TriggerHelper {
       trigger.getKey,
     ).map { monitoringRecord =>
       (monitoringRecord.priority, monitoringRecord.maxSecondsInError)
-    }.getOrElse((TriggerMonitoringPriority.Medium, 300))
+    }.getOrElse((TriggerMonitoringPriority.Low, 300))
     val jobDataMap = trigger.getJobDataMap
     val job = trigger.getJobKey
     Json.obj(
@@ -65,7 +65,7 @@ object TriggerHelper {
       "name" -> triggerKey.getName,
       "description" -> trigger.getDescription,
       "job-data-map" -> JsObject(jobDataMap.getKeys.toSeq.map(key => key -> JsString(jobDataMap.getString(key)))),
-      "triggerMonitoringPriority" -> monitoringPriority.toString,
+      "triggerMonitoringPriority" -> monitoringPriority.name,
       "triggerMaxErrorTime" -> maxSecondsInError
     ) ++ schedule
   }

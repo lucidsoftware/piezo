@@ -66,7 +66,7 @@ messagesProvider: play.api.i18n.MessagesProvider
       <input type="text" class="job-name-type-ahead form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
     }
     }
-    @helper.select(triggerForm("triggerMonitoringPriority"), TriggerMonitoringPriority.values.toList.map(tp => tp.toString -> tp.toString), Symbol("_label") -> "Monitoring Priority", Symbol("labelClass") -> "col-sm-2 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("class") -> "form-control", Symbol("value") -> triggerForm.data.get("triggerMonitoringPriority").getOrElse(TriggerMonitoringPriority.Medium), Symbol("placeholder") -> TriggerMonitoringPriority.Medium)
+    @helper.select(triggerForm("triggerMonitoringPriority"), TriggerMonitoringPriority.values.map(tp => tp.name -> tp.name), Symbol("_label") -> "Monitoring Priority", Symbol("labelClass") -> "col-sm-2 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("class") -> "form-control", Symbol("value") -> triggerForm.data.get("triggerMonitoringPriority").getOrElse(TriggerMonitoringPriority.Low), Symbol("placeholder") -> TriggerMonitoringPriority.Low)
     @helper.input(triggerForm("triggerMaxErrorTime"), Symbol("_label") -> "Monitoring - Max Seconds Between Successes", Symbol("labelClass") -> "col-sm-2 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "", Symbol("value") -> triggerForm.data.get("triggerMaxErrorTime").getOrElse(300)) { (id, name, value, args) =>
       <input type="number" class="form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
     }
