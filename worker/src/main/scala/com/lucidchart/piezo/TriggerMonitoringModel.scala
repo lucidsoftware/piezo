@@ -5,12 +5,22 @@ import java.util.{Date, Properties}
 import org.quartz.TriggerKey
 import org.slf4j.LoggerFactory
 
-object TriggerMonitoringPriority extends Enumeration {
+object TriggerMonitoringPriority {
+  case class Value(id: Int, name: String) {
+    override def toString: String = name
+  }
   type TriggerMonitoringPriority = Value
   val Off = Value(0, "Off")
   val Low = Value(1, "Low")
-  val Medium = Value(2, "Medium")
   val High = Value(3, "High")
+
+  val values = List(Off, Low, High)
+
+  // map values that formerly identified a Medium priority to Low
+  val valuesById: Map[Int, Value] = Map(2 -> Low) ++ values.map(p => p.id -> p)
+  val valuesByName: Map[String, Value] = Map("Medium" -> Low) ++ values.map(p => p.name -> p)
+
+  def withName: Function[String, Value] = valuesByName
 }
 
 case class TriggerMonitoringRecord (
@@ -101,7 +111,7 @@ class TriggerMonitoringModel(props: Properties) {
       prepared.setString(2, triggerKey.getGroup)
       val rs = prepared.executeQuery()
       if (rs.next()) {
-        TriggerMonitoringPriority.values.find(_.id == rs.getInt("priority")).map { priority =>
+        TriggerMonitoringPriority.valuesById.get(rs.getInt("priority")).map { priority =>
           TriggerMonitoringRecord(
             rs.getString("trigger_name"),
             rs.getString("trigger_group"),
