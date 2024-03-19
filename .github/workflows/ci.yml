@@ -51,5 +51,4 @@ jobs:
         run: |
           set -x
           sbt Universal/packageBin
-          args=$(printf -- "-a %q " {admin,worker}/target/**/*.jar admin/target/*.deb admin/target/universal/piezo-admin*.zip)
-          hub release create $args -m "Release $VERSION" $VERSION
+          gh release create -t "Release $VERSION" --generate-notes $VERSION {admin,worker}/target/**/*.jar admin/target/*.deb admin/target/universal/piezo-admin*.zip
