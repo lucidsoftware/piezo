@@ -46,7 +46,8 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
     jobDataMap: Option[JobDataMap],
     triggerMonitoringPriority: String,
     triggerMaxErrorTime: Int,
-  ): (Trigger, TriggerMonitoringPriority, Int) = {
+    triggerMonitoringTeam: Option[String],
+  ): (Trigger, TriggerMonitoringPriority, Int, Option[String]) = {
     val newTrigger: Trigger = TriggerBuilder
       .newTrigger()
       .withIdentity(name, group)
@@ -58,10 +59,15 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
       .forJob(jobName, jobGroup)
       .usingJobData(jobDataMap.getOrElse(new JobDataMap()))
       .build()
-    (newTrigger, TriggerMonitoringPriority.withName(triggerMonitoringPriority), triggerMaxErrorTime)
+    (
+      newTrigger,
+      TriggerMonitoringPriority.withName(triggerMonitoringPriority),
+      triggerMaxErrorTime,
+      triggerMonitoringTeam,
+    )
   }
 
-  private def triggerFormUnapply(tp: (Trigger, TriggerMonitoringPriority, Int)): Option[
+  private def triggerFormUnapply(tp: (Trigger, TriggerMonitoringPriority, Int, Option[String])): Option[
     (
       String,
       String,
@@ -74,6 +80,7 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
       Option[JobDataMap],
       String,
       Int,
+      Option[String],
     ),
   ] = {
     val trigger = tp._1
@@ -95,6 +102,7 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
         Some(trigger.getJobDataMap),
         tp._2.toString,
         tp._3,
+        tp._4,
       ),
     )
   }
@@ -124,7 +132,7 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
     }
   }
 
-  def buildTriggerForm = Form[(Trigger, TriggerMonitoringPriority, Int)](
+  def buildTriggerForm: Form[(Trigger, TriggerMonitoringPriority, Int, Option[String])] = Form(
     mapping(
       "triggerType" -> nonEmptyText(),
       "group" -> nonEmptyText(),
@@ -146,6 +154,7 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
       "job-data-map" -> jobDataMap,
       "triggerMonitoringPriority" -> nonEmptyText(),
       "triggerMaxErrorTime" -> of(MaxSecondsBetweenSuccessesFormatter).verifying(Constraints.min(0)),
+      "triggerMonitoringTeam" -> optional(text()),
     )(triggerFormApply)(triggerFormUnapply)
       .verifying(
         "Job does not exist",

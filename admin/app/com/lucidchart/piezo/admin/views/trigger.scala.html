@@ -11,6 +11,7 @@ triggerHistory: Option[List[com.lucidchart.piezo.TriggerRecord]],
 errorMessage: Option[String] = None,
 triggerMonitoringPriority: Option[com.lucidchart.piezo.TriggerMonitoringPriority.Value] = None,
 triggerMaxErrorTime: Integer = 300,
+triggerMonitoringTeam: Option[String] = None,
 triggerState: Option[TriggerState] = None
 )(
 implicit
@@ -166,6 +167,10 @@ request: play.api.mvc.Request[AnyContent]
             <tr>
                 <td class="text-right">Monitoring - max seconds between successes:</td>
                 <td>@triggerMaxErrorTime seconds</td>
+            </tr>
+            <tr>
+                <td class="text-right">Monitoring team:</td>
+                <td>@triggerMonitoringTeam.getOrElse("")</td>
             </tr>
             }
             <tr>

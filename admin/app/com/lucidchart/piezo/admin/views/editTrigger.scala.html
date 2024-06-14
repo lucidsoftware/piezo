@@ -1,6 +1,6 @@
 @(
 triggersByGroup: scala.collection.mutable.Buffer[(String, scala.collection.immutable.List[org.quartz.TriggerKey])],
-triggerForm: Form[(org.quartz.Trigger, com.lucidchart.piezo.TriggerMonitoringPriority.Value, Int)],
+triggerForm: Form[(org.quartz.Trigger, com.lucidchart.piezo.TriggerMonitoringPriority.Value, Int, Option[String])],
 formAction: play.api.mvc.Call,
 existing: Boolean,
 isTemplate: Boolean,
@@ -69,6 +69,9 @@ messagesProvider: play.api.i18n.MessagesProvider
     @helper.select(triggerForm("triggerMonitoringPriority"), TriggerMonitoringPriority.values.map(tp => tp.name -> tp.name), Symbol("_label") -> "Monitoring Priority", Symbol("labelClass") -> "col-sm-2 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("class") -> "form-control", Symbol("value") -> triggerForm.data.get("triggerMonitoringPriority").getOrElse(TriggerMonitoringPriority.Low), Symbol("placeholder") -> TriggerMonitoringPriority.Low)
     @helper.input(triggerForm("triggerMaxErrorTime"), Symbol("_label") -> "Monitoring - Max Seconds Between Successes", Symbol("labelClass") -> "col-sm-2 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "", Symbol("value") -> triggerForm.data.get("triggerMaxErrorTime").getOrElse(300)) { (id, name, value, args) =>
       <input type="number" class="form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
+    }
+    @helper.input(triggerForm("triggerMonitoringTeam"), Symbol("_label") -> "Monitoring team", Symbol("labelClass") -> "col-sm-2 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "", Symbol("value") -> triggerForm.data.get("triggerMonitoringTeam").getOrElse(None)) { (id, name, value, args) =>
+      <input type="text" class="form-control form-inline-control" name="@name" id="@id" @toHtmlArgs(args)>
     }
 
     @helper.input(triggerForm("description"), Symbol("_label") -> "Description", Symbol("labelClass") -> "col-sm-2 text-right", Symbol("inputDivClass") -> "col-sm-10", Symbol("placeholder") -> "Description", Symbol("value")-> triggerForm.data.get("description").getOrElse("")) { (id, name, value, args) =>

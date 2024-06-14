@@ -68,15 +68,15 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
           }
         }
 
-        val (triggerMonitoringPriority, triggerMaxErrorTime) = Try {
+        val (triggerMonitoringPriority, triggerMaxErrorTime, triggerMonitoringTeam) = Try {
           triggerMonitoringPriorityModel.getTriggerMonitoringRecord(
             triggerDetail.getKey
           ).map { triggerMonitoringRecord =>
-            (triggerMonitoringRecord.priority, triggerMonitoringRecord.maxSecondsInError)
-          }.getOrElse((TriggerMonitoringPriority.Low, 300))
+            (triggerMonitoringRecord.priority, triggerMonitoringRecord.maxSecondsInError, triggerMonitoringRecord.monitoringTeam)
+          }.getOrElse((TriggerMonitoringPriority.Low, 300, None))
         }.getOrElse {
           logger.error("Failed to get trigger monitoring info")
-          (TriggerMonitoringPriority.Low, 300)
+          (TriggerMonitoringPriority.Low, 300, None)
         }
 
         Ok(
@@ -87,6 +87,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
             None,
             Some(triggerMonitoringPriority),
             triggerMaxErrorTime,
+            triggerMonitoringTeam,
             triggerState = Some(scheduler.getTriggerState(triggerKey))
           )(request)
         )
@@ -159,7 +160,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
           case "simple" => new DummySimpleTrigger(jobGroup, jobName)
         }
         val newTriggerForm = triggerFormHelper.buildTriggerForm.fill(
-          (dummyTrigger, TriggerMonitoringPriority.Low, 300)
+          (dummyTrigger, TriggerMonitoringPriority.Low, 300, None)
         )
         Ok(
           com.lucidchart.piezo.admin.views.html.editTrigger(
@@ -182,18 +183,18 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
       NotFound(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, None, errorMsg)(request))
     } else {
       val triggerDetail: Trigger = scheduler.getTrigger(triggerKey)
-      val (triggerMonitoringPriority, triggerMaxErrorTime) = Try {
+      val (triggerMonitoringPriority, triggerMaxErrorTime, triggerMonitoringTeam) = Try {
         triggerMonitoringPriorityModel.getTriggerMonitoringRecord(
           triggerDetail.getKey,
         ).map { triggerMonitoringRecord =>
-          (triggerMonitoringRecord.priority, triggerMonitoringRecord.maxSecondsInError)
-        }.getOrElse((TriggerMonitoringPriority.Low, 300))
+          (triggerMonitoringRecord.priority, triggerMonitoringRecord.maxSecondsInError, triggerMonitoringRecord.monitoringTeam)
+        }.getOrElse((TriggerMonitoringPriority.Low, 300, None))
       }.getOrElse {
         logger.error("Failed to get trigger monitoring info")
-        (TriggerMonitoringPriority.Low, 300)
+        (TriggerMonitoringPriority.Low, 300, None)
       }
       val editTriggerForm = triggerFormHelper.buildTriggerForm.fill(
-        (triggerDetail, triggerMonitoringPriority, triggerMaxErrorTime)
+        (triggerDetail, triggerMonitoringPriority, triggerMaxErrorTime, triggerMonitoringTeam)
       )
       if (isTemplate) {
         Ok(
@@ -237,12 +238,13 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
           )
         ),
       value => {
-        val (trigger, triggerMonitoringPriority, triggerMaxErrorTime) = value
+        val (trigger, triggerMonitoringPriority, triggerMaxErrorTime, triggerMonitoringTeam) = value
         scheduler.rescheduleJob(trigger.getKey(), trigger)
         triggerMonitoringPriorityModel.setTriggerMonitoringRecord(
           trigger.getKey,
           triggerMonitoringPriority,
-          triggerMaxErrorTime
+          triggerMaxErrorTime,
+          triggerMonitoringTeam
         )
         Redirect(routes.Triggers.getTrigger(trigger.getKey.getGroup(), trigger.getKey.getName()))
           .flashing("message" -> "Successfully added trigger.", "class" -> "")
@@ -263,20 +265,21 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
           )
         ),
       value => {
-        val (trigger, triggerMonitoringPriority, triggerMaxErrorTime) = value
+        val (trigger, triggerMonitoringPriority, triggerMaxErrorTime, triggerMonitoringTeam) = value
         try {
           scheduler.scheduleJob(trigger)
           triggerMonitoringPriorityModel.setTriggerMonitoringRecord(
             trigger.getKey,
             triggerMonitoringPriority,
-            triggerMaxErrorTime
+            triggerMaxErrorTime,
+            triggerMonitoringTeam
           )
           Redirect(routes.Triggers.getTrigger(trigger.getKey.getGroup(), trigger.getKey.getName()))
             .flashing("message" -> "Successfully added trigger.", "class" -> "")
         } catch {
           case alreadyExists: ObjectAlreadyExistsException =>
             val form = triggerFormHelper.buildTriggerForm.fill(
-              (trigger, triggerMonitoringPriority, triggerMaxErrorTime)
+              (trigger, triggerMonitoringPriority, triggerMaxErrorTime, triggerMonitoringTeam)
             )
             Ok(
               com.lucidchart.piezo.admin.views.html.editTrigger(
