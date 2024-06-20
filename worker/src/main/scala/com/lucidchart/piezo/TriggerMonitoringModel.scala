@@ -28,6 +28,7 @@ case class TriggerMonitoringRecord (
   triggerGroup: String,
   priority: TriggerMonitoringPriority,
   maxSecondsInError: Int,
+  monitoringTeam: Option[String],
   created: Date,
   modified: Date
 )
@@ -39,23 +40,29 @@ class TriggerMonitoringModel(props: Properties) {
   def setTriggerMonitoringRecord(
     triggerKey: TriggerKey,
     triggerMonitoringPriority: TriggerMonitoringPriority,
-    maxSecondsInError: Int
+    maxSecondsInError: Int,
+    monitoringTeam: Option[String]
   ): Int = {
     val connection = connectionProvider.getConnection
     try {
       val prepared = connection.prepareStatement("""
         INSERT INTO trigger_monitoring_priority
-          (trigger_name, trigger_group, priority, max_error_time)
+          (trigger_name, trigger_group, priority, max_error_time, monitoring_team)
         VALUES
-          (?, ?, ?, ?)
+          (?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE
           priority = values(priority),
-          max_error_time = values(max_error_time)
+          max_error_time = values(max_error_time),
+          monitoring_team = values(monitoring_team)
       """)
       prepared.setString(1, triggerKey.getName)
       prepared.setString(2, triggerKey.getGroup)
       prepared.setInt(3, triggerMonitoringPriority.id)
       prepared.setInt(4, maxSecondsInError)
+      monitoringTeam match {
+        case Some(team) => prepared.setString(5, team)
+        case None => prepared.setNull(5, java.sql.Types.VARCHAR)
+      }
       prepared.executeUpdate()
     } catch {
       case e: Exception => logger.error(
@@ -117,6 +124,7 @@ class TriggerMonitoringModel(props: Properties) {
             rs.getString("trigger_group"),
             priority,
             rs.getInt("max_error_time"),
+            Option(rs.getString("monitoring_team")),
             rs.getDate("created"),
             rs.getDate("modified")
           )

@@ -234,16 +234,17 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: Cont
             logger.error(errorMessage)
             ImportFailure(Some(jobDetail.getKey), "Trigger Import Error:"+errorMessage)
           } else {
-            val triggers = triggersBinding.map(_.value).flatten
-              triggers.map { case (trigger, monitoringPriority, errorTime) =>
-                scheduler.scheduleJob(trigger)
-                triggerMonitoringPriorityModel.setTriggerMonitoringRecord(
-                  trigger.getKey,
-                  monitoringPriority,
-                  errorTime
-                )
-              }
-              ImportSuccess(Some(jobDetail.getKey))
+            val triggers = triggersBinding.flatMap(_.value)
+            triggers.foreach { case (trigger, monitoringPriority, errorTime, monitoringTeam) =>
+              scheduler.scheduleJob(trigger)
+              triggerMonitoringPriorityModel.setTriggerMonitoringRecord(
+                trigger.getKey,
+                monitoringPriority,
+                errorTime,
+                monitoringTeam,
+              )
+            }
+            ImportSuccess(Some(jobDetail.getKey))
           }
         } catch {
           case _: ObjectAlreadyExistsException =>

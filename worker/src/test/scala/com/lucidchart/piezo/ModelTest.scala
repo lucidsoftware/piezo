@@ -50,7 +50,7 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
     }
 
     override def beforeAll(): Unit = {
-        val piezoSchema = for (num <- 0 to 7) yield getPatchFile(s"piezo_mysql_$num.sql")
+        val piezoSchema = for (num <- 0 to 8) yield getPatchFile(s"piezo_mysql_$num.sql")
         val quartzSchema = getPatchFile("quartz_mysql_0.sql")
         val schema = (quartzSchema +: piezoSchema).map { path =>
             Files.readAllLines(path).asScala.mkString("\n")
@@ -81,7 +81,7 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
             val triggerMonitoringPriorityModel = new TriggerMonitoringModel(properties)
             val triggerKey = new TriggerKey("blahj", "blahg")
             triggerMonitoringPriorityModel.getTriggerMonitoringRecord(triggerKey) must beNone
-            triggerMonitoringPriorityModel.setTriggerMonitoringRecord(triggerKey, TriggerMonitoringPriority.Low, 1800)
+            triggerMonitoringPriorityModel.setTriggerMonitoringRecord(triggerKey, TriggerMonitoringPriority.Low, 1800, Some("my-team"))
             triggerMonitoringPriorityModel.getTriggerMonitoringRecord(triggerKey) must beSome
             triggerMonitoringPriorityModel.deleteTriggerMonitoringRecord(triggerKey) mustEqual 1
             triggerMonitoringPriorityModel.getTriggerMonitoringRecord(triggerKey) must beNone
