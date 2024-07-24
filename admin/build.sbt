@@ -14,6 +14,7 @@ libraryDependencies ++= Seq(
   "org.ow2.asm" % "asm" % "8.0.1",
   "ch.qos.logback" % "logback-classic" % "1.2.3",
   "org.quartz-scheduler" % "quartz" % "2.3.2",
+  "org.quartz-scheduler" % "quartz-jobs" % "2.3.2",
   "com.softwaremill.macwire" %% "macros" % "2.3.3" % "provided",
    specs2 % Test
 )
