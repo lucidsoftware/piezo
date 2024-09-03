@@ -17,6 +17,10 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
     val properties = new Properties
     properties.load(propertiesStream)
 
+    val propertiesStreamFailoverEveryConnection = getClass().getResourceAsStream("/quartz_test_mysql_failover_every_connection.properties")
+    val propertiesWithFailoverEveryConnection = new Properties
+    propertiesWithFailoverEveryConnection.load(propertiesStreamFailoverEveryConnection)
+
     val username = properties.getProperty("org.quartz.dataSource.test_jobs.user")
     val password = properties.getProperty("org.quartz.dataSource.test_jobs.password")
     val dbUrl = properties.getProperty("org.quartz.dataSource.test_jobs.URL")
@@ -65,6 +69,7 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
 
     "JobHistoryModel" should {
         "work correctly" in {
+          properties.getProperty("org.quartz.dataSource.test_jobs.causeFailoverEveryConnection") must beNull
           val jobHistoryModel = new JobHistoryModel(properties)
           val jobKey = new JobKey("blah", "blah")
           val triggerKey = new TriggerKey("blahtn", "blahtg")
@@ -73,6 +78,17 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
           jobHistoryModel.getJob(jobKey).headOption must beSome
           jobHistoryModel.getLastJobSuccessByTrigger(triggerKey) must beSome
           jobHistoryModel.getJobs().nonEmpty must beTrue
+        }
+
+        "work correctly with a failover for every connection to the database" in {
+          propertiesWithFailoverEveryConnection.getProperty("org.quartz.dataSource.test_jobs.causeFailoverEveryConnection") mustEqual("true")
+          val jobHistoryModel = new JobHistoryModel(propertiesWithFailoverEveryConnection)
+          val jobKey = new JobKey("blahc", "blahc")
+          val triggerKey = new TriggerKey("blahtnc", "blahtgc")
+          jobHistoryModel.getJob(jobKey).headOption must beNone
+          jobHistoryModel.addJob("abc", jobKey, triggerKey, new Date(), 1000, true)
+          jobHistoryModel.getJob(jobKey).headOption must beSome
+          jobHistoryModel.getLastJobSuccessByTrigger(triggerKey) must beSome
         }
     }
 
