@@ -9,6 +9,7 @@ lib_managed/
 src_managed/
 project/boot/
 project/plugins/project/
+project/project/
 
 # Scala-IDE specific
 .scala_dependencies
@@ -16,3 +17,5 @@ project/plugins/project/
 .idea_modules
 .bsp
 .metals
+.bloop/
+project/metals.sbt
