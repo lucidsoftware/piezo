@@ -21,7 +21,7 @@ class ConnectionProvider(props: Properties) {
   val logger = LoggerFactory.getLogger(this.getClass)
   private val dataSource = props.getProperty("org.quartz.jobStore.dataSource")
   private val jdbcURL = if (dataSource != null) props.getProperty("org.quartz.dataSource." + dataSource + ".URL") else null
-  private val detectIpAddressFailover = if (dataSource != null) props.getProperty("org.quartz.dataSource." + dataSource + ".ipFailover") == "true" else false
+  private val detectIpAddressFailover = props.getProperty("supportIPFailover") == "true"
   // Removes "jdbc:mysql://" prefix and ":{port}..." suffix
   private val dataSourceHostname = if (jdbcURL != null) jdbcURL.replace("jdbc:mysql://", "").split(":")(0) else null
 
@@ -37,7 +37,7 @@ class ConnectionProvider(props: Properties) {
   private val pool: Pool = new Pool(getIP)
 
   // Intended to be used only for tests. This mocks an IP failover every time a connection is retreived
-  private val causeFailoverEveryConnection = if (dataSource != null) props.getProperty("org.quartz.dataSource." + dataSource + ".causeFailoverEveryConnection") == "true" else false
+  private val causeFailoverEveryConnection = props.getProperty("causeFailoverEveryConnection") == "true"
 
   def createNewConnectionProvider(): Option[HikariCpPoolingConnectionProvider] = {
     if(dataSource != null) {
