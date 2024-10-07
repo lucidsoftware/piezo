@@ -69,7 +69,7 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
 
     "JobHistoryModel" should {
         "work correctly" in {
-          properties.getProperty("org.quartz.dataSource.test_jobs.causeFailoverEveryConnection") must beNull
+          properties.getProperty("causeFailoverEveryConnection") must beNull
           val jobHistoryModel = new JobHistoryModel(properties)
           val jobKey = new JobKey("blah", "blah")
           val triggerKey = new TriggerKey("blahtn", "blahtg")
@@ -81,7 +81,7 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
         }
 
         "work correctly with a failover for every connection to the database" in {
-          propertiesWithFailoverEveryConnection.getProperty("org.quartz.dataSource.test_jobs.causeFailoverEveryConnection") mustEqual("true")
+          propertiesWithFailoverEveryConnection.getProperty("causeFailoverEveryConnection") mustEqual("true")
           val jobHistoryModel = new JobHistoryModel(propertiesWithFailoverEveryConnection)
           val jobKey = new JobKey("blahc", "blahc")
           val triggerKey = new TriggerKey("blahtnc", "blahtgc")
