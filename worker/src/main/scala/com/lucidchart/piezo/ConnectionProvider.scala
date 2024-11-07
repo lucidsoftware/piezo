@@ -34,7 +34,8 @@ class ConnectionProvider(props: Properties) {
   @volatile
   private var cachedIpWithExpiration: Option[CachedIpWithExpiration] = None
 
-  private val pool: Pool = new Pool(getIP)
+  @volatile
+  private var pool: Pool = new Pool(getIP)
 
   // Intended to be used only for tests. This mocks an IP failover every time a connection is retreived
   private val causeFailoverEveryConnection = props.getProperty("causeFailoverEveryConnection") == "true"
@@ -111,7 +112,28 @@ class ConnectionProvider(props: Properties) {
       val newIP: String = getIP
       if (hasIpAddressChanged(pool, newIP)) {
         // A failover has occurred, so we evict connections softly. New connectons look up the new IP address
-        pool.connectionProvider.map(_.getDataSource().getHikariPoolMXBean().softEvictConnections())
+        logger.info(s"IP Address has changed for ${jdbcURL}: ${pool.ip} -> ${newIP}. Attempt replacing pool...")
+        val optionalOldPool = synchronized {
+          val oldPool = pool
+          // check if another thread updated the pool
+          if (hasIpAddressChanged(pool, newIP)) {
+            logger.info(s"Replacing pool for ${jdbcURL}...")
+            pool = new Pool(newIP)
+            Some(oldPool)
+          } else {
+            // already up to date
+            logger.info(s"Pool already replaced for ${jdbcURL}")
+            None
+          }
+        }
+
+        // Clean up old pool so we don't leak connections to the old server
+        optionalOldPool.foreach { oldPool =>
+          oldPool.connectionProvider.foreach { provider =>
+            logger.info(s"Closing DB connection pool for ${jdbcURL} for failover (${oldPool.ip} -> ${pool.ip})")
+            provider.shutdown()
+          }
+        }
       }
     }
     pool.connectionProvider.get.getConnection
