@@ -2,6 +2,7 @@ package com.lucidchart.piezo.admin.controllers
 
 import com.lucidchart.piezo.TriggerMonitoringPriority
 import com.lucidchart.piezo.TriggerMonitoringPriority.TriggerMonitoringPriority
+import com.lucidchart.piezo.admin.models.MonitoringTeams
 import com.lucidchart.piezo.admin.utils.CronHelper
 import java.text.ParseException
 import org.quartz._
@@ -11,7 +12,8 @@ import play.api.data.format.Formats.parsing
 import play.api.data.format.Formatter
 import play.api.data.validation.{Constraint, Constraints, Invalid, Valid, ValidationError}
 
-class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
+case class TriggerFormValue(trigger: Trigger, priority: TriggerMonitoringPriority, maxErrorTime: Int, monitoringTeam: Option[String])
+class TriggerFormHelper(scheduler: Scheduler, monitoringTeams: MonitoringTeams) extends JobDataHelper {
 
   private def simpleScheduleFormApply(repeatCount: Int, repeatInterval: Int): SimpleScheduleBuilder = {
     SimpleScheduleBuilder
@@ -47,7 +49,7 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
     triggerMonitoringPriority: String,
     triggerMaxErrorTime: Int,
     triggerMonitoringTeam: Option[String],
-  ): (Trigger, TriggerMonitoringPriority, Int, Option[String]) = {
+  ): TriggerFormValue = {
     val newTrigger: Trigger = TriggerBuilder
       .newTrigger()
       .withIdentity(name, group)
@@ -59,7 +61,7 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
       .forJob(jobName, jobGroup)
       .usingJobData(jobDataMap.getOrElse(new JobDataMap()))
       .build()
-    (
+    TriggerFormValue(
       newTrigger,
       TriggerMonitoringPriority.withName(triggerMonitoringPriority),
       triggerMaxErrorTime,
@@ -67,7 +69,7 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
     )
   }
 
-  private def triggerFormUnapply(tp: (Trigger, TriggerMonitoringPriority, Int, Option[String])): Option[
+  private def triggerFormUnapply(value: TriggerFormValue): Option[
     (
       String,
       String,
@@ -83,7 +85,7 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
       Option[String],
     ),
   ] = {
-    val trigger = tp._1
+    val trigger = value.trigger
     val (triggerType: String, simple, cron) = trigger match {
       case cron: CronTrigger     => ("cron", None, Some(cron.getScheduleBuilder))
       case simple: SimpleTrigger => ("simple", Some(simple.getScheduleBuilder), None)
@@ -100,9 +102,9 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
         simple.asInstanceOf[Option[SimpleScheduleBuilder]],
         cron.asInstanceOf[Option[CronScheduleBuilder]],
         Some(trigger.getJobDataMap),
-        tp._2.toString,
-        tp._3,
-        tp._4,
+        value.priority.toString,
+        value.maxErrorTime,
+        value.monitoringTeam,
       ),
     )
   }
@@ -132,7 +134,7 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
     }
   }
 
-  def buildTriggerForm: Form[(Trigger, TriggerMonitoringPriority, Int, Option[String])] = Form(
+  def buildTriggerForm: Form[TriggerFormValue] = Form(
     mapping(
       "triggerType" -> nonEmptyText(),
       "group" -> nonEmptyText(),
@@ -159,8 +161,14 @@ class TriggerFormHelper(scheduler: Scheduler) extends JobDataHelper {
       .verifying(
         "Job does not exist",
         fields => {
-          scheduler.checkExists(fields._1.getJobKey)
+          scheduler.checkExists(fields.trigger.getJobKey)
         },
+      )
+      .verifying(
+        "A valid team is required if monitoring is on",
+        fields => {
+          !monitoringTeams.teamsDefined || fields.priority == TriggerMonitoringPriority.Off || fields.monitoringTeam.exists(monitoringTeams.value.contains[String])
+        }
       ),
   )
 }

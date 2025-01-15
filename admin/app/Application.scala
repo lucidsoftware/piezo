@@ -27,6 +27,7 @@ class PiezoAdminComponents(context: Context) extends BuiltInComponentsFromContex
 
   lazy val schedulerFactory: WorkerSchedulerFactory = new WorkerSchedulerFactory()
   lazy val jobFormHelper: JobFormHelper = wire[JobFormHelper]
+  lazy val monitoringTeams: MonitoringTeams = MonitoringTeams(configuration)
 
   lazy val triggers: Triggers = wire[Triggers]
   lazy val jobs: Jobs = wire[Jobs]

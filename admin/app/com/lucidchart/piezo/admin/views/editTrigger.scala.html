@@ -1,15 +1,16 @@
 @(
 triggersByGroup: scala.collection.mutable.Buffer[(String, scala.collection.immutable.List[org.quartz.TriggerKey])],
-triggerForm: Form[(org.quartz.Trigger, com.lucidchart.piezo.TriggerMonitoringPriority.Value, Int, Option[String])],
+monitoringTeams: Seq[String],
+triggerForm: Form[com.lucidchart.piezo.admin.controllers.TriggerFormValue],
 formAction: play.api.mvc.Call,
 existing: Boolean,
 isTemplate: Boolean,
 errorMessage: Option[String] = None,
-scripts: List[String] = List[String]("js/jobData.js", "js/typeAhead.js")
+scripts: List[String] = List[String]("js/jobData.js", "js/typeAhead.js", "js/triggerMonitoring.js")
 )(
 implicit
 request: play.api.mvc.Request[AnyContent],
-messagesProvider: play.api.i18n.MessagesProvider
+messagesProvider: play.api.i18n.MessagesProvider,
 )
 
 @import com.lucidchart.piezo.TriggerMonitoringPriority
@@ -67,12 +68,18 @@ messagesProvider: play.api.i18n.MessagesProvider
     }
     }
     @helper.select(triggerForm("triggerMonitoringPriority"), TriggerMonitoringPriority.values.map(tp => tp.name -> tp.name), Symbol("_label") -> "Monitoring Priority", Symbol("labelClass") -> "col-sm-2 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("class") -> "form-control", Symbol("value") -> triggerForm.data.get("triggerMonitoringPriority").getOrElse(TriggerMonitoringPriority.Low), Symbol("placeholder") -> TriggerMonitoringPriority.Low)
-    @helper.input(triggerForm("triggerMaxErrorTime"), Symbol("_label") -> "Monitoring - Max Seconds Between Successes", Symbol("labelClass") -> "col-sm-2 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "", Symbol("value") -> triggerForm.data.get("triggerMaxErrorTime").getOrElse(300)) { (id, name, value, args) =>
-      <input type="number" class="form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
-    }
-    @helper.input(triggerForm("triggerMonitoringTeam"), Symbol("_label") -> "Monitoring team", Symbol("labelClass") -> "col-sm-2 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "", Symbol("value") -> triggerForm.data.get("triggerMonitoringTeam").getOrElse(None)) { (id, name, value, args) =>
-      <input type="text" class="form-control form-inline-control" name="@name" id="@id" @toHtmlArgs(args)>
-    }
+    <div id="triggerMonitoringDetails">
+        @helper.input(triggerForm("triggerMaxErrorTime"), Symbol("_label") -> "Monitoring - Max Seconds Between Successes", Symbol("labelClass") -> "col-sm-2 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "", Symbol("value") -> triggerForm.data.get("triggerMaxErrorTime").getOrElse(300)) { (id, name, value, args) =>
+        <input type="number" class="form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
+        }
+        @if(monitoringTeams.nonEmpty) {
+            @helper.select(triggerForm("triggerMonitoringTeam"), monitoringTeams.map(mt => mt -> mt), Symbol("_default") -> "Select team", Symbol("_label") -> "Monitoring team", Symbol("labelClass") -> "col-sm-2 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("class") -> "form-control", Symbol("value") -> triggerForm.data.get("triggerMonitoringTeam").getOrElse(""))
+        } else {
+            @helper.input(triggerForm("triggerMonitoringTeam"), Symbol("_label") -> "Monitoring team", Symbol("labelClass") -> "col-sm-2 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "", Symbol("value") -> triggerForm.data.get("triggerMonitoringTeam").getOrElse(None)) { (id, name, value, args) =>
+                <input type="text" class="form-control form-inline-control" name="@name" id="@id" @toHtmlArgs(args)>
+            }
+        }
+    </div>
 
     @helper.input(triggerForm("description"), Symbol("_label") -> "Description", Symbol("labelClass") -> "col-sm-2 text-right", Symbol("inputDivClass") -> "col-sm-10", Symbol("placeholder") -> "Description", Symbol("value")-> triggerForm.data.get("description").getOrElse("")) { (id, name, value, args) =>
       <input type="text" class="form-control form-inline-control " name="@name" id="@id" @toHtmlArgs(args)>
