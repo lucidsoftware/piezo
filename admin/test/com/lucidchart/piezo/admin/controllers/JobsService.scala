@@ -1,7 +1,6 @@
 package com.lucidchart.piezo.admin.controllers
 
 import org.specs2.mutable._
-
 import play.api.test._
 import play.api.test.Helpers._
 import com.lucidchart.piezo.jobs.monitoring.HeartBeat
@@ -14,8 +13,8 @@ import com.lucidchart.piezo.util.DummyClassGenerator
 import play.api.mvc.{Result, AnyContentAsEmpty}
 import java.util.Properties
 import play.api.Configuration
-
 import scala.concurrent.Future
+import com.lucidchart.piezo.admin.models.MonitoringTeams
 
 /**
   * Add your spec here.
@@ -39,7 +38,7 @@ class JobsService extends Specification {
        properties.load(propertiesStream)
        schedulerFactory.initialize(properties)
 
-       val jobsController = new Jobs(schedulerFactory, jobView, Helpers.stubControllerComponents())
+       val jobsController = new Jobs(schedulerFactory, jobView, Helpers.stubControllerComponents(), MonitoringTeams.empty)
        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/jobs/missinggroup/missingname")
        val missingJob: Future[Result] = jobsController.getJob("missinggroup", "missingname")(request)
 
@@ -57,8 +56,7 @@ class JobsService extends Specification {
        val scheduler = schedulerFactory.getScheduler()
        createJob(scheduler)
 
-
-       val jobsController = new Jobs(schedulerFactory, jobView, Helpers.stubControllerComponents())
+       val jobsController = new Jobs(schedulerFactory, jobView, Helpers.stubControllerComponents(), MonitoringTeams.empty)
        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/jobs/" + jobGroup + "/" + jobName)
        val validJob: Future[Result] = jobsController.getJob(jobGroup, jobName)(request)
 

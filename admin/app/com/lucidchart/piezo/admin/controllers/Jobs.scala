@@ -14,6 +14,7 @@ import scala.jdk.CollectionConverters._
 import scala.collection.mutable
 import scala.Some
 import scala.io.Source
+import com.lucidchart.piezo.admin.models.MonitoringTeams
 
 trait ImportResult {
   val jobKey: Option[JobKey]
@@ -35,14 +36,14 @@ trait ImportResult {
 case class ImportSuccess(val jobKey: Option[JobKey], val errorMessage: String = "", val success: Boolean=true) extends ImportResult
 case class ImportFailure(val jobKey: Option[JobKey], val errorMessage: String, val success: Boolean=false) extends ImportResult
 
-class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: ControllerComponents) extends AbstractController(cc) with Logging with ErrorLogging with play.api.i18n.I18nSupport {
+class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: ControllerComponents, monitoringTeams: MonitoringTeams) extends AbstractController(cc) with Logging with ErrorLogging with play.api.i18n.I18nSupport {
   val scheduler = logExceptions(schedulerFactory.getScheduler())
   val properties = schedulerFactory.props
   val jobHistoryModel = logExceptions(new JobHistoryModel(properties))
   val triggerMonitoringPriorityModel = logExceptions(new TriggerMonitoringModel(properties))
 
   val jobFormHelper = new JobFormHelper()
-  val triggerFormHelper = new TriggerFormHelper(scheduler)
+  val triggerFormHelper = new TriggerFormHelper(scheduler, monitoringTeams)
 
   // Allow up to 1M
   private val maxFormSize = 1024 * 1024
@@ -235,7 +236,7 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: Cont
             ImportFailure(Some(jobDetail.getKey), "Trigger Import Error:"+errorMessage)
           } else {
             val triggers = triggersBinding.flatMap(_.value)
-            triggers.foreach { case (trigger, monitoringPriority, errorTime, monitoringTeam) =>
+            triggers.foreach { case TriggerFormValue(trigger, monitoringPriority, errorTime, monitoringTeam) =>
               scheduler.scheduleJob(trigger)
               triggerMonitoringPriorityModel.setTriggerMonitoringRecord(
                 trigger.getKey,
