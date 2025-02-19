@@ -1,12 +1,12 @@
 package com.lucidchart.piezo.admin.controllers
 
-import org.specs2.mutable._
+import org.specs2.mutable.*
 
-import play.api.test._
-import play.api.test.Helpers._
+import play.api.test.*
+import play.api.test.Helpers.*
 import com.lucidchart.piezo.jobs.monitoring.HeartBeat
 import com.lucidchart.piezo.WorkerSchedulerFactory
-import TestUtil._
+import TestUtil.*
 import ch.qos.logback.classic.{Level, Logger}
 import org.slf4j.LoggerFactory
 import org.quartz.Job

@@ -1,7 +1,7 @@
 package com.lucidchart.piezo.admin.controllers
 
-import play.api._
-import play.api.mvc._
+import play.api.*
+import play.api.mvc.*
 
 class ApplicationController(cc: ControllerComponents) extends AbstractController(cc) {
 

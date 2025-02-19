@@ -2,11 +2,11 @@ package com.lucidchart.piezo
 
 import java.io.{BufferedReader, FileReader, File}
 
-import org.specs2.mutable._
-import org.quartz._
-import org.quartz.JobBuilder._
-import org.quartz.TriggerBuilder._
-import org.quartz.SimpleScheduleBuilder._
+import org.specs2.mutable.*
+import org.quartz.*
+import org.quartz.JobBuilder.*
+import org.quartz.TriggerBuilder.*
+import org.quartz.SimpleScheduleBuilder.*
 import org.quartz.impl.StdSchedulerFactory
 import java.util.Properties
 

@@ -25,6 +25,7 @@ inThisBuild(
     homepage := Some(url("https://github.com/lucidsoftware/piezo")),
     organization := "com.lucidchart",
     scalaVersion := "2.13.16",
+    scalacOptions += "-Xsource:3",
     scmInfo := Some(
       ScmInfo(url("https://github.com/lucidsoftware/piezo"), "scm:git:git@github.com:lucidsoftware/piezo.git"),
     ),

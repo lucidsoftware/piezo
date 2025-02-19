@@ -1,7 +1,7 @@
 package com.lucidchart.piezo.admin.util
 
-import org.specs2.mutable._
-import scala.collection.JavaConverters._
+import org.specs2.mutable.*
+import scala.collection.JavaConverters.*
 import java.io.{PrintWriter, StringWriter}
 import scala.util.Random
 import org.slf4j.LoggerFactory

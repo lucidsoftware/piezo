@@ -5,14 +5,19 @@ import com.lucidchart.piezo.TriggerMonitoringPriority.TriggerMonitoringPriority
 import com.lucidchart.piezo.admin.models.MonitoringTeams
 import com.lucidchart.piezo.admin.utils.CronHelper
 import java.text.ParseException
-import org.quartz._
+import org.quartz.*
 import play.api.data.{Form, FormError}
-import play.api.data.Forms._
+import play.api.data.Forms.*
 import play.api.data.format.Formats.parsing
 import play.api.data.format.Formatter
 import play.api.data.validation.{Constraint, Constraints, Invalid, Valid, ValidationError}
 
-case class TriggerFormValue(trigger: Trigger, priority: TriggerMonitoringPriority, maxErrorTime: Int, monitoringTeam: Option[String])
+case class TriggerFormValue(
+  trigger: Trigger,
+  priority: TriggerMonitoringPriority,
+  maxErrorTime: Int,
+  monitoringTeam: Option[String],
+)
 class TriggerFormHelper(scheduler: Scheduler, monitoringTeams: MonitoringTeams) extends JobDataHelper {
 
   private def simpleScheduleFormApply(repeatCount: Int, repeatInterval: Int): SimpleScheduleBuilder = {
@@ -33,7 +38,7 @@ class TriggerFormHelper(scheduler: Scheduler, monitoringTeams: MonitoringTeams) 
 
   private def cronScheduleFormUnapply(cron: CronScheduleBuilder) = {
     val cronTrigger = cron.build().asInstanceOf[CronTrigger]
-    Some((cronTrigger.getCronExpression()))
+    Some(cronTrigger.getCronExpression())
   }
 
   private def triggerFormApply(
@@ -55,7 +60,7 @@ class TriggerFormHelper(scheduler: Scheduler, monitoringTeams: MonitoringTeams) 
       .withIdentity(name, group)
       .withDescription(description)
       .withSchedule(triggerType match {
-        case "cron"   => cron.get
+        case "cron" => cron.get
         case "simple" => simple.get
       })
       .forJob(jobName, jobGroup)
@@ -87,7 +92,7 @@ class TriggerFormHelper(scheduler: Scheduler, monitoringTeams: MonitoringTeams) 
   ] = {
     val trigger = value.trigger
     val (triggerType: String, simple, cron) = trigger match {
-      case cron: CronTrigger     => ("cron", None, Some(cron.getScheduleBuilder))
+      case cron: CronTrigger => ("cron", None, Some(cron.getScheduleBuilder))
       case simple: SimpleTrigger => ("simple", Some(simple.getScheduleBuilder), None)
     }
     val description = if (trigger.getDescription() == null) "" else trigger.getDescription()
@@ -167,14 +172,15 @@ class TriggerFormHelper(scheduler: Scheduler, monitoringTeams: MonitoringTeams) 
       .verifying(
         "A valid team is required if monitoring is on",
         fields => {
-          !monitoringTeams.teamsDefined || fields.priority == TriggerMonitoringPriority.Off || fields.monitoringTeam.exists(monitoringTeams.value.contains[String])
-        }
+          !monitoringTeams.teamsDefined || fields.priority == TriggerMonitoringPriority.Off || fields.monitoringTeam
+            .exists(monitoringTeams.value.contains[String])
+        },
       ),
   )
 }
 
 object MaxSecondsBetweenSuccessesFormatter extends Formatter[Int] {
-  override val format = Some(("format.triggerMaxErrorTime", Nil))
+  override val format: Option[(String, Seq[Nothing])] = Some(("format.triggerMaxErrorTime", Nil))
   override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], Int] = {
     for {
       maxSecondsBetweenSuccesses <- parsing(_.toInt, "Numeric value expected", Nil)(key, data)

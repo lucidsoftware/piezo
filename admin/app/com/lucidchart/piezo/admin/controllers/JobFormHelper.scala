@@ -1,9 +1,9 @@
 package com.lucidchart.piezo.admin.controllers
 
-import org.quartz._
+import org.quartz.*
 import play.api.Logger
 import play.api.data.Form
-import play.api.data.Forms._
+import play.api.data.Forms.*
 import com.lucidchart.piezo.GeneratorClassLoader
 
 class JobFormHelper extends JobDataHelper {

@@ -1,7 +1,7 @@
 package com.lucidchart.piezo
 
 import com.timgroup.statsd.NonBlockingStatsDClientBuilder
-import java.io._
+import java.io.*
 import java.util.Properties
 import java.util.concurrent.{Semaphore, TimeUnit}
 import org.joda.time.DateTime

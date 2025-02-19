@@ -2,10 +2,10 @@ package com.lucidchart.piezo.admin.controllers
 
 import org.joda.time.{DateTime,Minutes}
 import org.joda.time.format.ISODateTimeFormat
-import play.api._
-import play.api.libs.json._
+import play.api.*
+import play.api.libs.json.*
 import play.api.Logging
-import play.api.mvc._
+import play.api.mvc.*
 import scala.io.Source
 
 class HealthCheck(configuration: Configuration, cc: ControllerComponents) extends AbstractController(cc) with Logging {

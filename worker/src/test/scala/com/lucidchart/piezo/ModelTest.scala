@@ -3,11 +3,11 @@ package com.lucidchart.piezo
 import java.nio.file.Files
 import java.nio.file.Paths
 import org.quartz.{JobKey, TriggerKey}
-import org.specs2.mutable._
-import org.specs2.specification._
+import org.specs2.mutable.*
+import org.specs2.specification.*
 import java.sql.DriverManager
 import java.util.Properties
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 import scala.util.Using
 import java.util.Date
 

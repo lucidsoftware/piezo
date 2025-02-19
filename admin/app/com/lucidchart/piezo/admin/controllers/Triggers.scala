@@ -3,14 +3,14 @@ package com.lucidchart.piezo.admin.controllers
 import com.lucidchart.piezo.{TriggerHistoryModel, TriggerMonitoringModel, TriggerMonitoringPriority, WorkerSchedulerFactory}
 import java.util.Date
 import org.quartz.Trigger.TriggerState
-import org.quartz._
+import org.quartz.*
 import org.quartz.impl.triggers.{CronTriggerImpl, SimpleTriggerImpl}
-import play.api._
-import play.api.libs.json._
-import play.api.mvc._
-import com.lucidchart.piezo.admin.models._
+import play.api.*
+import play.api.libs.json.*
+import play.api.mvc.*
+import com.lucidchart.piezo.admin.models.*
 import scala.collection.mutable
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 import scala.util.Try
 import play.api.Logging
 import play.api.i18n.I18nSupport

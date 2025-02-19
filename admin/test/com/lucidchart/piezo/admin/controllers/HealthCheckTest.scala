@@ -1,14 +1,13 @@
 package com.lucidchart.piezo.admin.controllers
 
-import java.io.{FileWriter, File}
+import java.io.{File, FileWriter}
 import org.joda.time.DateTime
 import org.joda.time.format.ISODateTimeFormat
-import org.specs2.mutable._
+import org.specs2.mutable.*
 import org.specs2.specification.AfterEach
 import play.api.Configuration
-import play.api.test.Helpers._
-import play.api.test._
-
+import play.api.test.Helpers.*
+import play.api.test.*
 
 class HealthCheckTest extends Specification {
 
@@ -16,13 +15,13 @@ class HealthCheckTest extends Specification {
   val dtf = ISODateTimeFormat.dateTimeNoMillis().withZoneUTC()
 
   trait FileCleaner extends After {
-    def after = new File(filename).delete
+    def after: Unit = new File(filename).delete
   }
 
   private def testConfig(heartbeatFile: String) = Configuration("com.lucidchart.piezo.heartbeatFile" -> heartbeatFile)
 
   "HealthCheck" should {
-    "send 200 when the worker timestamp is recent" in new FileCleaner{
+    "send 200 when the worker timestamp is recent" in new FileCleaner {
       val file = new File(filename)
       val fileWrite = new FileWriter(file)
       val heartbeatTime = dtf.print(new DateTime(System.currentTimeMillis()))
@@ -33,7 +32,7 @@ class HealthCheckTest extends Specification {
       status(response) must equalTo(OK)
     }
 
-    "send 503 when the worker timestamp is too far in the past" in new FileCleaner{
+    "send 503 when the worker timestamp is too far in the past" in new FileCleaner {
       val file = new File(filename)
       val fileWrite = new FileWriter(file)
       val heartbeatTime = dtf.print(new DateTime(System.currentTimeMillis()).minusMinutes(10))
@@ -45,4 +44,3 @@ class HealthCheckTest extends Specification {
     }
   }
 }
-

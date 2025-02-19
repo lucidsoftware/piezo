@@ -3,7 +3,7 @@ package com.lucidchart.piezo.jobs.exec
 import java.util.Scanner
 import org.quartz.{Job, JobExecutionContext}
 import org.slf4j.LoggerFactory
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 /**
   * When creating job's data map, choose keys in alphabetical order

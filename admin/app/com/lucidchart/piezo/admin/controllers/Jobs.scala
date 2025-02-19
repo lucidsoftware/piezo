@@ -1,16 +1,16 @@
 package com.lucidchart.piezo.admin.controllers
 
 import com.lucidchart.piezo.admin.utils.JobUtils
-import com.lucidchart.piezo.admin.utils.JobDetailHelper._
-import com.lucidchart.piezo.admin.views._
+import com.lucidchart.piezo.admin.utils.JobDetailHelper.*
+import com.lucidchart.piezo.admin.views.*
 import com.lucidchart.piezo.{JobHistoryModel, TriggerHistoryModel, TriggerMonitoringModel, WorkerSchedulerFactory}
-import org.quartz._
+import org.quartz.*
 import org.quartz.impl.matchers.GroupMatcher
-import play.api._
-import play.api.libs.functional.syntax._
-import play.api.libs.json._
-import play.api.mvc._
-import scala.jdk.CollectionConverters._
+import play.api.*
+import play.api.libs.functional.syntax.*
+import play.api.libs.json.*
+import play.api.mvc.*
+import scala.jdk.CollectionConverters.*
 import scala.collection.mutable
 import scala.Some
 import scala.io.Source

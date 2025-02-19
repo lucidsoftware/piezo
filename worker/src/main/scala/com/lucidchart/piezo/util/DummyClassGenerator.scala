@@ -3,7 +3,7 @@ package com.lucidchart.piezo.util
 import javax.tools.{ JavaFileObject, DiagnosticCollector, ToolProvider}
 import org.quartz.{JobExecutionContext, Job}
 
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 import java.net.{URLClassLoader}
 import org.slf4j.LoggerFactory
 import java.io.File

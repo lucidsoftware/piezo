@@ -1,10 +1,10 @@
 package com.lucidchart.piezo.admin.controllers
 
-import org.specs2.mutable._
-import play.api.test._
-import play.api.test.Helpers._
+import org.specs2.mutable.*
+import play.api.test.*
+import play.api.test.Helpers.*
 import com.lucidchart.piezo.WorkerSchedulerFactory
-import TestUtil._
+import TestUtil.*
 import java.util.Properties
 import play.api.mvc.{AnyContentAsEmpty, Result}
 import scala.concurrent.Future
