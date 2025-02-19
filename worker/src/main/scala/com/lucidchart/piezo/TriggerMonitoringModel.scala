@@ -4,17 +4,18 @@ import com.lucidchart.piezo.TriggerMonitoringPriority.TriggerMonitoringPriority
 import java.util.{Date, Properties}
 import org.quartz.TriggerKey
 import org.slf4j.LoggerFactory
+import org.slf4j.Logger
 
 object TriggerMonitoringPriority {
   case class Value(id: Int, name: String) {
     override def toString: String = name
   }
   type TriggerMonitoringPriority = Value
-  val Off = Value(0, "Off")
-  val Low = Value(1, "Low")
-  val High = Value(3, "High")
+  val Off: Value = Value(0, "Off")
+  val Low: Value = Value(1, "Low")
+  val High: Value = Value(3, "High")
 
-  val values = List(Off, Low, High)
+  val values: List[Value] = List(Off, Low, High)
 
   // map values that formerly identified a Medium priority to Low
   val valuesById: Map[Int, Value] = Map(2 -> Low) ++ values.map(p => p.id -> p)
@@ -34,7 +35,7 @@ case class TriggerMonitoringRecord (
 )
 
 class TriggerMonitoringModel(props: Properties) {
-  val logger = LoggerFactory.getLogger(this.getClass)
+  val logger: Logger = LoggerFactory.getLogger(this.getClass)
   val connectionProvider = new ConnectionProvider(props)
 
   def setTriggerMonitoringRecord(

@@ -4,6 +4,7 @@ import java.sql.{ResultSet, Timestamp}
 import java.util.{Date, Properties}
 import org.quartz.{JobKey, TriggerKey}
 import org.slf4j.LoggerFactory
+import org.slf4j.Logger
 
 case class JobRecord(
   name: String,
@@ -17,7 +18,7 @@ case class JobRecord(
 )
 
 class JobHistoryModel(props: Properties) {
-  val logger = LoggerFactory.getLogger(this.getClass)
+  val logger: Logger = LoggerFactory.getLogger(this.getClass)
   val connectionProvider = new ConnectionProvider(props)
 
   def addJob(

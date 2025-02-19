@@ -7,9 +7,10 @@ import scala.jdk.CollectionConverters.*
 import java.net.{URLClassLoader}
 import org.slf4j.LoggerFactory
 import java.io.File
+import javax.tools.JavaCompiler
 
 object DummyClassGenerator {
-  var classLoader = Thread.currentThread().getContextClassLoader()
+  var classLoader: ClassLoader = Thread.currentThread().getContextClassLoader()
 }
 
 class DummyClassGenerator {
@@ -24,7 +25,7 @@ class DummyClassGenerator {
   }
   val urlClassLoader: URLClassLoader = new URLClassLoader(
     Array(tempOutputDir.toURI().toURL()), Thread.currentThread().getContextClassLoader())
-  val compiler = ToolProvider.getSystemJavaCompiler()
+  val compiler: JavaCompiler = ToolProvider.getSystemJavaCompiler()
   val diagnostics: DiagnosticCollector[JavaFileObject] = new DiagnosticCollector[JavaFileObject]()
 
   private def getClasspath() = {

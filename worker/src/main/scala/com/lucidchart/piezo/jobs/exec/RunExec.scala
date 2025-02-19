@@ -4,13 +4,14 @@ import java.util.Scanner
 import org.quartz.{Job, JobExecutionContext}
 import org.slf4j.LoggerFactory
 import scala.jdk.CollectionConverters.*
+import org.slf4j.Logger
 
 /**
   * When creating job's data map, choose keys in alphabetical order
   * for corresponding values to be executed in the correct order
   */
 class RunExec extends Job {
-  val logger = LoggerFactory.getLogger(this.getClass)
+  val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
   def execute(context: JobExecutionContext): Unit = {
     val jobDataMap = context.getJobDetail.getJobDataMap

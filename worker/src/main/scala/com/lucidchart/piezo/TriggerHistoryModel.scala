@@ -4,6 +4,7 @@ import java.sql.Timestamp
 import org.quartz.TriggerKey
 import org.slf4j.LoggerFactory
 import java.util.{Date, Properties}
+import org.slf4j.Logger
 
 case class TriggerRecord(
   name: String,
@@ -16,7 +17,7 @@ case class TriggerRecord(
 )
 
 class TriggerHistoryModel(props: Properties) {
-  val logger = LoggerFactory.getLogger(this.getClass)
+  val logger: Logger = LoggerFactory.getLogger(this.getClass)
   val connectionProvider = new ConnectionProvider(props)
 
   def addTrigger(triggerKey: TriggerKey, triggerFireTime: Option[Date], actualStart: Option[Date], misfire: Boolean, fireInstanceId: Option[String]): Unit = {

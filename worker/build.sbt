@@ -23,6 +23,8 @@ libraryDependencies ++= Seq(
 
 fork := true
 
+scalaVersion := "3.3.4"
+
 javaOptions ++= Seq(
   s"-Dpidfile.path=${File.createTempFile("piezoWorkerPid", null)}",
   s"-Dcom.lucidchart.piezo.heartbeatfile=${File.createTempFile("piezoHeartbeat", null)}",
@@ -32,7 +34,6 @@ javaOptions ++= Seq(
 scalacOptions ++= Seq(
   "-deprecation",
   "-feature",
-  "-Xlint",
 )
 
 Compile / unmanagedClasspath += sourceDirectory.value / "run" / "resources"
