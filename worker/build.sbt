@@ -19,7 +19,6 @@ libraryDependencies ++= Seq(
   "org.joda" % "joda-convert" % "3.0.1",
   "com.typesafe" % "config" % "1.4.3",
   "com.datadoghq" % "java-dogstatsd-client" % "4.4.3",
-  "org.scala-lang.modules" %% "scala-collection-compat" % "2.13.0",
 )
 
 fork := true
