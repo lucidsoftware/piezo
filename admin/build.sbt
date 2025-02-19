@@ -4,7 +4,7 @@ enablePlugins(SystemdPlugin)
 bashScriptExtraDefines ++= Seq(
   s"addJava -Dorg.quartz.properties=${defaultLinuxConfigLocation.value}/${(Linux / packageName).value}/quartz.properties",
   "addJava -Dpidfile.path=/run/piezo-admin/piezo-admin.pid",
-  s"addJava -Dhttp.port=${PlayKeys.playDefaultPort.value}"
+  s"addJava -Dhttp.port=${PlayKeys.playDefaultPort.value}",
 )
 
 javaOptions += s"-Dorg.quartz.properties=${(Compile / resourceDirectory).value / "quartz.properties"}"
@@ -16,19 +16,19 @@ libraryDependencies ++= Seq(
   "org.quartz-scheduler" % "quartz" % "2.5.0",
   "org.quartz-scheduler" % "quartz-jobs" % "2.5.0",
   "com.softwaremill.macwire" %% "macros" % "2.6.6" % "provided",
-   specs2 % Test
+  specs2 % Test,
 )
 
 Universal / doc / sources := Seq.empty
 Debian / doc / sources := Seq.empty
 
-Debian/version := {
-    val noDashVersion = (Compile/version).value.replace("-", "~")
-    if (noDashVersion.matches("^\\d.*")) {
-        noDashVersion
-    } else {
-        "0~" + noDashVersion
-    }
+Debian / version := {
+  val noDashVersion = (Compile / version).value.replace("-", "~")
+  if (noDashVersion.matches("^\\d.*")) {
+    noDashVersion
+  } else {
+    "0~" + noDashVersion
+  }
 }
 
 maintainer := "Lucid Software, Inc. <ops@lucidchart.com>"
@@ -39,6 +39,6 @@ packageDescription := "Piezo web admin"
 
 PlayKeys.playDefaultPort := 8001
 
-Debian/defaultLinuxStartScriptLocation  := "/lib/systemd/system"
+Debian / defaultLinuxStartScriptLocation := "/lib/systemd/system"
 
 publishTo := sonatypePublishToBundle.value

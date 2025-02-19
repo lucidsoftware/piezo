@@ -29,7 +29,7 @@ class JobFormHelper extends JobDataHelper {
     Some((job.getKey.getName(), job.getKey.getGroup(), job.getJobClass.toString.replace("class ", ""), description, job.isDurable(), job.requestsRecovery(), Some(job.getJobDataMap)))
   }
 
-  def buildJobForm = Form[JobDetail](
+  def buildJobForm: Form[JobDetail] = Form[JobDetail](
     mapping(
       "name" -> nonEmptyText(),
       "group" -> nonEmptyText(),

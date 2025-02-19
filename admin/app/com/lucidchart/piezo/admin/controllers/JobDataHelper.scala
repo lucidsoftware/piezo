@@ -34,7 +34,7 @@ trait JobDataHelper {
 
   implicit def jobDataMap: Mapping[Option[JobDataMap]] =
     optional(
-      list(mapping("key" -> text, "value" -> text)(DataMap.apply)(DataMap.unapply))
+      list(mapping("key" -> text, "value" -> text)(DataMap.apply)(r => Some((r.key, r.value))))
         .transform(mapToJobData, jobDataToMap),
     )
 

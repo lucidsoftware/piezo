@@ -12,7 +12,7 @@ class RequestStatCollector(ec: ExecutionContext) extends EssentialFilter with Lo
     result
   }
 
-  def apply(next: EssentialAction) = EssentialAction { (request: RequestHeader) =>
+  def apply(next: EssentialAction): EssentialAction = EssentialAction { (request: RequestHeader) =>
     val start = System.currentTimeMillis
     next(request).map { value =>
       recordStats(request, start)(value)

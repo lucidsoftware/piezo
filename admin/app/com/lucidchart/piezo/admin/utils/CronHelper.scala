@@ -52,7 +52,7 @@ object CronHelper extends Logging {
 
   private def getSubexpressions(parts: Array[String]): IndexedSeq[Subexpression] = {
     parts
-      .zip(List(Seconds, Minutes, Hours, Days))
+      .zip(List(Seconds.apply, Minutes.apply, Hours.apply, Days.apply))
       .map { case (str, cronType) => cronType(str) }
       .toIndexedSeq
   }
@@ -88,7 +88,7 @@ abstract class BoundSubexpression(
 ) extends Subexpression(str, getSimplifiedCron) {
 
   final override protected val startDate = new Date(BoundSubexpression.startInstant.toEpochMilli)
-  final protected val endDate = Date.from(
+  final protected val endDate: Date = Date.from(
     BoundSubexpression.startInstant.plus(numUnitsInContainer, temporalUnit),
   )
   final override lazy val maxInterval: Long = getMaxInterval(cron, startDate, endDate, 0)
@@ -123,7 +123,7 @@ abstract class BoundSubexpression(
   private def getLastTriggerTime(expr: CronExpression, prev: Date, end: Date): Long = {
     Option(expr.getTimeAfter(prev)) match { // stop iterating before going past the "end"
       case Some(curr) if !curr.after(end) => getLastTriggerTime(expr, curr, end)
-      case _                              => prev.getTime / 1000
+      case _ => prev.getTime / 1000
     }
   }
 }

@@ -8,11 +8,12 @@ import org.specs2.specification.AfterEach
 import play.api.Configuration
 import play.api.test.Helpers.*
 import play.api.test.*
+import org.joda.time.format.DateTimeFormatter
 
 class HealthCheckTest extends Specification {
 
   val filename = "HeartbeatTestFile"
-  val dtf = ISODateTimeFormat.dateTimeNoMillis().withZoneUTC()
+  val dtf: DateTimeFormatter = ISODateTimeFormat.dateTimeNoMillis().withZoneUTC()
 
   trait FileCleaner extends After {
     def after: Unit = new File(filename).delete

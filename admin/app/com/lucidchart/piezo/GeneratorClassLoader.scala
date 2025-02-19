@@ -4,6 +4,7 @@ import org.objectweb.asm.{ClassWriter, Opcodes, Type}
 import org.quartz.{Job, JobExecutionContext}
 import org.quartz.spi.ClassLoadHelper
 import org.slf4j.LoggerFactory
+import org.slf4j.Logger
 
 class DummyJob extends Job {
   def execute(context: JobExecutionContext): Unit = {
@@ -12,7 +13,7 @@ class DummyJob extends Job {
 }
 
 class GeneratorClassLoader extends ClassLoader(classOf[GeneratorClassLoader].getClassLoader) with ClassLoadHelper {
-  val logger = LoggerFactory.getLogger(this.getClass)
+  val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
   private[this] def generate(name: String) = {
     val classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS)
@@ -46,7 +47,7 @@ class GeneratorClassLoader extends ClassLoader(classOf[GeneratorClassLoader].get
 
   def getClassLoader: GeneratorClassLoader = this
 
-  def loadClass[T](name: String, clazz: Class[T]) = loadClass(name).asInstanceOf[Class[_ <: T]]
+  def loadClass[T](name: String, clazz: Class[T]): Class[_ <: T] = loadClass(name).asInstanceOf[Class[_ <: T]]
 
   def initialize() = ()
 

@@ -71,5 +71,5 @@ object TriggerHelper {
     ) ++ schedule
   }
 
-  def writesTriggerSeq(monitoringModel: TriggerMonitoringModel) = Writes.seq(writesTrigger(monitoringModel))
+  def writesTriggerSeq(monitoringModel: TriggerMonitoringModel): Writes[Seq[Trigger]] = Writes.seq(writesTrigger(monitoringModel))
 }

@@ -59,10 +59,10 @@ class TriggerFormHelper(scheduler: Scheduler, monitoringTeams: MonitoringTeams) 
       .newTrigger()
       .withIdentity(name, group)
       .withDescription(description)
-      .withSchedule(triggerType match {
+      .withSchedule((triggerType match {
         case "cron" => cron.get
         case "simple" => simple.get
-      })
+      }): ScheduleBuilder[?])
       .forJob(jobName, jobGroup)
       .usingJobData(jobDataMap.getOrElse(new JobDataMap()))
       .build()
@@ -206,5 +206,5 @@ object MaxSecondsBetweenSuccessesFormatter extends Formatter[Int] {
       )
     } yield maxSecondsBetweenSuccesses
   }
-  override def unbind(key: String, value: Int) = Map(key -> value.toString)
+  override def unbind(key: String, value: Int): Map[String, String] = Map(key -> value.toString)
 }
