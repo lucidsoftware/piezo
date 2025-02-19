@@ -1,6 +1,5 @@
 package com.lucidchart.piezo.admin
 
-import com.lucidchart.piezo.util.DummyClassGenerator
 import com.softwaremill.macwire.*
 import play.api.ApplicationLoader.Context
 import play.api.*
@@ -40,12 +39,7 @@ class PiezoAdminComponents(context: Context)
 
   lazy val jobView: views.html.job = wire[views.html.job]
 
-  override val httpFilters: Seq[EssentialFilter] = {
-    val ec = controllerComponents.executionContext
-    Seq(
-      wire[RequestStatCollector],
-    )
-  }
+  override val httpFilters: Seq[EssentialFilter] = Seq(new RequestStatCollector(controllerComponents.executionContext))
   val logger: Logger = Logger("com.lucidchart.piezo.Global")
 
   override lazy val httpErrorHandler: HttpErrorHandler =
@@ -84,7 +78,7 @@ class PiezoAdminComponents(context: Context)
 
   lazy val router: Router = {
     // add the prefix string in local scope for the Routes constructor
-    val prefix: String = "/"
+    // val prefix: String = "/"
     wire[Routes]
   }
 }

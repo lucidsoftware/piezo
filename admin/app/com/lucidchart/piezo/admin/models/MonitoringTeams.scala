@@ -1,10 +1,8 @@
 package com.lucidchart.piezo.admin.models
 
 import play.api.Configuration
-import java.nio.file.Files
 import play.api.libs.json.Json
 import scala.util.Try
-import java.io.File
 import java.io.FileInputStream
 import play.api.libs.json.JsArray
 import play.api.Logging

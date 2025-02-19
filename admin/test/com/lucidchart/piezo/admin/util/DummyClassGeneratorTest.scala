@@ -1,13 +1,12 @@
 package com.lucidchart.piezo.admin.util
 
 import org.specs2.mutable.*
-import scala.jdk.CollectionConverters.*
 import java.io.{PrintWriter, StringWriter}
 import scala.util.Random
 import org.slf4j.LoggerFactory
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
-import com.lucidchart.piezo.util.DummyClassGenerator
+//import com.lucidchart.piezo.util.DummyClassGenerator
 
 class DummyClassGeneratorTest extends Specification {
   val rootLogger: Logger = LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME).asInstanceOf[Logger]
@@ -29,7 +28,7 @@ class DummyClassGeneratorTest extends Specification {
 
   "generator" should {
     "create dummy class" in {
-      val dummyClassGenerator = new DummyClassGenerator()
+      // val dummyClassGenerator = new DummyClassGenerator()
       // TODO: figure out why it won't load
 //      val dummyClass: Option[Class[_]] = dummyClassGenerator.generate(className, writer.toString)
 //      val dummyMethod = dummyClass.get.getDeclaredMethod(methodName, classOf[java.lang.Integer])
