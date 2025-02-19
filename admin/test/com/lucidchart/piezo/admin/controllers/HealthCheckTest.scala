@@ -4,7 +4,6 @@ import java.io.{File, FileWriter}
 import org.joda.time.DateTime
 import org.joda.time.format.ISODateTimeFormat
 import org.specs2.mutable.*
-import org.specs2.specification.AfterEach
 import play.api.Configuration
 import play.api.test.Helpers.*
 import play.api.test.*

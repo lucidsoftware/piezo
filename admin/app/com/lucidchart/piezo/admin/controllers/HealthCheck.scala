@@ -19,7 +19,7 @@ class HealthCheck(configuration: Configuration, cc: ControllerComponents) extend
     5
   }
 
-  def main: Action[AnyContent] = cc.actionBuilder { implicit requests =>
+  def main: Action[AnyContent] = cc.actionBuilder { requests =>
     val workerHealth = areWorkersHealthy()
     val responseBody = Json.toJson(Map("HeartbeatTime" -> Json.toJson(workerHealth._2)))
     if (workerHealth._1) {

@@ -2,7 +2,6 @@ package com.lucidchart.piezo
 
 import java.net.UnknownHostException
 import java.sql.{Connection, SQLTransientConnectionException}
-import java.util.Properties
 import java.util.concurrent.TimeUnit
 import org.quartz.utils.HikariCpPoolingConnectionProvider
 import org.slf4j.LoggerFactory

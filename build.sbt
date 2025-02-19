@@ -28,6 +28,12 @@ inThisBuild(
     ),
     version := sys.props.getOrElse("build.version", "0-SNAPSHOT"),
     versionScheme := Some("early-semver"),
+    scalacOptions ++= Seq(
+      "-no-indent",
+      "-Wunused:linted",
+      "-Werror",
+      // "-Xlint",
+    ),
   ),
 )
 

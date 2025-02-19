@@ -4,11 +4,9 @@ import com.lucidchart.piezo.admin.utils.JobUtils
 import com.lucidchart.piezo.admin.utils.JobDetailHelper.*
 import com.lucidchart.piezo.admin.models.ModelComponents
 import com.lucidchart.piezo.admin.views.*
-import com.lucidchart.piezo.{JobHistoryModel, TriggerHistoryModel, TriggerMonitoringModel, WorkerSchedulerFactory}
 import org.quartz.*
 import org.quartz.impl.matchers.GroupMatcher
 import play.api.*
-import play.api.libs.functional.syntax.*
 import play.api.libs.json.*
 import play.api.mvc.*
 import scala.jdk.CollectionConverters.*
@@ -487,7 +485,7 @@ class Jobs(
       )
   }
 
-  def jobGroupTypeAhead(sofar: String): Action[AnyContent] = Action { implicit request =>
+  def jobGroupTypeAhead(sofar: String): Action[AnyContent] = Action { request =>
     val groups = scheduler.getJobGroupNames().asScala.toList
 
     Ok(Json.obj("groups" -> groups.filter { group =>
@@ -496,7 +494,7 @@ class Jobs(
   }
 
   def jobNameTypeAhead(group: String, sofar: String): Action[AnyContent] =
-    Action { implicit request =>
+    Action { request =>
       val jobs =
         scheduler.getJobKeys(GroupMatcher.jobGroupEquals(group)).asScala.toSet
 

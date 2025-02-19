@@ -12,9 +12,6 @@ request: play.api.mvc.Request[AnyContent],
 messagesProvider: play.api.i18n.MessagesProvider
 )
 
-@import com.lucidchart.piezo.admin.controllers.{routes=>piezoRoutes}
-@import com.lucidchart.piezo.admin.views
-@import org.quartz._
 @import com.lucidchart.piezo.admin.views.FormHelpers._
 
 @com.lucidchart.piezo.admin.views.html.jobsLayout(jobsByGroup, None, scripts) {
