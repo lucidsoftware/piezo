@@ -4,6 +4,7 @@ import org.quartz.JobDataMap
 import play.api.libs.json._
 import play.api.data.Form
 import play.api.data.Forms._
+import play.api.data.Mapping
 
 case class DataMap(key: String, value: String)
 
@@ -11,7 +12,7 @@ object DataMap {
   implicit val writes: Writes[DataMap] = Writes { dataMap =>
     Json.obj(
       "key" -> dataMap.key,
-      "value" -> dataMap.value
+      "value" -> dataMap.value,
     )
   }
 }
@@ -31,9 +32,10 @@ trait JobDataHelper {
     })
   }
 
-  implicit def jobDataMap = {
-    optional(list(mapping("key" -> text, "value" -> text)(DataMap.apply)(DataMap.unapply))
-      .transform(mapToJobData, jobDataToMap))
-  }
+  implicit def jobDataMap: Mapping[Option[JobDataMap]] =
+    optional(
+      list(mapping("key" -> text, "value" -> text)(DataMap.apply)(DataMap.unapply))
+        .transform(mapToJobData, jobDataToMap),
+    )
 
 }

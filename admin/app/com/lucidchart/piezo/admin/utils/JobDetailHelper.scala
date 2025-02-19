@@ -2,7 +2,7 @@ package com.lucidchart.piezo.admin.utils
 import play.api.libs.json._
 import org.quartz._
 import scala.collection.JavaConverters._
-import com.lucidchart.piezo.admin.controllers.{JobFormHelper, JobDataHelper, TriggerHelper}
+import com.lucidchart.piezo.admin.controllers.{JobDataHelper, JobFormHelper, TriggerHelper}
 import com.lucidchart.piezo.TriggerMonitoringModel
 
 object JobDetailHelper extends JobDataHelper {
@@ -10,7 +10,7 @@ object JobDetailHelper extends JobDataHelper {
 
   implicit def jobDetailWrites(
     triggers: Seq[Trigger],
-    triggerMonitoringModel: TriggerMonitoringModel
+    triggerMonitoringModel: TriggerMonitoringModel,
   ): Writes[JobDetail] = Writes[JobDetail] { jobDetail =>
     val jobDataMap = jobDetail.getJobDataMap
 
@@ -20,14 +20,17 @@ object JobDetailHelper extends JobDataHelper {
       "name" -> jobKey.getName,
       "description" -> jobDetail.getDescription,
       "class" -> jobDetail.getJobClass.getName,
-      "concurrent" -> jobDetail.isConcurrentExectionDisallowed,
+      "concurrent" -> jobDetail.isConcurrentExecutionDisallowed,
       "durable" -> jobDetail.isDurable,
       "requests-recovery" -> jobDetail.requestsRecovery,
       "job-data-map" -> Json.toJson(jobDataToMap(jobDataMap)),
-      "triggers" -> Json.toJson(triggers)(TriggerHelper.writesTriggerSeq(triggerMonitoringModel))
+      "triggers" -> Json.toJson(triggers)(TriggerHelper.writesTriggerSeq(triggerMonitoringModel)),
     )
   }
 
-  implicit def jobDetailSeqWrites(triggers: Seq[Trigger], triggerMonitoringModel: TriggerMonitoringModel) = Writes.seq(jobDetailWrites(triggers, triggerMonitoringModel))
+  implicit def jobDetailSeqWrites(
+    triggers: Seq[Trigger],
+    triggerMonitoringModel: TriggerMonitoringModel,
+  ): Writes[Seq[JobDetail]] =
+    Writes.seq(jobDetailWrites(triggers, triggerMonitoringModel))
 }
-
