@@ -1,13 +1,12 @@
-import com.lucidchart.sbtcross.{Axis, CrossableProject, DefaultAxis}
 import play.api.libs.json.Json
 
-lazy val admin = project.dependsOn(worker_2_13).settings(scalaVersion := "2.13.16")
+scalaVersion := "2.13.16"
+
+lazy val admin = project.dependsOn(worker)
 
 lazy val commonSettings = Seq(publishTo := sonatypePublishToBundle.value)
 
-lazy val worker = project.cross
-lazy val worker_2_12 = worker("2.12.20").settings(commonSettings)
-lazy val worker_2_13 = worker("2.13.16").settings(commonSettings)
+lazy val worker = project.settings(publishTo := sonatypePublishToBundle.value)
 
 PgpKeys.pgpPassphrase in Global := Some(Array.emptyCharArray)
 

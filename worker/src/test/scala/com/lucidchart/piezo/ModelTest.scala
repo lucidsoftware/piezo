@@ -5,10 +5,10 @@ import java.nio.file.Paths
 import org.quartz.{JobKey, TriggerKey}
 import org.specs2.mutable._
 import org.specs2.specification._
-import java.lang.AutoCloseable
 import java.sql.DriverManager
 import java.util.Properties
 import scala.jdk.CollectionConverters._
+import scala.util.Using
 import java.util.Date
 
 class ModelTest extends Specification with BeforeAll with AfterAll {
@@ -32,18 +32,9 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
     Paths.get(getClass.getResource(s"/$fileName").toURI())
   }
 
-  // TODO: use `scala.util.Using.resource` instead when scala 2.12 is dropped
-  private def arm[A <: AutoCloseable, B](a: A)(fn: A => B) = {
-    try {
-      fn(a)
-    } finally {
-      a.close()
-    }
-  }
-
   private def runSql(dbUrl: String, sql: String) = {
-    arm(DriverManager.getConnection(dbUrl, username, password)) { connection =>
-      arm(connection.createStatement) { statement =>
+    Using.resource(DriverManager.getConnection(dbUrl, username, password)) { connection =>
+      Using.resource(connection.createStatement) { statement =>
         statement.executeUpdate(sql)
       }
     }
