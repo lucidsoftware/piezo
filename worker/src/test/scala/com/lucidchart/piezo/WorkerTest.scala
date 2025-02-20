@@ -1,6 +1,6 @@
 package com.lucidchart.piezo
 
-import java.io.{BufferedReader, FileReader, File}
+import java.io.{BufferedReader, File, FileReader}
 
 import org.specs2.mutable.*
 import org.quartz.*
@@ -11,7 +11,6 @@ import org.quartz.impl.StdSchedulerFactory
 import java.util.Properties
 
 import scala.util.Random
-
 
 object WorkerStopJob {
   var runCount = 0
@@ -37,9 +36,11 @@ class WorkerTest extends Specification {
       val trigger = newTrigger()
         .withIdentity("trigger1", "group1")
         .startNow()
-        .withSchedule(simpleSchedule()
-        .withIntervalInSeconds(5)
-        .repeatForever())
+        .withSchedule(
+          simpleSchedule()
+            .withIntervalInSeconds(5)
+            .repeatForever(),
+        )
         .build()
 
       val propertiesStream = getClass().getResourceAsStream("/quartz_test.properties")
@@ -63,9 +64,11 @@ class WorkerTest extends Specification {
       val trigger = newTrigger()
         .withIdentity("trigger2", "group2")
         .startNow()
-        .withSchedule(simpleSchedule()
-        .withIntervalInSeconds(1)
-        .repeatForever())
+        .withSchedule(
+          simpleSchedule()
+            .withIntervalInSeconds(1)
+            .repeatForever(),
+        )
         .build()
 
       val propertiesStream = getClass().getResourceAsStream("/quartz_test.properties")

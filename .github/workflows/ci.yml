@@ -30,7 +30,7 @@ jobs:
           echo "VERSION=$version" >> $GITHUB_ENV
           echo "SBT_OPTS=-Dbuild.version=$version" >> $GITHUB_ENV
       - name: Test
-        run: sbt compile test doc Debian/packageBin
+        run: sbt compile test scalafmtCheck doc Debian/packageBin
       - name: Publish to Sonatype
         if: ${{ github.repository == 'lucidsoftware/piezo'  &&  github.event_name != 'pull_request' }}
         env:

@@ -1,6 +1,6 @@
 package com.lucidchart.piezo.admin.controllers
 
-import org.joda.time.{DateTime,Minutes}
+import org.joda.time.{DateTime, Minutes}
 import org.joda.time.format.ISODateTimeFormat
 import play.api.*
 import play.api.libs.json.*
@@ -14,20 +14,20 @@ class HealthCheck(configuration: Configuration, cc: ControllerComponents) extend
     logger.warn("heartbeat file not specified")
     ""
   }
-  val minutesBetweenBeats: Int = configuration.getOptional[Int]("healthCheck.worker.minutesBetween").getOrElse{
+  val minutesBetweenBeats: Int = configuration.getOptional[Int]("healthCheck.worker.minutesBetween").getOrElse {
     logger.warn("minutes between heartbeats not specified. Defaulting to 5")
     5
   }
 
-  def main: Action[AnyContent] = cc.actionBuilder { implicit requests=>
+  def main: Action[AnyContent] = cc.actionBuilder { implicit requests =>
     val workerHealth = areWorkersHealthy()
     val responseBody = Json.toJson(Map("HeartbeatTime" -> Json.toJson(workerHealth._2)))
-    if(workerHealth._1) {
-     Ok(responseBody)
+    if (workerHealth._1) {
+      Ok(responseBody)
     } else {
-     ServiceUnavailable(responseBody)
+      ServiceUnavailable(responseBody)
     }
- }
+  }
 
   def areWorkersHealthy(): (Boolean, String) = {
     val heartbeatFile = Source.fromFile(heartbeatFilename)
@@ -39,9 +39,8 @@ class HealthCheck(configuration: Configuration, cc: ControllerComponents) extend
       val currentTime = new DateTime
       val isTimestampRecent = Minutes.minutesBetween(heartbeatTime, currentTime).getMinutes < minutesBetweenBeats
       (isTimestampRecent, formatter.print(heartbeatTime))
-    }
-    finally {
+    } finally {
       heartbeatFile.close()
     }
- }
+  }
 }
