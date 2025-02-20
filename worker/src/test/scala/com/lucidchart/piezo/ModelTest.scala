@@ -3,29 +3,30 @@ package com.lucidchart.piezo
 import java.nio.file.Files
 import java.nio.file.Paths
 import org.quartz.{JobKey, TriggerKey}
-import org.specs2.mutable._
-import org.specs2.specification._
+import org.specs2.mutable.*
+import org.specs2.specification.*
 import java.sql.DriverManager
 import java.util.Properties
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 import scala.util.Using
 import java.util.Date
+import java.io.InputStream
 
 class ModelTest extends Specification with BeforeAll with AfterAll {
-  val propertiesStream = getClass().getResourceAsStream("/quartz_test_mysql.properties")
+  val propertiesStream: InputStream = getClass().getResourceAsStream("/quartz_test_mysql.properties")
   val properties = new Properties
   properties.load(propertiesStream)
 
-  val propertiesStreamFailoverEveryConnection =
+  val propertiesStreamFailoverEveryConnection: InputStream =
     getClass().getResourceAsStream("/quartz_test_mysql_failover_every_connection.properties")
   val propertiesWithFailoverEveryConnection = new Properties
   propertiesWithFailoverEveryConnection.load(propertiesStreamFailoverEveryConnection)
 
-  val username = properties.getProperty("org.quartz.dataSource.test_jobs.user")
-  val password = properties.getProperty("org.quartz.dataSource.test_jobs.password")
-  val dbUrl = properties.getProperty("org.quartz.dataSource.test_jobs.URL")
+  val username: String = properties.getProperty("org.quartz.dataSource.test_jobs.user")
+  val password: String = properties.getProperty("org.quartz.dataSource.test_jobs.password")
+  val dbUrl: String = properties.getProperty("org.quartz.dataSource.test_jobs.URL")
   val urlParts :+ testDb = dbUrl.split("/").toSeq
-  val mysqlUrl = urlParts.mkString("/")
+  val mysqlUrl: String = urlParts.mkString("/")
   Class.forName("com.mysql.cj.jdbc.Driver")
 
   private def getPatchFile(fileName: String) = {

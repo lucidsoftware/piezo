@@ -1,10 +1,10 @@
 package com.lucidchart.piezo.admin.controllers
 
-import org.specs2.mutable._
-import play.api.test._
-import play.api.test.Helpers._
+import org.specs2.mutable.*
+import play.api.test.*
+import play.api.test.Helpers.*
 import com.lucidchart.piezo.WorkerSchedulerFactory
-import TestUtil._
+import TestUtil.*
 import java.util.Properties
 import play.api.mvc.{AnyContentAsEmpty, Result}
 import scala.concurrent.Future
@@ -30,7 +30,7 @@ class TriggersService extends Specification {
       val missingTrigger: Future[Result] = triggersController.getTrigger("missinggroup", "missingname")(request)
 
       status(missingTrigger) must equalTo(NOT_FOUND)
-      contentType(missingTrigger) must beSome.which(_ == "text/html")
+      contentType(missingTrigger) must beSome("text/html")
       contentAsString(missingTrigger) must contain("Trigger missinggroup missingname not found")
     }
 
@@ -48,7 +48,7 @@ class TriggersService extends Specification {
       val validTrigger: Future[Result] = triggersController.getTrigger(triggerGroup, triggerName)(request)
 
       status(validTrigger) must equalTo(OK)
-      contentType(validTrigger) must beSome.which(_ == "text/html")
+      contentType(validTrigger) must beSome("text/html")
       contentAsString(validTrigger) must contain(triggerGroup)
       contentAsString(validTrigger) must contain(triggerName)
     }

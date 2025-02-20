@@ -1,19 +1,19 @@
 package com.lucidchart.piezo.admin
 
 import com.lucidchart.piezo.util.DummyClassGenerator
-import com.softwaremill.macwire._
+import com.softwaremill.macwire.*
 import play.api.ApplicationLoader.Context
-import play.api._
-import play.api.i18n._
-import play.api.http._
-import play.api.mvc._
-import play.api.mvc.Results._
+import play.api.*
+import play.api.i18n.*
+import play.api.http.*
+import play.api.mvc.*
+import play.api.mvc.Results.*
 import play.api.Mode
 import play.api.routing.Router
 import router.Routes
 import scala.concurrent.Future
-import com.lucidchart.piezo.admin.models._
-import com.lucidchart.piezo.admin.controllers._
+import com.lucidchart.piezo.admin.models.*
+import com.lucidchart.piezo.admin.controllers.*
 import com.lucidchart.piezo.WorkerSchedulerFactory
 import _root_.controllers.AssetsComponents
 /**
@@ -42,7 +42,7 @@ class PiezoAdminComponents(context: Context) extends BuiltInComponentsFromContex
       wire[RequestStatCollector]
     )
   }
-  val logger = Logger("com.lucidchart.piezo.Global")
+  val logger: Logger = Logger("com.lucidchart.piezo.Global")
 
 
   override lazy val httpErrorHandler: HttpErrorHandler = new DefaultHttpErrorHandler(environment, configuration, devContext.map(_.sourceMapper), Some(router)) {

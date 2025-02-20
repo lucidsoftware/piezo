@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit
 import org.quartz.utils.HikariCpPoolingConnectionProvider
 import org.slf4j.LoggerFactory
 import scala.annotation.tailrec
+import org.slf4j.Logger
 
 class ConnectionProvider(props: Properties) {
 
@@ -18,7 +19,7 @@ class ConnectionProvider(props: Properties) {
     connectionProvider.map(warmUpCP)
   }
 
-  val logger = LoggerFactory.getLogger(this.getClass)
+  val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private val dataSource = props.getProperty("org.quartz.jobStore.dataSource")
   private val jdbcURL = if (dataSource != null) props.getProperty("org.quartz.dataSource." + dataSource + ".URL") else null
   private val detectIpAddressFailover = props.getProperty("supportIPFailover") == "true"
@@ -106,7 +107,7 @@ class ConnectionProvider(props: Properties) {
     }
   }
 
-  def getConnection = {
+  def getConnection: Connection = {
     if (detectIpAddressFailover && dataSourceHostname != null) {
       // If the IP has changed, then we know a failover has occurred, and we need to create a new hikari config
       val newIP: String = getIP

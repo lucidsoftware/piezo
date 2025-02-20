@@ -1,7 +1,7 @@
 package com.lucidchart.piezo
 
 import com.timgroup.statsd.NonBlockingStatsDClientBuilder
-import java.io._
+import java.io.*
 import java.util.Properties
 import java.util.concurrent.{Semaphore, TimeUnit}
 import org.joda.time.DateTime
@@ -72,11 +72,11 @@ object Worker {
               val currentJobs: Int = scheduler.getCurrentlyExecutingJobs.size
               logger.info("worker heartbeat - currently running " + currentJobs + " jobs")
             }
-          if(reader.ready && System.in.read == -1){
-              logger.info("Received EOF on stdin")
-              runSemaphore.release()
+            if (reader.ready && System.in.read == -1){
+                logger.info("Received EOF on stdin")
+                runSemaphore.release()
+              }
             }
-          }
         }
         catch {
           case e: InterruptedException => logger.error("caught interruption exception: " + e)

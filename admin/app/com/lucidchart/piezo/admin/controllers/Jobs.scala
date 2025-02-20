@@ -1,16 +1,16 @@
 package com.lucidchart.piezo.admin.controllers
 
 import com.lucidchart.piezo.admin.utils.JobUtils
-import com.lucidchart.piezo.admin.utils.JobDetailHelper._
-import com.lucidchart.piezo.admin.views._
+import com.lucidchart.piezo.admin.utils.JobDetailHelper.*
+import com.lucidchart.piezo.admin.views.*
 import com.lucidchart.piezo.{JobHistoryModel, TriggerHistoryModel, TriggerMonitoringModel, WorkerSchedulerFactory}
-import org.quartz._
+import org.quartz.*
 import org.quartz.impl.matchers.GroupMatcher
-import play.api._
-import play.api.libs.functional.syntax._
-import play.api.libs.json._
-import play.api.mvc._
-import scala.jdk.CollectionConverters._
+import play.api.*
+import play.api.libs.functional.syntax.*
+import play.api.libs.json.*
+import play.api.mvc.*
+import scala.jdk.CollectionConverters.*
 import scala.collection.mutable
 import scala.Some
 import scala.io.Source
@@ -20,7 +20,7 @@ trait ImportResult {
   val jobKey: Option[JobKey]
   val errorMessage: String
   val success: Boolean
-  def toJson = {
+  def toJson: JsObject = {
     Json.obj(
       "success" -> success,
       "errorMessage" -> errorMessage
@@ -37,10 +37,10 @@ case class ImportSuccess(val jobKey: Option[JobKey], val errorMessage: String = 
 case class ImportFailure(val jobKey: Option[JobKey], val errorMessage: String, val success: Boolean=false) extends ImportResult
 
 class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: ControllerComponents, monitoringTeams: MonitoringTeams) extends AbstractController(cc) with Logging with ErrorLogging with play.api.i18n.I18nSupport {
-  val scheduler = logExceptions(schedulerFactory.getScheduler())
+  val scheduler: Scheduler = logExceptions(schedulerFactory.getScheduler())
   val properties = schedulerFactory.props
-  val jobHistoryModel = logExceptions(new JobHistoryModel(properties))
-  val triggerMonitoringPriorityModel = logExceptions(new TriggerMonitoringModel(properties))
+  val jobHistoryModel: JobHistoryModel = logExceptions(new JobHistoryModel(properties))
+  val triggerMonitoringPriorityModel: TriggerMonitoringModel = logExceptions(new TriggerMonitoringModel(properties))
 
   val jobFormHelper = new JobFormHelper()
   val triggerFormHelper = new TriggerFormHelper(scheduler, monitoringTeams)
@@ -58,7 +58,7 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: Cont
     jobsByGroup.sortBy(groupList => groupList._1)
   }
 
-  def getIndex = Action { implicit request =>
+  def getIndex: Action[AnyContent] = Action { implicit request =>
     val allJobs: List[JobKey] = getJobsByGroup().flatMap(_._2).toList
     val jobHistories = allJobs.flatMap({ job =>
       jobHistoryModel.getJob(job).headOption
@@ -70,7 +70,7 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: Cont
     Ok(com.lucidchart.piezo.admin.views.html.jobs(getJobsByGroup(), None, Some(jobHistories), untriggeredJobs, scheduler.getMetaData)(request))
   }
 
-  def getJob(group: String, name: String) = Action { implicit request =>
+  def getJob(group: String, name: String): Action[AnyContent] = Action { implicit request =>
     val jobKey = new JobKey(name, group)
     val jobExists = scheduler.checkExists(jobKey)
     if (!jobExists) {
@@ -109,7 +109,7 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: Cont
     }
   }
 
-  def deleteJob(group: String, name: String) = Action { implicit request =>
+  def deleteJob(group: String, name: String): Action[AnyContent] = Action { implicit request =>
     val jobKey = new JobKey(name, group)
     if (!scheduler.checkExists(jobKey)) {
       val errorMsg = Some("Job %s $s not found".format(group, name))
@@ -128,7 +128,7 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: Cont
     }
   }
 
-  def getJobDetail(group: String, name: String) = Action { implicit request =>
+  def getJobDetail(group: String, name: String): Action[AnyContent] = Action { implicit request =>
     if(request.accepts(JSON)) {
       val jobKey = new JobKey(name, group)
       if (scheduler.checkExists(jobKey)) {
@@ -143,7 +143,7 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: Cont
     }
   }
 
-  def getJobsDetail = Action { implicit request =>
+  def getJobsDetail: Action[AnyContent] = Action { implicit request =>
     if (request.accepts(JSON)) {
       Ok(
         Json.toJson(
@@ -166,7 +166,7 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: Cont
   val submitEditMessage = "Save"
   def formEditAction(group: String, name: String): Call = routes.Jobs.putJob(group, name)
 
-  def getNewJobForm(templateGroup: Option[String] = None, templateName: Option[String] = None) = Action { implicit request =>
+  def getNewJobForm(templateGroup: Option[String] = None, templateName: Option[String] = None): Action[AnyContent] = Action { implicit request =>
     //if (request.queryString.contains())
     templateGroup match {
       case Some(group) => getEditJob(group, templateName.get, true)
@@ -177,7 +177,7 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: Cont
 
   }
 
-  def getEditJob(group: String, name: String, isTemplate: Boolean)(implicit request: Request[AnyContent]) = {
+  def getEditJob(group: String, name: String, isTemplate: Boolean)(implicit request: Request[AnyContent]): Result = {
     val jobKey = new JobKey(name, group)
 
     if (scheduler.checkExists(jobKey)) {
@@ -191,9 +191,9 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: Cont
     }
   }
 
-  def getEditJobAction(group: String, name: String) = Action { implicit request => getEditJob(group, name, false) }
+  def getEditJobAction(group: String, name: String): Action[AnyContent] = Action { implicit request => getEditJob(group, name, false) }
 
-  def putJob(group: String, name: String) = Action { implicit request =>
+  def putJob(group: String, name: String): Action[AnyContent] = Action { implicit request =>
     jobFormHelper.buildJobForm.bindFromRequest().fold(
       formWithErrors =>
         BadRequest(html.editJob(getJobsByGroup(), formWithErrors, submitNewMessage, formNewAction, false)),
@@ -256,7 +256,7 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: Cont
     }
   }
 
-  def postJobs = Action { implicit request: Request[AnyContent] =>
+  def postJobs: Action[AnyContent] = Action { implicit request: Request[AnyContent] =>
     val jsonOpt = request.body.asJson.orElse {
       request.body.asMultipartFormData.flatMap { d =>
         d.file("file").map { f =>
@@ -282,7 +282,7 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: Cont
     }
   }
 
-  def postJob = Action { implicit request =>
+  def postJob: Action[AnyContent] = Action { implicit request =>
     jobFormHelper.buildJobForm.bindFromRequest().fold(
       formWithErrors =>
         BadRequest(com.lucidchart.piezo.admin.views.html.editJob(getJobsByGroup(), formWithErrors, submitNewMessage, formNewAction, false)),
@@ -307,7 +307,7 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: Cont
     )
   }
 
-  def jobGroupTypeAhead(sofar: String) = Action { implicit request =>
+  def jobGroupTypeAhead(sofar: String): Action[AnyContent] = Action { implicit request =>
     val groups = scheduler.getJobGroupNames().asScala.toList
 
     Ok(Json.obj("groups" -> groups.filter{ group =>
@@ -315,7 +315,7 @@ class Jobs(schedulerFactory: WorkerSchedulerFactory, jobView: html.job, cc: Cont
     }))
   }
 
-  def jobNameTypeAhead(group: String, sofar: String) = Action { implicit request =>
+  def jobNameTypeAhead(group: String, sofar: String): Action[AnyContent] = Action { implicit request =>
     val jobs = scheduler.getJobKeys(GroupMatcher.jobGroupEquals(group)).asScala.toSet
 
     Ok(Json.obj("jobs" -> jobs.filter(_.getName.toLowerCase.contains(sofar.toLowerCase)).map(_.getName)))

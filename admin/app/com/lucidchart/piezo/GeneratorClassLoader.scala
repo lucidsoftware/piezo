@@ -4,6 +4,7 @@ import org.objectweb.asm.{ClassWriter, Opcodes, Type}
 import org.quartz.{Job, JobExecutionContext}
 import org.quartz.spi.ClassLoadHelper
 import org.slf4j.LoggerFactory
+import org.slf4j.Logger
 
 class DummyJob extends Job {
   def execute(context: JobExecutionContext): Unit = {
@@ -12,16 +13,29 @@ class DummyJob extends Job {
 }
 
 class GeneratorClassLoader extends ClassLoader(classOf[GeneratorClassLoader].getClassLoader) with ClassLoadHelper {
-  val logger = LoggerFactory.getLogger(this.getClass)
+  val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
   private[this] def generate(name: String) = {
     val classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS)
-    classWriter.visit(Opcodes.V1_8, Opcodes.ACC_PUBLIC, name.replace('.', '/'), null, Type.getInternalName(classOf[DummyJob]), null)
+    classWriter.visit(
+      Opcodes.V1_8,
+      Opcodes.ACC_PUBLIC,
+      name.replace('.', '/'),
+      null,
+      Type.getInternalName(classOf[DummyJob]),
+      null,
+    )
 
     // Minimal constructor that just calls the super constructor and returns.
     val constructorWriter = classWriter.visitMethod(Opcodes.ACC_PUBLIC, "<init>", "()V", null, null)
     constructorWriter.visitVarInsn(Opcodes.ALOAD, 0)
-    constructorWriter.visitMethodInsn(Opcodes.INVOKESPECIAL, Type.getInternalName(classOf[Object]), "<init>", "()V", false)
+    constructorWriter.visitMethodInsn(
+      Opcodes.INVOKESPECIAL,
+      Type.getInternalName(classOf[Object]),
+      "<init>",
+      "()V",
+      false,
+    )
     constructorWriter.visitInsn(Opcodes.RETURN)
     constructorWriter.visitMaxs(0, 0)
     constructorWriter.visitEnd()
@@ -31,9 +45,9 @@ class GeneratorClassLoader extends ClassLoader(classOf[GeneratorClassLoader].get
     classWriter.toByteArray
   }
 
-  def getClassLoader = this
+  def getClassLoader: GeneratorClassLoader = this
 
-  def loadClass[T](name: String, clazz: Class[T]) = loadClass(name).asInstanceOf[Class[_ <: T]]
+  def loadClass[T](name: String, clazz: Class[T]): Class[? <: T] = loadClass(name).asInstanceOf[Class[? <: T]]
 
   def initialize() = ()
 

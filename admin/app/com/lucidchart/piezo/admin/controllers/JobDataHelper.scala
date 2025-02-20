@@ -1,9 +1,9 @@
 package com.lucidchart.piezo.admin.controllers
 
 import org.quartz.JobDataMap
-import play.api.libs.json._
+import play.api.libs.json.*
 import play.api.data.Form
-import play.api.data.Forms._
+import play.api.data.Forms.*
 import play.api.data.Mapping
 
 case class DataMap(key: String, value: String)
@@ -34,7 +34,7 @@ trait JobDataHelper {
 
   implicit def jobDataMap: Mapping[Option[JobDataMap]] =
     optional(
-      list(mapping("key" -> text, "value" -> text)(DataMap.apply)(DataMap.unapply))
+      list(mapping("key" -> text, "value" -> text)(DataMap.apply)(data => Some((data.key, data.value))))
         .transform(mapToJobData, jobDataToMap),
     )
 

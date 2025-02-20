@@ -1,9 +1,9 @@
 package com.lucidchart.piezo.admin.controllers
 
-import org.quartz._
+import org.quartz.*
 import play.api.Logger
 import play.api.data.Form
-import play.api.data.Forms._
+import play.api.data.Forms.*
 import com.lucidchart.piezo.GeneratorClassLoader
 
 class JobFormHelper extends JobDataHelper {
@@ -29,7 +29,7 @@ class JobFormHelper extends JobDataHelper {
     Some((job.getKey.getName(), job.getKey.getGroup(), job.getJobClass.toString.replace("class ", ""), description, job.isDurable(), job.requestsRecovery(), Some(job.getJobDataMap)))
   }
 
-  def buildJobForm = Form[JobDetail](
+  def buildJobForm: Form[JobDetail] = Form[JobDetail](
     mapping(
       "name" -> nonEmptyText(),
       "group" -> nonEmptyText(),

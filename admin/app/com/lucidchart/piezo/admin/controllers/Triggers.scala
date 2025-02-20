@@ -3,14 +3,14 @@ package com.lucidchart.piezo.admin.controllers
 import com.lucidchart.piezo.{TriggerHistoryModel, TriggerMonitoringModel, TriggerMonitoringPriority, WorkerSchedulerFactory}
 import java.util.Date
 import org.quartz.Trigger.TriggerState
-import org.quartz._
+import org.quartz.*
 import org.quartz.impl.triggers.{CronTriggerImpl, SimpleTriggerImpl}
-import play.api._
-import play.api.libs.json._
-import play.api.mvc._
-import com.lucidchart.piezo.admin.models._
+import play.api.*
+import play.api.libs.json.*
+import play.api.mvc.*
+import com.lucidchart.piezo.admin.models.*
 import scala.collection.mutable
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 import scala.util.Try
 import play.api.Logging
 import play.api.i18n.I18nSupport
@@ -18,10 +18,10 @@ import play.api.i18n.I18nSupport
 class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponents, monitoringTeams: MonitoringTeams)
   extends AbstractController(cc) with Logging with ErrorLogging with play.api.i18n.I18nSupport {
 
-  val scheduler = logExceptions(schedulerFactory.getScheduler())
+  val scheduler: Scheduler = logExceptions(schedulerFactory.getScheduler())
   val properties = schedulerFactory.props
-  val triggerHistoryModel = logExceptions(new TriggerHistoryModel(properties))
-  val triggerMonitoringPriorityModel = logExceptions(new TriggerMonitoringModel(properties))
+  val triggerHistoryModel: TriggerHistoryModel = logExceptions(new TriggerHistoryModel(properties))
+  val triggerMonitoringPriorityModel: TriggerMonitoringModel = logExceptions(new TriggerMonitoringModel(properties))
   val triggerFormHelper = new TriggerFormHelper(scheduler, monitoringTeams)
 
   def firesFirst(time: Date)(trigger1: Trigger, trigger2: Trigger): Boolean = {
@@ -33,7 +33,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
     else trigger1.getPriority > trigger2.getPriority
   }
 
-   def getIndex = Action { implicit request =>
+   def getIndex: Action[AnyContent] = Action { implicit request =>
      val now = new Date()
      val allTriggers: List[Trigger] = TriggerHelper.getTriggersByGroup(scheduler).flatMap { case (group, triggerKeys) =>
        triggerKeys.map(triggerKey => scheduler.getTrigger(triggerKey))
@@ -48,7 +48,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
      )
    }
 
-  def getTrigger(group: String, name: String) = Action { implicit request =>
+  def getTrigger(group: String, name: String): Action[AnyContent] = Action { implicit request =>
     val triggerKey = new TriggerKey(name, group)
     val triggerExists = scheduler.checkExists(triggerKey)
     if (!triggerExists) {
@@ -109,7 +109,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
     }
   }
 
-  def deleteTrigger(group: String, name: String) = Action { implicit request =>
+  def deleteTrigger(group: String, name: String): Action[AnyContent] = Action { implicit request =>
     val triggerKey = new TriggerKey(name, group)
     val triggerExists = scheduler.checkExists(triggerKey)
     if (!triggerExists) {
@@ -143,7 +143,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
     }
   }
 
-  val formNewAction = routes.Triggers.postTrigger()
+  val formNewAction: Call = routes.Triggers.postTrigger()
   def formEditAction(group: String, name: String): Call = routes.Triggers.putTrigger(group, name)
 
   def getNewTriggerForm(
@@ -152,7 +152,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
     jobName: String = "",
     templateGroup: Option[String] = None,
     templateName: Option[String] = None
-  ) = Action { implicit request =>
+  ): Action[AnyContent] = Action { implicit request =>
     templateGroup match {
       case Some(group) => getEditTrigger(group, templateName.get, true)
       case None =>
@@ -176,7 +176,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
     }
   }
 
-  def getEditTrigger(group: String, name: String, isTemplate: Boolean)(implicit request: Request[AnyContent]) = {
+  def getEditTrigger(group: String, name: String, isTemplate: Boolean)(implicit request: Request[AnyContent]): Result = {
     val triggerKey = new TriggerKey(name, group)
     val triggerExists = scheduler.checkExists(triggerKey)
     if (!triggerExists) {
@@ -224,11 +224,11 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
     }
   }
 
-  def getEditTriggerAction(group: String, name: String) = Action { implicit request =>
+  def getEditTriggerAction(group: String, name: String): Action[AnyContent] = Action { implicit request =>
     getEditTrigger(group, name, false)
   }
 
-  def putTrigger(group: String, name: String) = Action { implicit request =>
+  def putTrigger(group: String, name: String): Action[AnyContent] = Action { implicit request =>
     triggerFormHelper.buildTriggerForm.bindFromRequest().fold(
       formWithErrors =>
         BadRequest(
@@ -256,7 +256,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
     )
   }
 
-  def postTrigger() = Action { implicit request =>
+  def postTrigger(): Action[AnyContent] = Action { implicit request =>
     triggerFormHelper.buildTriggerForm.bindFromRequest().fold(
       formWithErrors =>
         BadRequest(
@@ -302,7 +302,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
     )
   }
 
-  def triggerGroupTypeAhead(sofar: String) = Action { implicit request =>
+  def triggerGroupTypeAhead(sofar: String): Action[AnyContent] = Action { implicit request =>
     val groups = scheduler.getTriggerGroupNames().asScala.toList
 
     Ok(Json.obj("groups" -> groups.filter{ group =>
@@ -310,7 +310,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
     }))
   }
 
-  def triggerJob(group: String, name: String) = Action { implicit request =>
+  def triggerJob(group: String, name: String): Action[AnyContent] = Action { implicit request =>
     val jobKey = new JobKey(name, group)
 
     if (scheduler.checkExists(jobKey)) {
@@ -328,7 +328,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
     }
   }
 
-  def patchTrigger(group: String, name: String) = Action { implicit request =>
+  def patchTrigger(group: String, name: String): Action[AnyContent] = Action { implicit request =>
     val triggerKey = new TriggerKey(name, group)
     val triggerExists = scheduler.checkExists(triggerKey)
     if (!triggerExists) {
@@ -363,19 +363,19 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
   }
 
   private trait DummyTrigger extends Trigger {
-    override def getKey() = { new TriggerKey("", "") }
+    override def getKey(): TriggerKey = { new TriggerKey("", "") }
 
-    override def getJobKey() = { new JobKey("", "") }
+    override def getJobKey(): JobKey = { new JobKey("", "") }
 
     override def getDescription() = ""
   }
 
   private class DummyCronTrigger(jobGroup: String, jobName: String) extends CronTriggerImpl with DummyTrigger {
     override def getCronExpression() = "7 7 7 * * ?"
-    override def getJobKey() = { new JobKey(jobName, jobGroup)}
+    override def getJobKey(): JobKey = { new JobKey(jobName, jobGroup)}
   }
 
   private class DummySimpleTrigger(jobGroup: String, jobName: String) extends SimpleTriggerImpl with DummyTrigger {
-    override def getJobKey() = { new JobKey(jobName, jobGroup)}
+    override def getJobKey(): JobKey = { new JobKey(jobName, jobGroup)}
   }
 }

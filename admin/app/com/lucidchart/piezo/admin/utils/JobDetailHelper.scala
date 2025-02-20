@@ -1,9 +1,10 @@
 package com.lucidchart.piezo.admin.utils
-import play.api.libs.json._
-import org.quartz._
-import scala.collection.JavaConverters._
-import com.lucidchart.piezo.admin.controllers.{JobDataHelper, JobFormHelper, TriggerHelper}
+
 import com.lucidchart.piezo.TriggerMonitoringModel
+import com.lucidchart.piezo.admin.controllers.{JobDataHelper, JobFormHelper, TriggerHelper}
+import org.quartz.*
+import play.api.libs.json.*
+import scala.jdk.CollectionConverters.*
 
 object JobDetailHelper extends JobDataHelper {
   lazy val jobFormHelper = new JobFormHelper()

@@ -4,9 +4,10 @@ import com.timgroup.statsd.StatsDClient
 import java.util.Properties
 import org.quartz.{JobExecutionContext, JobExecutionException, JobListener}
 import org.slf4j.LoggerFactory
+import org.slf4j.Logger
 
 object WorkerJobListener {
-  val logger = LoggerFactory.getLogger(this.getClass)
+  val logger: Logger = LoggerFactory.getLogger(this.getClass)
 }
 
 class WorkerJobListener(props: Properties, statsd: StatsDClient, useDatadog: Boolean) extends JobListener {

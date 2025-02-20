@@ -2,14 +2,14 @@ package com.lucidchart.piezo.admin.controllers
 
 import com.lucidchart.piezo.{TriggerMonitoringModel, TriggerMonitoringPriority}
 import com.lucidchart.piezo.admin.models.TriggerType
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 import org.quartz.TriggerKey
 import org.quartz.{CronTrigger, SimpleTrigger}
 import org.quartz.impl.matchers.GroupMatcher
 import org.quartz.Scheduler
 import org.quartz.Trigger
-import play.api.libs.json._
+import play.api.libs.json.*
 
 
 import scala.collection.mutable
@@ -71,5 +71,5 @@ object TriggerHelper {
     ) ++ schedule
   }
 
-  def writesTriggerSeq(monitoringModel: TriggerMonitoringModel) = Writes.seq(writesTrigger(monitoringModel))
+  def writesTriggerSeq(monitoringModel: TriggerMonitoringModel): Writes[Seq[Trigger]] = Writes.seq(writesTrigger(monitoringModel))
 }

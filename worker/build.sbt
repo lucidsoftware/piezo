@@ -32,7 +32,6 @@ javaOptions ++= Seq(
 scalacOptions ++= Seq(
   "-deprecation",
   "-feature",
-  "-Xlint",
 )
 
 Compile / unmanagedClasspath += sourceDirectory.value / "run" / "resources"

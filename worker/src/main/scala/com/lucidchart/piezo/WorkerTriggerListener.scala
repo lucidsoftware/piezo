@@ -4,7 +4,7 @@ import com.timgroup.statsd.StatsDClient
 
 import java.util.Properties
 import org.quartz.Trigger.{CompletedExecutionInstruction, TriggerState}
-import org.quartz._
+import org.quartz.*
 import org.slf4j.LoggerFactory
 
 object WorkerTriggerListener {
