@@ -47,7 +47,7 @@ class GeneratorClassLoader extends ClassLoader(classOf[GeneratorClassLoader].get
 
   def getClassLoader: GeneratorClassLoader = this
 
-  def loadClass[T](name: String, clazz: Class[T]): Class[_ <: T] = loadClass(name).asInstanceOf[Class[_ <: T]]
+  def loadClass[T](name: String, clazz: Class[T]): Class[? <: T] = loadClass(name).asInstanceOf[Class[? <: T]]
 
   def initialize() = ()
 

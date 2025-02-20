@@ -180,7 +180,7 @@ class TriggerFormHelper(scheduler: Scheduler, monitoringTeams: MonitoringTeams) 
 }
 
 object MaxSecondsBetweenSuccessesFormatter extends Formatter[Int] {
-  override val format: Option[(String, Seq[Nothing])] = Some(("format.triggerMaxErrorTime", Nil))
+  override val format: Option[(String, Seq[Any])] = Some(("format.triggerMaxErrorTime", Nil))
   override def bind(key: String, data: Map[String, String]): Either[Seq[FormError], Int] = {
     for {
       maxSecondsBetweenSuccesses <- parsing(_.toInt, "Numeric value expected", Nil)(key, data)
