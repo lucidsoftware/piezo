@@ -1,6 +1,6 @@
 package com.lucidchart.piezo.jobs.cleanup
 
-import org.quartz.{JobExecutionContext, Job}
+import org.quartz.{Job, JobExecutionContext}
 import org.slf4j.LoggerFactory
 import com.lucidchart.piezo.{JobHistoryModel, TriggerHistoryModel, WorkerSchedulerFactory}
 import java.util.Date
@@ -30,7 +30,7 @@ class JobHistoryCleanup extends Job {
     logger.info("Deleted " + numDeleted + " trigger histories")
   }
 
-  private[this] def deleteJobHistories(minStart: Long): Unit =  {
+  private[this] def deleteJobHistories(minStart: Long): Unit = {
     logger.info("Deleting jobs older than " + new Date(minStart))
     val numDeleted = JobHistoryCleanup.jobHistoryModel.deleteJobs(minStart)
     logger.info("Deleted " + numDeleted + " job histories")

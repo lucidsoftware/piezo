@@ -6,8 +6,7 @@ trait ErrorLogging { self: Logging =>
   def logExceptions[T](value: => T): T = {
     try {
       value
-    }
-    catch {
+    } catch {
       case t: Throwable =>
         logger.error("Caught exception initializing class", t)
         throw t

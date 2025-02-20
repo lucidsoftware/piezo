@@ -21,7 +21,8 @@ class ConnectionProvider(props: Properties) {
 
   val logger: Logger = LoggerFactory.getLogger(this.getClass)
   private val dataSource = props.getProperty("org.quartz.jobStore.dataSource")
-  private val jdbcURL = if (dataSource != null) props.getProperty("org.quartz.dataSource." + dataSource + ".URL") else null
+  private val jdbcURL =
+    if (dataSource != null) props.getProperty("org.quartz.dataSource." + dataSource + ".URL") else null
   private val detectIpAddressFailover = props.getProperty("supportIPFailover") == "true"
   // Removes "jdbc:mysql://" prefix and ":{port}..." suffix
   private val dataSourceHostname = if (jdbcURL != null) jdbcURL.replace("jdbc:mysql://", "").split(":")(0) else null
@@ -42,15 +43,17 @@ class ConnectionProvider(props: Properties) {
   private val causeFailoverEveryConnection = props.getProperty("causeFailoverEveryConnection") == "true"
 
   def createNewConnectionProvider(): Option[HikariCpPoolingConnectionProvider] = {
-    if(dataSource != null) {
-      Some(new HikariCpPoolingConnectionProvider(
-        props.getProperty("org.quartz.dataSource." + dataSource + ".driver"),
-        jdbcURL,
-        props.getProperty("org.quartz.dataSource." + dataSource + ".user"),
-        props.getProperty("org.quartz.dataSource." + dataSource + ".password"),
-        props.getProperty("org.quartz.dataSource." + dataSource + ".maxConnections").toInt,
-        props.getProperty("org.quartz.dataSource." + dataSource + ".validationQuery")
-      ))
+    if (dataSource != null) {
+      Some(
+        new HikariCpPoolingConnectionProvider(
+          props.getProperty("org.quartz.dataSource." + dataSource + ".driver"),
+          jdbcURL,
+          props.getProperty("org.quartz.dataSource." + dataSource + ".user"),
+          props.getProperty("org.quartz.dataSource." + dataSource + ".password"),
+          props.getProperty("org.quartz.dataSource." + dataSource + ".maxConnections").toInt,
+          props.getProperty("org.quartz.dataSource." + dataSource + ".validationQuery"),
+        ),
+      )
     } else {
       logger.info("No job store found in config to get connections")
       None
@@ -58,8 +61,8 @@ class ConnectionProvider(props: Properties) {
   }
 
   /**
-   * HikariCP connection pools don't automatically close when IP addresses for a hostname change. This function returns True, iff at
-   * least one of the following conditions is met:
+   * HikariCP connection pools don't automatically close when IP addresses for a hostname change. This function returns
+   * True, iff at least one of the following conditions is met:
    *   - IP addresses have changed for the CNAME record used for DNS lookup
    *   - causeFailoverEveryConnection is set to "true", which is used for testing failover functionality
    *
@@ -97,13 +100,15 @@ class ConnectionProvider(props: Properties) {
 
   def getIP: String = {
     synchronized {
-      cachedIpWithExpiration.map { cachedValue =>
-        if (System.currentTimeMillis() > cachedValue.expiration) {
-          _getIp
-        } else {
-          cachedValue.ip
+      cachedIpWithExpiration
+        .map { cachedValue =>
+          if (System.currentTimeMillis() > cachedValue.expiration) {
+            _getIp
+          } else {
+            cachedValue.ip
+          }
         }
-      }.getOrElse(_getIp)
+        .getOrElse(_getIp)
     }
   }
 

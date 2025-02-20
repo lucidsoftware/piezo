@@ -25,13 +25,13 @@ class WorkerTriggerListener(props: Properties, statsd: StatsDClient, useDatadog:
 
      To fix this, right before Quartz starts the job, we check the _current_ trigger
      state to ensure that job wasn't paused after the execution was queued.
-    */
+     */
 
     // Veto if current trigger state is paused
     context.getScheduler.getTriggerState(trigger.getKey) == TriggerState.PAUSED
   }
 
-  def triggerFired(trigger: Trigger, context: JobExecutionContext):  Unit = {
+  def triggerFired(trigger: Trigger, context: JobExecutionContext): Unit = {
     val triggerKey = s"${trigger.getKey.getGroup}.${trigger.getKey.getName}"
     if (useDatadog) {
       statsd.increment("triggers", s"trigger:${triggerKey}", "event:fired")
@@ -43,14 +43,15 @@ class WorkerTriggerListener(props: Properties, statsd: StatsDClient, useDatadog:
   def triggerComplete(
     trigger: Trigger,
     context: JobExecutionContext,
-    triggerInstructionCode: CompletedExecutionInstruction
+    triggerInstructionCode: CompletedExecutionInstruction,
   ): Unit = {
     try {
       triggerHistoryModel.addTrigger(
         trigger.getKey,
         Option(trigger.getPreviousFireTime),
         Some(context.getFireTime),
-        misfire = false, Some(context.getFireInstanceId)
+        misfire = false,
+        Some(context.getFireInstanceId),
       )
 
       val triggerKey = s"${trigger.getKey.getGroup}.${trigger.getKey.getName}"
@@ -71,7 +72,7 @@ class WorkerTriggerListener(props: Properties, statsd: StatsDClient, useDatadog:
         Option(trigger.getPreviousFireTime),
         None,
         misfire = true,
-        None
+        None,
       )
 
       val triggerKey = s"${trigger.getKey.getGroup}.${trigger.getKey.getName}"

@@ -8,7 +8,7 @@ object TriggerType extends Enumeration {
   val Unknown: Value = Value(2, "unknown")
 
   def apply(trigger: Trigger): Value = {
-    if(trigger.isInstanceOf[org.quartz.CronTrigger]) {
+    if (trigger.isInstanceOf[org.quartz.CronTrigger]) {
       TriggerType.Cron
     } else if (trigger.isInstanceOf[org.quartz.SimpleTrigger]) {
       TriggerType.Simple
