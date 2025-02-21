@@ -7,9 +7,9 @@ import scala.jdk.CollectionConverters.*
 import org.slf4j.Logger
 
 /**
-  * When creating job's data map, choose keys in alphabetical order
-  * for corresponding values to be executed in the correct order
-  */
+ * When creating job's data map, choose keys in alphabetical order for corresponding values to be executed in the
+ * correct order
+ */
 class RunExec extends Job {
   val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
@@ -19,7 +19,7 @@ class RunExec extends Job {
     val commands: java.util.List[String] = sortedDataList.map(entry => entry.getValue.toString).asJava
     val cmdProcess = new ProcessBuilder(commands).start
     cmdProcess.waitFor
-    val result = new Scanner(cmdProcess.getInputStream,"UTF-8").useDelimiter("\\A").next()
+    val result = new Scanner(cmdProcess.getInputStream, "UTF-8").useDelimiter("\\A").next()
     logger.info("Executable output: " + result)
   }
 }

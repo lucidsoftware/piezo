@@ -25,7 +25,7 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
   val username: String = properties.getProperty("org.quartz.dataSource.test_jobs.user")
   val password: String = properties.getProperty("org.quartz.dataSource.test_jobs.password")
   val dbUrl: String = properties.getProperty("org.quartz.dataSource.test_jobs.URL")
-  val urlParts :+ testDb = dbUrl.split("/").toSeq
+  val urlParts :+ testDb = dbUrl.split("/").toSeq: @unchecked
   val mysqlUrl: String = urlParts.mkString("/")
   Class.forName("com.mysql.cj.jdbc.Driver")
 

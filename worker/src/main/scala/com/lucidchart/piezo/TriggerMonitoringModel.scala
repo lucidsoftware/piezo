@@ -24,14 +24,14 @@ object TriggerMonitoringPriority {
   def withName: Function[String, Value] = valuesByName
 }
 
-case class TriggerMonitoringRecord (
+case class TriggerMonitoringRecord(
   triggerName: String,
   triggerGroup: String,
   priority: TriggerMonitoringPriority,
   maxSecondsInError: Int,
   monitoringTeam: Option[String],
   created: Date,
-  modified: Date
+  modified: Date,
 )
 
 class TriggerMonitoringModel(props: Properties) {
@@ -42,7 +42,7 @@ class TriggerMonitoringModel(props: Properties) {
     triggerKey: TriggerKey,
     triggerMonitoringPriority: TriggerMonitoringPriority,
     maxSecondsInError: Int,
-    monitoringTeam: Option[String]
+    monitoringTeam: Option[String],
   ): Int = {
     val connection = connectionProvider.getConnection
     try {
@@ -66,12 +66,13 @@ class TriggerMonitoringModel(props: Properties) {
       }
       prepared.executeUpdate()
     } catch {
-      case e: Exception => logger.error(
-        s"Error setting trigger monitoring priority. " +
-        s"Trigger name: ${triggerKey.getName} group: ${triggerKey.getGroup}",
-        e
-      )
-      0
+      case e: Exception =>
+        logger.error(
+          s"Error setting trigger monitoring priority. " +
+            s"Trigger name: ${triggerKey.getName} group: ${triggerKey.getGroup}",
+          e,
+        )
+        0
     } finally {
       connection.close()
     }
@@ -95,7 +96,7 @@ class TriggerMonitoringModel(props: Properties) {
         logger.error(
           s"Error deleting trigger monitoring priority. " +
             s"Trigger name: ${triggerKey.getName} group: ${triggerKey.getGroup}",
-          e
+          e,
         )
         0
       }
@@ -127,7 +128,7 @@ class TriggerMonitoringModel(props: Properties) {
             rs.getInt("max_error_time"),
             Option(rs.getString("monitoring_team")),
             rs.getDate("created"),
-            rs.getDate("modified")
+            rs.getDate("modified"),
           )
         }
       } else {
@@ -137,8 +138,8 @@ class TriggerMonitoringModel(props: Properties) {
       case e: Exception => {
         logger.error(
           s"Error retrieving trigger monitoring priority. " +
-          s"Trigger name: ${triggerKey.getName} group: ${triggerKey.getGroup}",
-          e
+            s"Trigger name: ${triggerKey.getName} group: ${triggerKey.getGroup}",
+          e,
         )
         None
       }

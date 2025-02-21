@@ -2,7 +2,6 @@ package com.lucidchart.piezo.admin.controllers
 
 import org.quartz.JobDataMap
 import play.api.libs.json.*
-import play.api.data.Form
 import play.api.data.Forms.*
 import play.api.data.Mapping
 

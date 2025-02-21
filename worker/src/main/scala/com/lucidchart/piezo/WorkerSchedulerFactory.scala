@@ -4,7 +4,7 @@ import org.quartz.impl.StdSchedulerFactory
 import java.util.Properties
 
 /**
-  */
+ */
 class WorkerSchedulerFactory extends StdSchedulerFactory {
   var props: Properties = null
 

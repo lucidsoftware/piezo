@@ -12,8 +12,8 @@ import scala.util.Try
 import scala.util.control.NonFatal
 
 /**
-  * To stop the worker without stopping SBT: Ctrl+D Enter
-  */
+ * To stop the worker without stopping SBT: Ctrl+D Enter
+ */
 object Worker {
   private val logger = LoggerFactory.getLogger(this.getClass)
   private[piezo] val runSemaphore = new Semaphore(0)
@@ -31,7 +31,8 @@ object Worker {
     val schedulerFactory: WorkerSchedulerFactory = new WorkerSchedulerFactory()
     val scheduler = schedulerFactory.getScheduler()
     val props = schedulerFactory.props
-    val useDatadog = Try(props.getProperty("com.lucidchart.piezo.statsd.useDatadog", "false").toBoolean).getOrElse(false)
+    val useDatadog =
+      Try(props.getProperty("com.lucidchart.piezo.statsd.useDatadog", "false").toBoolean).getOrElse(false)
     val statsd = new NonBlockingStatsDClientBuilder()
       .prefix(props.getProperty("com.lucidchart.piezo.statsd.prefix", "applications.piezo.worker"))
       .hostname(props.getProperty("com.lucidchart.piezo.statsd.host", "localhost"))
@@ -49,7 +50,12 @@ object Worker {
     System.exit(0)
   }
 
-  private[piezo] def run(scheduler: Scheduler, properties: Properties, heartbeatSeconds: Int = 60, semaphorePermitsToStop: Int = 1): Unit = {
+  private[piezo] def run(
+    scheduler: Scheduler,
+    properties: Properties,
+    heartbeatSeconds: Int = 60,
+    semaphorePermitsToStop: Int = 1,
+  ): Unit = {
     val heartbeatFile = properties.getProperty("com.lucidchart.piezo.heartbeatFile")
     if (heartbeatFile == null) {
       logger.trace("No heartbeat file specified")
@@ -72,21 +78,19 @@ object Worker {
               val currentJobs: Int = scheduler.getCurrentlyExecutingJobs.size
               logger.info("worker heartbeat - currently running " + currentJobs + " jobs")
             }
-            if (reader.ready && System.in.read == -1){
-                logger.info("Received EOF on stdin")
-                runSemaphore.release()
-              }
+            if (reader.ready && System.in.read == -1) {
+              logger.info("Received EOF on stdin")
+              runSemaphore.release()
             }
-        }
-        catch {
+          }
+        } catch {
           case e: InterruptedException => logger.error("caught interruption exception: " + e)
           case e: Exception => logger.error("caught exception: " + e)
         }
       }
       scheduler.shutdown(true)
       logger.info("scheduler shutdown")
-    }
-    catch {
+    } catch {
       case e: Exception => logger.error("exception caught scheduling jobs: " + e)
     }
   }
@@ -108,7 +112,8 @@ object Worker {
     val location = getClass.getProtectionDomain.getCodeSource.getLocation
     val applicationPath = location.getFile()
     java.lang.management.ManagementFactory.getRuntimeMXBean.getName.split('@').headOption.map { pid =>
-      val pidFile = Option(System.getProperty("pidfile.path")).map(new File(_)).getOrElse(new File(applicationPath, "RUNNING_PID"))
+      val pidFile =
+        Option(System.getProperty("pidfile.path")).map(new File(_)).getOrElse(new File(applicationPath, "RUNNING_PID"))
 
       logger.info("process ID is " + pid)
       logger.info("pid file: " + pidFile.getAbsolutePath)

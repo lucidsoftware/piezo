@@ -5,11 +5,9 @@ import play.api.test.*
 import play.api.test.Helpers.*
 import com.lucidchart.piezo.jobs.monitoring.HeartBeat
 import com.lucidchart.piezo.WorkerSchedulerFactory
-import org.quartz.*
 import TestUtil.*
 import ch.qos.logback.classic.{Level, Logger}
 import org.slf4j.LoggerFactory
-import com.lucidchart.piezo.util.DummyClassGenerator
 import play.api.mvc.{AnyContentAsEmpty, Result}
 import java.util.Properties
 import play.api.Configuration
