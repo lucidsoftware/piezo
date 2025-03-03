@@ -35,9 +35,16 @@ class JobsService extends Specification {
       val properties = new Properties
       properties.load(propertiesStream)
       schedulerFactory.initialize(properties)
+      val scheduler = schedulerFactory.getScheduler()
 
       val jobsController =
-        new Jobs(schedulerFactory, jobView, Helpers.stubControllerComponents(), MonitoringTeams.empty)
+        new Jobs(
+          scheduler,
+          TestUtil.mockModelComponents,
+          jobView,
+          Helpers.stubControllerComponents(),
+          MonitoringTeams.empty,
+        )
       val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/jobs/missinggroup/missingname")
       val missingJob: Future[Result] = jobsController.getJob("missinggroup", "missingname")(request)
 
@@ -56,7 +63,13 @@ class JobsService extends Specification {
       createJob(scheduler)
 
       val jobsController =
-        new Jobs(schedulerFactory, jobView, Helpers.stubControllerComponents(), MonitoringTeams.empty)
+        new Jobs(
+          scheduler,
+          TestUtil.mockModelComponents,
+          jobView,
+          Helpers.stubControllerComponents(),
+          MonitoringTeams.empty,
+        )
       val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/jobs/" + jobGroup + "/" + jobName)
       val validJob: Future[Result] = jobsController.getJob(jobGroup, jobName)(request)
 

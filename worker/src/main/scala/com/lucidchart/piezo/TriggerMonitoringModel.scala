@@ -1,10 +1,11 @@
 package com.lucidchart.piezo
 
 import com.lucidchart.piezo.TriggerMonitoringPriority.TriggerMonitoringPriority
-import java.util.{Date, Properties}
+import java.util.Date
 import org.quartz.TriggerKey
 import org.slf4j.LoggerFactory
 import org.slf4j.Logger
+import java.sql.Connection
 
 object TriggerMonitoringPriority {
   case class Value(id: Int, name: String) {
@@ -34,9 +35,8 @@ case class TriggerMonitoringRecord(
   modified: Date,
 )
 
-class TriggerMonitoringModel(props: Properties) {
+class TriggerMonitoringModel(getConnection: () => Connection) {
   val logger: Logger = LoggerFactory.getLogger(this.getClass)
-  val connectionProvider = new ConnectionProvider(props)
 
   def setTriggerMonitoringRecord(
     triggerKey: TriggerKey,
@@ -44,7 +44,7 @@ class TriggerMonitoringModel(props: Properties) {
     maxSecondsInError: Int,
     monitoringTeam: Option[String],
   ): Int = {
-    val connection = connectionProvider.getConnection
+    val connection = getConnection()
     try {
       val prepared = connection.prepareStatement("""
         INSERT INTO trigger_monitoring_priority
@@ -79,7 +79,7 @@ class TriggerMonitoringModel(props: Properties) {
   }
 
   def deleteTriggerMonitoringRecord(triggerKey: TriggerKey): Int = {
-    val connection = connectionProvider.getConnection
+    val connection = getConnection()
     try {
       val prepared = connection.prepareStatement("""
         DELETE
@@ -106,7 +106,7 @@ class TriggerMonitoringModel(props: Properties) {
   }
 
   def getTriggerMonitoringRecord(triggerKey: TriggerKey): Option[TriggerMonitoringRecord] = {
-    val connection = connectionProvider.getConnection
+    val connection = getConnection()
 
     try {
       val prepared = connection.prepareStatement("""

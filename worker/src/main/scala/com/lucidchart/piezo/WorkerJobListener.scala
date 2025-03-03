@@ -5,13 +5,15 @@ import java.util.Properties
 import org.quartz.{JobExecutionContext, JobExecutionException, JobListener}
 import org.slf4j.LoggerFactory
 import org.slf4j.Logger
+import java.sql.Connection
 
 object WorkerJobListener {
   val logger: Logger = LoggerFactory.getLogger(this.getClass)
 }
 
-class WorkerJobListener(props: Properties, statsd: StatsDClient, useDatadog: Boolean) extends JobListener {
-  val jobHistoryModel = new JobHistoryModel(props)
+class WorkerJobListener(getConnection: () => Connection, statsd: StatsDClient, useDatadog: Boolean)
+    extends JobListener {
+  val jobHistoryModel = new JobHistoryModel(getConnection)
 
   def getName: String = "WorkerJobListener"
 

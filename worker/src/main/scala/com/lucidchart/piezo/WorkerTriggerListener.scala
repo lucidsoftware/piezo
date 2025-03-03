@@ -6,13 +6,15 @@ import java.util.Properties
 import org.quartz.Trigger.{CompletedExecutionInstruction, TriggerState}
 import org.quartz.*
 import org.slf4j.LoggerFactory
+import java.sql.Connection
 
 object WorkerTriggerListener {
   private val logger = LoggerFactory.getLogger(this.getClass)
 }
 
-class WorkerTriggerListener(props: Properties, statsd: StatsDClient, useDatadog: Boolean) extends TriggerListener {
-  val triggerHistoryModel = new TriggerHistoryModel(props)
+class WorkerTriggerListener(getConnection: () => Connection, statsd: StatsDClient, useDatadog: Boolean)
+    extends TriggerListener {
+  val triggerHistoryModel = new TriggerHistoryModel(getConnection)
 
   def getName: String = "WorkerTriggerListener"
 

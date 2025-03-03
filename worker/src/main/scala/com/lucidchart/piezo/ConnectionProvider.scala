@@ -9,21 +9,30 @@ import org.slf4j.LoggerFactory
 import scala.annotation.tailrec
 import org.slf4j.Logger
 
-class ConnectionProvider(props: Properties) {
+class ConnectionProvider(
+  url: String,
+  driver: String,
+  user: String,
+  password: String,
+  maxConnections: Int = 10,
+  validationQuery: String = "SELECT 0",
+  supportIPFailover: Boolean = false,
+  // Intended to be used only for tests. This mocks an IP failover every time a connection is retreived
+  causeFailoverEveryConnection: Boolean = false,
+) extends org.quartz.utils.ConnectionProvider {
 
-  private class Pool(val ip: String) {
-    val connectionProvider: Option[HikariCpPoolingConnectionProvider] = createNewConnectionProvider()
+  private class Pool(val ip: String, val connectionProvider: HikariCpPoolingConnectionProvider) {
+
+    def this(ip: String) = this(ip, createNewConnectionProvider())
+
     logger.info(s"Initialized Db connection pool for ${jdbcURL}")
     // Hikari takes about a second to add connections to the connection pool
     // We are now going to warm-up connectionPool(with timelimit of 2500ms)
-    connectionProvider.map(warmUpCP)
+    warmUpCP(connectionProvider)
   }
 
   val logger: Logger = LoggerFactory.getLogger(this.getClass)
-  private val dataSource = props.getProperty("org.quartz.jobStore.dataSource")
-  private val jdbcURL =
-    if (dataSource != null) props.getProperty("org.quartz.dataSource." + dataSource + ".URL") else null
-  private val detectIpAddressFailover = props.getProperty("supportIPFailover") == "true"
+  private def jdbcURL = url
   // Removes "jdbc:mysql://" prefix and ":{port}..." suffix
   private val dataSourceHostname = if (jdbcURL != null) jdbcURL.replace("jdbc:mysql://", "").split(":")(0) else null
 
@@ -39,25 +48,15 @@ class ConnectionProvider(props: Properties) {
   @volatile
   private var pool: Pool = new Pool(getIP)
 
-  // Intended to be used only for tests. This mocks an IP failover every time a connection is retreived
-  private val causeFailoverEveryConnection = props.getProperty("causeFailoverEveryConnection") == "true"
-
-  def createNewConnectionProvider(): Option[HikariCpPoolingConnectionProvider] = {
-    if (dataSource != null) {
-      Some(
-        new HikariCpPoolingConnectionProvider(
-          props.getProperty("org.quartz.dataSource." + dataSource + ".driver"),
-          jdbcURL,
-          props.getProperty("org.quartz.dataSource." + dataSource + ".user"),
-          props.getProperty("org.quartz.dataSource." + dataSource + ".password"),
-          props.getProperty("org.quartz.dataSource." + dataSource + ".maxConnections").toInt,
-          props.getProperty("org.quartz.dataSource." + dataSource + ".validationQuery"),
-        ),
-      )
-    } else {
-      logger.info("No job store found in config to get connections")
-      None
-    }
+  def createNewConnectionProvider(): HikariCpPoolingConnectionProvider = {
+    new HikariCpPoolingConnectionProvider(
+      driver,
+      jdbcURL,
+      user,
+      password,
+      maxConnections,
+      validationQuery,
+    )
   }
 
   /**
@@ -112,8 +111,11 @@ class ConnectionProvider(props: Properties) {
     }
   }
 
-  def getConnection: Connection = {
-    if (detectIpAddressFailover && dataSourceHostname != null) {
+  // Do nothing. everything is initialized in constructor
+  override def initialize(): Unit = ()
+
+  override def getConnection: Connection = {
+    if (supportIPFailover && dataSourceHostname != null) {
       // If the IP has changed, then we know a failover has occurred, and we need to create a new hikari config
       val newIP: String = getIP
       if (hasIpAddressChanged(pool, newIP)) {
@@ -135,14 +137,17 @@ class ConnectionProvider(props: Properties) {
 
         // Clean up old pool so we don't leak connections to the old server
         optionalOldPool.foreach { oldPool =>
-          oldPool.connectionProvider.foreach { provider =>
-            logger.info(s"Closing DB connection pool for ${jdbcURL} for failover (${oldPool.ip} -> ${pool.ip})")
-            provider.shutdown()
-          }
+          logger.info(s"Closing DB connection pool for ${jdbcURL} for failover (${oldPool.ip} -> ${pool.ip})")
+          oldPool.connectionProvider.shutdown()
         }
       }
     }
-    pool.connectionProvider.get.getConnection
+    pool.connectionProvider.getConnection
+  }
+
+  override def shutdown(): Unit = {
+    logger.info(s"Shutting down connection pool for ${jdbcURL}")
+    pool.connectionProvider.shutdown()
   }
 
   private def warmUpCP(connectionPool: HikariCpPoolingConnectionProvider): Unit = {

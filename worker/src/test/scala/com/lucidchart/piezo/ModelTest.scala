@@ -19,13 +19,11 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
 
   val propertiesStreamFailoverEveryConnection: InputStream =
     getClass().getResourceAsStream("/quartz_test_mysql_failover_every_connection.properties")
-  val propertiesWithFailoverEveryConnection = new Properties
-  propertiesWithFailoverEveryConnection.load(propertiesStreamFailoverEveryConnection)
 
   val username: String = properties.getProperty("org.quartz.dataSource.test_jobs.user")
   val password: String = properties.getProperty("org.quartz.dataSource.test_jobs.password")
   val dbUrl: String = properties.getProperty("org.quartz.dataSource.test_jobs.URL")
-  val urlParts :+ testDb = dbUrl.split("/").toSeq
+  val urlParts :+ testDb = dbUrl.split("/").toSeq: @unchecked
   val mysqlUrl: String = urlParts.mkString("/")
   Class.forName("com.mysql.cj.jdbc.Driver")
 
@@ -62,10 +60,22 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
     }
   }
 
+  private def getConnectionProvider(failoverEveryConnection: Boolean = false): () => java.sql.Connection = {
+    val provider = new ConnectionProvider(
+      dbUrl,
+      "mysql",
+      username,
+      password,
+      supportIPFailover = true,
+      causeFailoverEveryConnection = failoverEveryConnection,
+    )
+
+    () => provider.getConnection()
+  }
+
   "JobHistoryModel" should {
     "work correctly" in {
-      properties.getProperty("causeFailoverEveryConnection") must beNull
-      val jobHistoryModel = new JobHistoryModel(properties)
+      val jobHistoryModel = new JobHistoryModel(getConnectionProvider())
       val jobKey = new JobKey("blah", "blah")
       val triggerKey = new TriggerKey("blahtn", "blahtg")
       jobHistoryModel.getJobs().isEmpty must beTrue
@@ -76,8 +86,7 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
     }
 
     "work correctly with a failover for every connection to the database" in {
-      propertiesWithFailoverEveryConnection.getProperty("causeFailoverEveryConnection") mustEqual "true"
-      val jobHistoryModel = new JobHistoryModel(propertiesWithFailoverEveryConnection)
+      val jobHistoryModel = new JobHistoryModel(getConnectionProvider(true))
       val jobKey = new JobKey("blahc", "blahc")
       val triggerKey = new TriggerKey("blahtnc", "blahtgc")
       jobHistoryModel.getJob(jobKey).headOption must beNone
@@ -89,7 +98,7 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
 
   "TriggerMonitoringModel" should {
     "work correctly" in {
-      val triggerMonitoringPriorityModel = new TriggerMonitoringModel(properties)
+      val triggerMonitoringPriorityModel = new TriggerMonitoringModel(getConnectionProvider())
       val triggerKey = new TriggerKey("blahj", "blahg")
       triggerMonitoringPriorityModel.getTriggerMonitoringRecord(triggerKey) must beNone
       triggerMonitoringPriorityModel.setTriggerMonitoringRecord(
@@ -106,7 +115,7 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
 
   "TriggerHistoryModel" should {
     "work correctly" in {
-      val triggerHistoryModel = new TriggerHistoryModel(properties)
+      val triggerHistoryModel = new TriggerHistoryModel(getConnectionProvider())
       val triggerKey = new TriggerKey("blahj", "blahg")
       triggerHistoryModel.addTrigger(
         triggerKey,

@@ -1,10 +1,11 @@
 package com.lucidchart.piezo
 
 import java.sql.{ResultSet, Timestamp}
-import java.util.{Date, Properties}
+import java.util.Date
 import org.quartz.{JobKey, TriggerKey}
 import org.slf4j.LoggerFactory
 import org.slf4j.Logger
+import java.sql.Connection
 
 case class JobRecord(
   name: String,
@@ -17,9 +18,8 @@ case class JobRecord(
   fire_instance_id: String,
 )
 
-class JobHistoryModel(props: Properties) {
+class JobHistoryModel(getConnection: () => Connection) {
   val logger: Logger = LoggerFactory.getLogger(this.getClass)
-  val connectionProvider = new ConnectionProvider(props)
 
   def addJob(
     fireInstanceId: String,
@@ -29,7 +29,7 @@ class JobHistoryModel(props: Properties) {
     instanceDurationInMillis: Long,
     success: Boolean,
   ): Unit = {
-    val connection = connectionProvider.getConnection
+    val connection = getConnection()
     try {
       val prepared = connection.prepareStatement(
         """
@@ -63,7 +63,7 @@ class JobHistoryModel(props: Properties) {
   }
 
   def deleteJobs(minStart: Long): Int = {
-    val connection = connectionProvider.getConnection
+    val connection = getConnection()
     try {
       val prepared = connection.prepareStatement(
         """
@@ -84,7 +84,7 @@ class JobHistoryModel(props: Properties) {
   }
 
   def getJob(jobKey: JobKey): List[JobRecord] = {
-    val connection = connectionProvider.getConnection
+    val connection = getConnection()
 
     try {
       val prepared = connection.prepareStatement(
@@ -113,7 +113,7 @@ class JobHistoryModel(props: Properties) {
   }
 
   def getLastJobSuccessByTrigger(triggerKey: TriggerKey): Option[JobRecord] = {
-    val connection = connectionProvider.getConnection
+    val connection = getConnection()
 
     try {
       val prepared = connection.prepareStatement(
@@ -147,7 +147,7 @@ class JobHistoryModel(props: Properties) {
   }
 
   def getJobs(): List[JobRecord] = {
-    val connection = connectionProvider.getConnection
+    val connection = getConnection()
 
     try {
       val prepared = connection.prepareStatement(
