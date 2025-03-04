@@ -63,7 +63,7 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
   private def getConnectionProvider(failoverEveryConnection: Boolean = false): () => java.sql.Connection = {
     val provider = new ConnectionProvider(
       dbUrl,
-      "mysql",
+      "com.mysql.cj.jdbc.Driver",
       username,
       password,
       supportIPFailover = true,
