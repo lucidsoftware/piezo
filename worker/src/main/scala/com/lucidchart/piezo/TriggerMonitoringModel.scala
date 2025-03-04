@@ -1,10 +1,11 @@
 package com.lucidchart.piezo
 
 import com.lucidchart.piezo.TriggerMonitoringPriority.TriggerMonitoringPriority
-import java.util.{Date, Properties}
+import java.util.Date
 import org.quartz.TriggerKey
 import org.slf4j.LoggerFactory
 import org.slf4j.Logger
+import java.sql.Connection
 
 object TriggerMonitoringPriority {
   case class Value(id: Int, name: String) {
@@ -24,27 +25,26 @@ object TriggerMonitoringPriority {
   def withName: Function[String, Value] = valuesByName
 }
 
-case class TriggerMonitoringRecord (
+case class TriggerMonitoringRecord(
   triggerName: String,
   triggerGroup: String,
   priority: TriggerMonitoringPriority,
   maxSecondsInError: Int,
   monitoringTeam: Option[String],
   created: Date,
-  modified: Date
+  modified: Date,
 )
 
-class TriggerMonitoringModel(props: Properties) {
+class TriggerMonitoringModel(getConnection: () => Connection) {
   val logger: Logger = LoggerFactory.getLogger(this.getClass)
-  val connectionProvider = new ConnectionProvider(props)
 
   def setTriggerMonitoringRecord(
     triggerKey: TriggerKey,
     triggerMonitoringPriority: TriggerMonitoringPriority,
     maxSecondsInError: Int,
-    monitoringTeam: Option[String]
+    monitoringTeam: Option[String],
   ): Int = {
-    val connection = connectionProvider.getConnection
+    val connection = getConnection()
     try {
       val prepared = connection.prepareStatement("""
         INSERT INTO trigger_monitoring_priority
@@ -66,19 +66,20 @@ class TriggerMonitoringModel(props: Properties) {
       }
       prepared.executeUpdate()
     } catch {
-      case e: Exception => logger.error(
-        s"Error setting trigger monitoring priority. " +
-        s"Trigger name: ${triggerKey.getName} group: ${triggerKey.getGroup}",
-        e
-      )
-      0
+      case e: Exception =>
+        logger.error(
+          s"Error setting trigger monitoring priority. " +
+            s"Trigger name: ${triggerKey.getName} group: ${triggerKey.getGroup}",
+          e,
+        )
+        0
     } finally {
       connection.close()
     }
   }
 
   def deleteTriggerMonitoringRecord(triggerKey: TriggerKey): Int = {
-    val connection = connectionProvider.getConnection
+    val connection = getConnection()
     try {
       val prepared = connection.prepareStatement("""
         DELETE
@@ -95,7 +96,7 @@ class TriggerMonitoringModel(props: Properties) {
         logger.error(
           s"Error deleting trigger monitoring priority. " +
             s"Trigger name: ${triggerKey.getName} group: ${triggerKey.getGroup}",
-          e
+          e,
         )
         0
       }
@@ -105,7 +106,7 @@ class TriggerMonitoringModel(props: Properties) {
   }
 
   def getTriggerMonitoringRecord(triggerKey: TriggerKey): Option[TriggerMonitoringRecord] = {
-    val connection = connectionProvider.getConnection
+    val connection = getConnection()
 
     try {
       val prepared = connection.prepareStatement("""
@@ -127,7 +128,7 @@ class TriggerMonitoringModel(props: Properties) {
             rs.getInt("max_error_time"),
             Option(rs.getString("monitoring_team")),
             rs.getDate("created"),
-            rs.getDate("modified")
+            rs.getDate("modified"),
           )
         }
       } else {
@@ -137,8 +138,8 @@ class TriggerMonitoringModel(props: Properties) {
       case e: Exception => {
         logger.error(
           s"Error retrieving trigger monitoring priority. " +
-          s"Trigger name: ${triggerKey.getName} group: ${triggerKey.getGroup}",
-          e
+            s"Trigger name: ${triggerKey.getName} group: ${triggerKey.getGroup}",
+          e,
         )
         None
       }

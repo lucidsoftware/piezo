@@ -1,6 +1,6 @@
 package com.lucidchart.piezo.jobs.monitoring
 
-import org.quartz.{JobExecutionContext, Job}
+import org.quartz.{Job, JobExecutionContext}
 import org.slf4j.LoggerFactory
 
 class HeartBeat extends Job {

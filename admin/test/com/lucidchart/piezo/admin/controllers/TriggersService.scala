@@ -25,7 +25,13 @@ class TriggersService extends Specification {
       properties.load(propertiesStream)
       schedulerFactory.initialize(properties)
 
-      val triggersController = new Triggers(schedulerFactory, Helpers.stubControllerComponents(), MonitoringTeams.empty)
+      val triggersController =
+        new Triggers(
+          schedulerFactory.getScheduler(),
+          TestUtil.mockModelComponents,
+          Helpers.stubControllerComponents(),
+          MonitoringTeams.empty,
+        )
       val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/triggers/missinggroup/missingname")
       val missingTrigger: Future[Result] = triggersController.getTrigger("missinggroup", "missingname")(request)
 
@@ -43,7 +49,8 @@ class TriggersService extends Specification {
       val scheduler = schedulerFactory.getScheduler()
       createJob(scheduler)
 
-      val triggersController = new Triggers(schedulerFactory, Helpers.stubControllerComponents(), MonitoringTeams.empty)
+      val triggersController =
+        new Triggers(scheduler, TestUtil.mockModelComponents, Helpers.stubControllerComponents(), MonitoringTeams.empty)
       val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/triggers/" + jobGroup + "/" + jobName)
       val validTrigger: Future[Result] = triggersController.getTrigger(triggerGroup, triggerName)(request)
 

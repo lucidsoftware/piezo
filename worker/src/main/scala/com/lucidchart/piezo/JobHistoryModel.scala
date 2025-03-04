@@ -1,10 +1,11 @@
 package com.lucidchart.piezo
 
 import java.sql.{ResultSet, Timestamp}
-import java.util.{Date, Properties}
+import java.util.Date
 import org.quartz.{JobKey, TriggerKey}
 import org.slf4j.LoggerFactory
 import org.slf4j.Logger
+import java.sql.Connection
 
 case class JobRecord(
   name: String,
@@ -14,12 +15,11 @@ case class JobRecord(
   success: Int,
   start: Date,
   finish: Date,
-  fire_instance_id: String
+  fire_instance_id: String,
 )
 
-class JobHistoryModel(props: Properties) {
+class JobHistoryModel(getConnection: () => Connection) {
   val logger: Logger = LoggerFactory.getLogger(this.getClass)
-  val connectionProvider = new ConnectionProvider(props)
 
   def addJob(
     fireInstanceId: String,
@@ -27,9 +27,9 @@ class JobHistoryModel(props: Properties) {
     triggerKey: TriggerKey,
     fireTime: Date,
     instanceDurationInMillis: Long,
-    success:Boolean
+    success: Boolean,
   ): Unit = {
-    val connection = connectionProvider.getConnection
+    val connection = getConnection()
     try {
       val prepared = connection.prepareStatement(
         """
@@ -44,7 +44,7 @@ class JobHistoryModel(props: Properties) {
             finish
           )
           VALUES(?, ?, ?, ?, ?, ?, ?, ?)
-        """.stripMargin
+        """.stripMargin,
       )
       prepared.setString(1, fireInstanceId)
       prepared.setString(2, jobKey.getName)
@@ -56,27 +56,27 @@ class JobHistoryModel(props: Properties) {
       prepared.setTimestamp(8, new Timestamp(fireTime.getTime + instanceDurationInMillis))
       prepared.executeUpdate()
     } catch {
-      case e:Exception => logger.error("error in recording start of job",e)
+      case e: Exception => logger.error("error in recording start of job", e)
     } finally {
       connection.close()
-    } //TODO: close statement?
+    } // TODO: close statement?
   }
 
   def deleteJobs(minStart: Long): Int = {
-    val connection = connectionProvider.getConnection
+    val connection = getConnection()
     try {
       val prepared = connection.prepareStatement(
         """
           DELETE
           FROM job_history
           WHERE start < ?
-        """.stripMargin
+        """.stripMargin,
       )
       prepared.setTimestamp(1, new Timestamp(minStart))
       prepared.executeUpdate()
     } catch {
-      case e:Exception =>
-        logger.error("error deleting job histories",e)
+      case e: Exception =>
+        logger.error("error deleting job histories", e)
         0
     } finally {
       connection.close()
@@ -84,7 +84,7 @@ class JobHistoryModel(props: Properties) {
   }
 
   def getJob(jobKey: JobKey): List[JobRecord] = {
-    val connection = connectionProvider.getConnection
+    val connection = getConnection()
 
     try {
       val prepared = connection.prepareStatement(
@@ -96,7 +96,7 @@ class JobHistoryModel(props: Properties) {
             AND job_group=?
           ORDER BY start DESC
           LIMIT 100
-        """.stripMargin
+        """.stripMargin,
       )
       prepared.setString(1, jobKey.getName)
       prepared.setString(2, jobKey.getGroup)
@@ -113,7 +113,7 @@ class JobHistoryModel(props: Properties) {
   }
 
   def getLastJobSuccessByTrigger(triggerKey: TriggerKey): Option[JobRecord] = {
-    val connection = connectionProvider.getConnection
+    val connection = getConnection()
 
     try {
       val prepared = connection.prepareStatement(
@@ -126,7 +126,7 @@ class JobHistoryModel(props: Properties) {
             AND success=1
           ORDER BY start DESC
           LIMIT 1
-        """.stripMargin
+        """.stripMargin,
       )
       prepared.setString(1, triggerKey.getName)
       prepared.setString(2, triggerKey.getGroup)
@@ -147,7 +147,7 @@ class JobHistoryModel(props: Properties) {
   }
 
   def getJobs(): List[JobRecord] = {
-    val connection = connectionProvider.getConnection
+    val connection = getConnection()
 
     try {
       val prepared = connection.prepareStatement(
@@ -156,7 +156,7 @@ class JobHistoryModel(props: Properties) {
           FROM job_history
           ORDER BY start DESC
           LIMIT 100
-        """.stripMargin
+        """.stripMargin,
       )
       val rs = prepared.executeQuery()
       parseJobs(rs)
@@ -172,7 +172,7 @@ class JobHistoryModel(props: Properties) {
 
   def parseJobs(rs: ResultSet): List[JobRecord] = {
     var result = List[JobRecord]()
-    while(rs.next()) {
+    while (rs.next()) {
       result :+= parseJob(rs)
     }
     result
@@ -187,7 +187,7 @@ class JobHistoryModel(props: Properties) {
       rs.getInt("success"),
       rs.getTimestamp("start"),
       rs.getTimestamp("finish"),
-      rs.getString("fire_instance_id")
+      rs.getString("fire_instance_id"),
     )
   }
 }

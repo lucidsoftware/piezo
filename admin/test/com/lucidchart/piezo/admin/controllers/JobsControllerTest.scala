@@ -13,17 +13,16 @@ import org.quartz.Job
 import com.lucidchart.piezo.util.DummyClassGenerator
 
 /**
-  * Add your spec here.
-  * You can mock out a whole application including requests, plugins etc.
-  * For more information, consult the wiki.
-  */
+ * Add your spec here. You can mock out a whole application including requests, plugins etc. For more information,
+ * consult the wiki.
+ */
 class JobsControllerTest extends Specification {
   val rootLogger: Logger = LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME).asInstanceOf[Logger]
   rootLogger.setLevel(Level.DEBUG)
 
   "Jobs" should {
     "create dummy job class" in {
-      //TODO: figure out how to set the classpath in a test
+      // TODO: figure out how to set the classpath in a test
 //      val rootPackageClassName = "foo"
 //      val rootPackageClassSource = Jobs.getDummyJobSource(rootPackageClassName)
 //      val dummyClassGenerator = new DummyClassGenerator()
