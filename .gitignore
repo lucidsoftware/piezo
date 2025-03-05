@@ -1,6 +1,9 @@
 *.class
 *.log
 
+# Created when running admin service
+HeartbeatTestFile
+
 # sbt specific
 dist/*
 target/

@@ -1,10 +1,10 @@
 package com.lucidchart.piezo.util
 
-import javax.tools.{ JavaFileObject, DiagnosticCollector, ToolProvider}
-import org.quartz.{JobExecutionContext, Job}
+import javax.tools.{DiagnosticCollector, JavaFileObject, ToolProvider}
+import org.quartz.{Job, JobExecutionContext}
 
 import scala.jdk.CollectionConverters.*
-import java.net.{URLClassLoader}
+import java.net.URLClassLoader
 import org.slf4j.LoggerFactory
 import java.io.File
 import javax.tools.JavaCompiler
@@ -19,19 +19,18 @@ class DummyClassGenerator {
   val tempDir: String = System.getProperty("java.io.tmpdir")
   val tempOutputDirName: String = tempDir + File.separator + "piezo"
   val tempOutputDir = new File(tempOutputDirName)
-  if (!tempOutputDir.exists())
-  {
+  if (!tempOutputDir.exists()) {
     tempOutputDir.mkdir()
   }
-  val urlClassLoader: URLClassLoader = new URLClassLoader(
-    Array(tempOutputDir.toURI().toURL()), Thread.currentThread().getContextClassLoader())
+  val urlClassLoader: URLClassLoader =
+    new URLClassLoader(Array(tempOutputDir.toURI().toURL()), Thread.currentThread().getContextClassLoader())
   val compiler: JavaCompiler = ToolProvider.getSystemJavaCompiler()
   val diagnostics: DiagnosticCollector[JavaFileObject] = new DiagnosticCollector[JavaFileObject]()
 
   private def getClasspath() = {
     val dummyJob = new Job() {
-      def execute(context: JobExecutionContext): Unit = {
-      }}
+      def execute(context: JobExecutionContext): Unit = {}
+    }
     val classLoader = dummyJob.getClass.getClassLoader
     val urls = classLoader.asInstanceOf[URLClassLoader].getURLs()
     val buffer = new StringBuilder(1000)
