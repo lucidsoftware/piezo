@@ -38,10 +38,10 @@ class BeanConnectionProvider extends org.quartz.utils.ConnectionProvider {
   @BeanProperty
   var causeFailoverEveryConnection: Boolean = false
 
-  private var provider: ConnectionProvider = null
+  private var provider: PiezoConnectionProvider = null
 
   override def initialize(): Unit = {
-    provider = new ConnectionProvider(
+    provider = new PiezoConnectionProvider(
       URL,
       driver,
       user,

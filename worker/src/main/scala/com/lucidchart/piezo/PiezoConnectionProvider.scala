@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory
 import scala.annotation.tailrec
 import org.slf4j.Logger
 
-class ConnectionProvider(
+private[piezo] class PiezoConnectionProvider(
   url: String,
   driver: String,
   user: String,
@@ -19,7 +19,7 @@ class ConnectionProvider(
   supportIPFailover: Boolean = false,
   // Intended to be used only for tests. This mocks an IP failover every time a connection is retreived
   causeFailoverEveryConnection: Boolean = false,
-) extends org.quartz.utils.ConnectionProvider {
+) {
 
   private class Pool(val ip: String, val connectionProvider: HikariCpPoolingConnectionProvider) {
 
@@ -111,10 +111,7 @@ class ConnectionProvider(
     }
   }
 
-  // Do nothing. everything is initialized in constructor
-  override def initialize(): Unit = ()
-
-  override def getConnection: Connection = {
+  def getConnection(): Connection = {
     if (supportIPFailover && dataSourceHostname != null) {
       // If the IP has changed, then we know a failover has occurred, and we need to create a new hikari config
       val newIP: String = getIP
@@ -142,10 +139,10 @@ class ConnectionProvider(
         }
       }
     }
-    pool.connectionProvider.getConnection
+    pool.connectionProvider.getConnection()
   }
 
-  override def shutdown(): Unit = {
+  def shutdown(): Unit = {
     logger.info(s"Shutting down connection pool for ${jdbcURL}")
     pool.connectionProvider.shutdown()
   }

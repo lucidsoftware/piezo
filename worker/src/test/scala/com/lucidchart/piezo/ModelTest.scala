@@ -61,7 +61,7 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
   }
 
   private def getConnectionProvider(failoverEveryConnection: Boolean = false): () => java.sql.Connection = {
-    val provider = new ConnectionProvider(
+    val provider = new PiezoConnectionProvider(
       dbUrl,
       "com.mysql.cj.jdbc.Driver",
       username,
