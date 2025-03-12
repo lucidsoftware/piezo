@@ -11,14 +11,14 @@ import org.quartz.Scheduler
 import org.quartz.Trigger
 import play.api.libs.json.*
 
-
 import scala.collection.mutable
 
 object TriggerHelper {
   def getTriggersByGroup(scheduler: Scheduler): mutable.Buffer[(String, List[TriggerKey])] = {
     val triggersByGroup =
       for (groupName <- scheduler.getTriggerGroupNames.asScala) yield {
-        val triggers: List[TriggerKey] = scheduler.getTriggerKeys(GroupMatcher.triggerGroupEquals(groupName)).asScala.toList
+        val triggers: List[TriggerKey] =
+          scheduler.getTriggerKeys(GroupMatcher.triggerGroupEquals(groupName)).asScala.toList
         val sortedTriggers: List[TriggerKey] = triggers.sortBy(triggerKey => triggerKey.getName)
         (groupName, sortedTriggers)
       }
@@ -31,10 +31,11 @@ object TriggerHelper {
     val schedule = triggerType match {
       case TriggerType.Cron => {
         val cronTrigger = trigger.asInstanceOf[CronTrigger]
-        Json.obj("cron" ->
-          Json.obj(
-            "cronExpression" -> cronTrigger.getCronExpression
-          )
+        Json.obj(
+          "cron" ->
+            Json.obj(
+              "cronExpression" -> cronTrigger.getCronExpression,
+            ),
         )
 
       }
@@ -43,18 +44,21 @@ object TriggerHelper {
         Json.obj(
           "simple" -> Json.obj(
             "repeatInterval" -> simpleTrigger.getRepeatInterval,
-            "repeatCount" -> simpleTrigger.getRepeatCount
-          )
+            "repeatCount" -> simpleTrigger.getRepeatCount,
+          ),
         )
       }
       case _ => Json.obj()
     }
 
-    val (monitoringPriority, maxSecondsInError, monitoringTeam) = monitoringModel.getTriggerMonitoringRecord(
-      trigger.getKey,
-    ).map { monitoringRecord =>
-      (monitoringRecord.priority, monitoringRecord.maxSecondsInError, monitoringRecord.monitoringTeam)
-    }.getOrElse((TriggerMonitoringPriority.Low, 300, None))
+    val (monitoringPriority, maxSecondsInError, monitoringTeam) = monitoringModel
+      .getTriggerMonitoringRecord(
+        trigger.getKey,
+      )
+      .map { monitoringRecord =>
+        (monitoringRecord.priority, monitoringRecord.maxSecondsInError, monitoringRecord.monitoringTeam)
+      }
+      .getOrElse((TriggerMonitoringPriority.Low, 300, None))
     val jobDataMap = trigger.getJobDataMap
     val job = trigger.getJobKey
     Json.obj(
@@ -71,5 +75,6 @@ object TriggerHelper {
     ) ++ schedule
   }
 
-  def writesTriggerSeq(monitoringModel: TriggerMonitoringModel): Writes[Seq[Trigger]] = Writes.seq(writesTrigger(monitoringModel))
+  def writesTriggerSeq(monitoringModel: TriggerMonitoringModel): Writes[Seq[Trigger]] =
+    Writes.seq(writesTrigger(monitoringModel))
 }

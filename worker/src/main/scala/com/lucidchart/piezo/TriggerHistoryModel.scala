@@ -13,14 +13,20 @@ case class TriggerRecord(
   actual_start: Option[Date],
   finish: Date,
   misfire: Int,
-  fire_instance_id: String
+  fire_instance_id: String,
 )
 
 class TriggerHistoryModel(props: Properties) {
   val logger: Logger = LoggerFactory.getLogger(this.getClass)
   val connectionProvider = new ConnectionProvider(props)
 
-  def addTrigger(triggerKey: TriggerKey, triggerFireTime: Option[Date], actualStart: Option[Date], misfire: Boolean, fireInstanceId: Option[String]): Unit = {
+  def addTrigger(
+    triggerKey: TriggerKey,
+    triggerFireTime: Option[Date],
+    actualStart: Option[Date],
+    misfire: Boolean,
+    fireInstanceId: Option[String],
+  ): Unit = {
     val connection = connectionProvider.getConnection
     try {
       val prepared = connection.prepareStatement(
@@ -42,7 +48,7 @@ class TriggerHistoryModel(props: Properties) {
             finish = Values(finish),
             misfire = Values(misfire),
             fire_instance_id = Values(fire_instance_id)
-        """.stripMargin
+        """.stripMargin,
       )
       prepared.setString(1, triggerKey.getName)
       prepared.setString(2, triggerKey.getGroup)
@@ -53,7 +59,7 @@ class TriggerHistoryModel(props: Properties) {
       prepared.setString(7, fireInstanceId.getOrElse(""))
       prepared.executeUpdate()
     } catch {
-      case e:Exception => logger.error("error in recording end of trigger",e)
+      case e: Exception => logger.error("error in recording end of trigger", e)
     } finally {
       connection.close()
     }
@@ -66,8 +72,8 @@ class TriggerHistoryModel(props: Properties) {
       prepared.setTimestamp(1, new Timestamp(minScheduledStart))
       prepared.executeUpdate()
     } catch {
-      case e:Exception =>
-        logger.error("error deleting trigger histories",e)
+      case e: Exception =>
+        logger.error("error deleting trigger histories", e)
         0
     } finally {
       connection.close()
@@ -78,13 +84,15 @@ class TriggerHistoryModel(props: Properties) {
     val connection = connectionProvider.getConnection
 
     try {
-      val prepared = connection.prepareStatement("""SELECT * FROM trigger_history WHERE trigger_name=? AND trigger_group=? ORDER BY scheduled_start DESC LIMIT 100""")
+      val prepared = connection.prepareStatement(
+        """SELECT * FROM trigger_history WHERE trigger_name=? AND trigger_group=? ORDER BY scheduled_start DESC LIMIT 100""",
+      )
       prepared.setString(1, triggerKey.getName)
       prepared.setString(2, triggerKey.getGroup)
       val rs = prepared.executeQuery()
 
       var result = List[TriggerRecord]()
-      while(rs.next()) {
+      while (rs.next()) {
         result :+= new TriggerRecord(
           rs.getString("trigger_name"),
           rs.getString("trigger_group"),
@@ -92,16 +100,16 @@ class TriggerHistoryModel(props: Properties) {
           Option(rs.getTimestamp("actual_start")),
           rs.getTimestamp("finish"),
           rs.getInt("misfire"),
-          rs.getString("fire_instance_id")
+          rs.getString("fire_instance_id"),
         )
       }
       result
     } catch {
-      case e: Exception => logger.error("error in retrieving triggers", e)
-      List()
+      case e: Exception =>
+        logger.error("error in retrieving triggers", e)
+        List()
     } finally {
       connection.close()
     }
   }
 }
-
