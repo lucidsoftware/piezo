@@ -12,9 +12,11 @@ import play.api.Mode
 import play.api.routing.Router
 import router.Routes
 import scala.concurrent.Future
+import com.lucidchart.piezo.{JobHistoryModel, TriggerHistoryModel, TriggerMonitoringModel}
 import com.lucidchart.piezo.admin.models.*
 import com.lucidchart.piezo.admin.controllers.*
 import com.lucidchart.piezo.WorkerSchedulerFactory
+import org.quartz.Scheduler
 import _root_.controllers.AssetsComponents
 
 /**
@@ -30,8 +32,18 @@ class PiezoAdminComponents(context: Context)
     with AssetsComponents {
 
   lazy val schedulerFactory: WorkerSchedulerFactory = new WorkerSchedulerFactory()
+  private lazy val quartzScheduler: Scheduler = schedulerFactory.getScheduler()
   lazy val jobFormHelper: JobFormHelper = wire[JobFormHelper]
   lazy val monitoringTeams: MonitoringTeams = MonitoringTeams(configuration)
+
+  private lazy val modelComponents: ModelComponents = {
+    val props = schedulerFactory.props
+    var source = props.getProperty("com.lucidchart.piezo.dataSource")
+    if (source == null) {
+      source = props.getProperty("org.quartz.jobStore.dataSource")
+    }
+    ModelComponents.forDataSource(source)
+  }
 
   lazy val triggers: Triggers = wire[Triggers]
   lazy val jobs: Jobs = wire[Jobs]

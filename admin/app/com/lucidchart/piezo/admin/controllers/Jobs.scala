@@ -2,6 +2,7 @@ package com.lucidchart.piezo.admin.controllers
 
 import com.lucidchart.piezo.admin.utils.JobUtils
 import com.lucidchart.piezo.admin.utils.JobDetailHelper.*
+import com.lucidchart.piezo.admin.models.ModelComponents
 import com.lucidchart.piezo.admin.views.*
 import com.lucidchart.piezo.{JobHistoryModel, TriggerHistoryModel, TriggerMonitoringModel, WorkerSchedulerFactory}
 import org.quartz.*
@@ -35,13 +36,20 @@ trait ImportResult {
   }
 }
 
-case class ImportSuccess(val jobKey: Option[JobKey], val errorMessage: String = "", val success: Boolean = true)
-    extends ImportResult
-case class ImportFailure(val jobKey: Option[JobKey], val errorMessage: String, val success: Boolean = false)
-    extends ImportResult
+case class ImportSuccess(
+  val jobKey: Option[JobKey],
+  val errorMessage: String = "",
+  val success: Boolean = true,
+) extends ImportResult
+case class ImportFailure(
+  val jobKey: Option[JobKey],
+  val errorMessage: String,
+  val success: Boolean = false,
+) extends ImportResult
 
 class Jobs(
-  schedulerFactory: WorkerSchedulerFactory,
+  scheduler: Scheduler,
+  modelComponents: ModelComponents,
   jobView: html.job,
   cc: ControllerComponents,
   monitoringTeams: MonitoringTeams,
@@ -49,10 +57,8 @@ class Jobs(
     with Logging
     with ErrorLogging
     with play.api.i18n.I18nSupport {
-  val scheduler: Scheduler = logExceptions(schedulerFactory.getScheduler())
-  val properties = schedulerFactory.props
-  val jobHistoryModel: JobHistoryModel = logExceptions(new JobHistoryModel(properties))
-  val triggerMonitoringPriorityModel: TriggerMonitoringModel = logExceptions(new TriggerMonitoringModel(properties))
+
+  import modelComponents.*
 
   val jobFormHelper = new JobFormHelper()
   val triggerFormHelper = new TriggerFormHelper(scheduler, monitoringTeams)
@@ -63,7 +69,10 @@ class Jobs(
   def getJobsByGroup(): mutable.Buffer[(String, List[JobKey])] = {
     val jobsByGroup =
       for (groupName <- scheduler.getJobGroupNames().asScala) yield {
-        val jobs: List[JobKey] = scheduler.getJobKeys(GroupMatcher.jobGroupEquals(groupName)).asScala.toList
+        val jobs: List[JobKey] = scheduler
+          .getJobKeys(GroupMatcher.jobGroupEquals(groupName))
+          .asScala
+          .toList
         val sortedJobs: List[JobKey] = jobs.sortBy(jobKey => jobKey.getName())
         (groupName, sortedJobs)
       }
@@ -83,10 +92,17 @@ class Jobs(
         triggerKeys.map(triggerKey => scheduler.getTrigger(triggerKey).getJobKey)
       }
       .toList
-    val untriggeredJobs: List[JobKey] = allJobs.filterNot(x => triggeredJobs.contains(x))
+    val untriggeredJobs: List[JobKey] =
+      allJobs.filterNot(x => triggeredJobs.contains(x))
     Ok(
       com.lucidchart.piezo.admin.views.html
-        .jobs(getJobsByGroup(), None, Some(jobHistories), untriggeredJobs, scheduler.getMetaData)(request),
+        .jobs(
+          getJobsByGroup(),
+          None,
+          Some(jobHistories),
+          untriggeredJobs,
+          scheduler.getMetaData,
+        )(request),
     )
   }
 
@@ -100,7 +116,8 @@ class Jobs(
       NotFound(jobView(getJobsByGroup(), None, None, None, errorMsg)(request))
     } else {
       try {
-        val jobDetail: Option[JobDetail] = Some(scheduler.getJobDetail(jobKey))
+        val jobDetail: Option[JobDetail] =
+          Some(scheduler.getJobDetail(jobKey))
 
         val history = {
           try {
@@ -115,20 +132,39 @@ class Jobs(
 
         val triggers = scheduler.getTriggersOfJob(jobKey).asScala.toList
         val (resumableTriggers, pausableTriggers) =
-          triggers.filter(_.isInstanceOf[CronTrigger]).map(_.getKey()).partition { triggerKey =>
-            scheduler.getTriggerState(triggerKey) == Trigger.TriggerState.PAUSED
-          }
+          triggers
+            .filter(_.isInstanceOf[CronTrigger])
+            .map(_.getKey())
+            .partition { triggerKey =>
+              scheduler.getTriggerState(
+                triggerKey,
+              ) == Trigger.TriggerState.PAUSED
+            }
 
         Ok(
-          jobView(getJobsByGroup(), jobDetail, history, Some(triggers), None, pausableTriggers, resumableTriggers)(
+          jobView(
+            getJobsByGroup(),
+            jobDetail,
+            history,
+            Some(triggers),
+            None,
+            pausableTriggers,
+            resumableTriggers,
+          )(
             request,
           ),
         )
       } catch {
         case e: Exception => {
-          val errorMsg = "Exception caught getting job " + group + " " + name + ". -- " + e.getLocalizedMessage()
+          val errorMsg =
+            "Exception caught getting job " + group + " " + name + ". -- " + e
+              .getLocalizedMessage()
           logger.error(errorMsg, e)
-          InternalServerError(jobView(getJobsByGroup(), None, None, None, Some(errorMsg))(request))
+          InternalServerError(
+            jobView(getJobsByGroup(), None, None, None, Some(errorMsg))(
+              request,
+            ),
+          )
         }
       }
     }
@@ -145,9 +181,17 @@ class Jobs(
         Ok(jobView(getJobsByGroup(), None, None, None)(request))
       } catch {
         case e: Exception => {
-          val errorMsg = "Exception caught deleting job %s %s. -- %s".format(group, name, e.getLocalizedMessage())
+          val errorMsg = "Exception caught deleting job %s %s. -- %s".format(
+            group,
+            name,
+            e.getLocalizedMessage(),
+          )
           logger.error(errorMsg, e)
-          InternalServerError(jobView(mutable.Buffer(), None, None, None, Some(errorMsg))(request))
+          InternalServerError(
+            jobView(mutable.Buffer(), None, None, None, Some(errorMsg))(
+              request,
+            ),
+          )
         }
       }
     }
@@ -159,7 +203,11 @@ class Jobs(
       if (scheduler.checkExists(jobKey)) {
         val jobDetail = scheduler.getJobDetail(jobKey)
         val triggers = scheduler.getTriggersOfJob(jobKey).asScala.toList
-        Ok(Json.toJson(Seq(jobDetail))(jobDetailSeqWrites(triggers, triggerMonitoringPriorityModel)))
+        Ok(
+          Json.toJson(Seq(jobDetail))(
+            jobDetailSeqWrites(triggers, triggerMonitoringModel),
+          ),
+        )
       } else {
         NotFound(Json.obj("message" -> "specified job doesn't exist"))
       }
@@ -173,10 +221,13 @@ class Jobs(
       Ok(
         Json.toJson(
           scheduler.getJobGroupNames().asScala.toList.flatMap { group =>
-            val jobKeys = scheduler.getJobKeys(GroupMatcher.jobGroupEquals(group)).asScala
+            val jobKeys =
+              scheduler.getJobKeys(GroupMatcher.jobGroupEquals(group)).asScala
             jobKeys.map { jk =>
               val triggers = scheduler.getTriggersOfJob(jk).asScala.toList
-              Json.toJson(scheduler.getJobDetail(jk))(jobDetailWrites(triggers, triggerMonitoringPriorityModel))
+              Json.toJson(scheduler.getJobDetail(jk))(
+                jobDetailWrites(triggers, triggerMonitoringModel),
+              )
             }
           },
         ),
@@ -189,9 +240,13 @@ class Jobs(
   val submitNewMessage = "Create"
   val formNewAction = routes.Jobs.postJob
   val submitEditMessage = "Save"
-  def formEditAction(group: String, name: String): Call = routes.Jobs.putJob(group, name)
+  def formEditAction(group: String, name: String): Call =
+    routes.Jobs.putJob(group, name)
 
-  def getNewJobForm(templateGroup: Option[String] = None, templateName: Option[String] = None): Action[AnyContent] =
+  def getNewJobForm(
+    templateGroup: Option[String] = None,
+    templateName: Option[String] = None,
+  ): Action[AnyContent] =
     Action { implicit request =>
       // if (request.queryString.contains())
       templateGroup match {
@@ -200,13 +255,21 @@ class Jobs(
           val newJobForm = jobFormHelper.buildJobForm
           Ok(
             com.lucidchart.piezo.admin.views.html
-              .editJob(getJobsByGroup(), newJobForm, submitNewMessage, formNewAction, false)(request, implicitly),
+              .editJob(
+                getJobsByGroup(),
+                newJobForm,
+                submitNewMessage,
+                formNewAction,
+                false,
+              )(request, implicitly),
           )
       }
 
     }
 
-  def getEditJob(group: String, name: String, isTemplate: Boolean)(implicit request: Request[AnyContent]): Result = {
+  def getEditJob(group: String, name: String, isTemplate: Boolean)(implicit
+    request: Request[AnyContent],
+  ): Result = {
     val jobKey = new JobKey(name, group)
 
     if (scheduler.checkExists(jobKey)) {
@@ -215,7 +278,13 @@ class Jobs(
       if (isTemplate)
         Ok(
           com.lucidchart.piezo.admin.views.html
-            .editJob(getJobsByGroup(), editJobForm, submitNewMessage, formNewAction, false)(request, implicitly),
+            .editJob(
+              getJobsByGroup(),
+              editJobForm,
+              submitNewMessage,
+              formNewAction,
+              false,
+            )(request, implicitly),
         )
       else
         Ok(
@@ -229,24 +298,39 @@ class Jobs(
         )
     } else {
       val errorMsg = Some("Job %s %s not found".format(group, name))
-      NotFound(com.lucidchart.piezo.admin.views.html.trigger(mutable.Buffer(), None, None, errorMsg)(request))
+      NotFound(
+        com.lucidchart.piezo.admin.views.html
+          .trigger(mutable.Buffer(), None, None, errorMsg)(request),
+      )
     }
   }
 
-  def getEditJobAction(group: String, name: String): Action[AnyContent] = Action { implicit request =>
-    getEditJob(group, name, false)
-  }
+  def getEditJobAction(group: String, name: String): Action[AnyContent] =
+    Action { implicit request =>
+      getEditJob(group, name, false)
+    }
 
   def putJob(group: String, name: String): Action[AnyContent] = Action { implicit request =>
     jobFormHelper.buildJobForm
       .bindFromRequest()
       .fold(
         formWithErrors =>
-          BadRequest(html.editJob(getJobsByGroup(), formWithErrors, submitNewMessage, formNewAction, false)),
+          BadRequest(
+            html.editJob(
+              getJobsByGroup(),
+              formWithErrors,
+              submitNewMessage,
+              formNewAction,
+              false,
+            ),
+          ),
         value => {
           val jobDetail = JobUtils.cleanup(value)
           scheduler.addJob(jobDetail, true)
-          Redirect(routes.Jobs.getJob(value.getKey.getGroup(), value.getKey.getName()))
+          Redirect(
+            routes.Jobs
+              .getJob(value.getKey.getGroup(), value.getKey.getName()),
+          )
             .flashing("message" -> "Successfully edited job.", "class" -> "")
         },
       )
@@ -282,21 +366,38 @@ class Jobs(
               scheduler.addJob(jobDetail, false)
               val triggersOpt = (jsObject \ "triggers").asOpt[List[JsObject]]
               val triggersBinding =
-                triggersOpt.map(_.map(triggerFormHelper.buildTriggerForm.bind(_, maxFormSize))).getOrElse(Nil)
+                triggersOpt
+                  .map(
+                    _.map(
+                      triggerFormHelper.buildTriggerForm.bind(_, maxFormSize),
+                    ),
+                  )
+                  .getOrElse(Nil)
               if (triggersBinding.exists(b => b.hasErrors || b.hasGlobalErrors)) {
-                val errorMessage = formErrorStr(triggersBinding.filter(_.hasErrors).flatMap(_.errors))
+                val errorMessage = formErrorStr(
+                  triggersBinding.filter(_.hasErrors).flatMap(_.errors),
+                )
                 logger.error(errorMessage)
-                ImportFailure(Some(jobDetail.getKey), "Trigger Import Error:" + errorMessage)
+                ImportFailure(
+                  Some(jobDetail.getKey),
+                  "Trigger Import Error:" + errorMessage,
+                )
               } else {
                 val triggers = triggersBinding.flatMap(_.value)
-                triggers.foreach { case TriggerFormValue(trigger, monitoringPriority, errorTime, monitoringTeam) =>
-                  scheduler.scheduleJob(trigger)
-                  triggerMonitoringPriorityModel.setTriggerMonitoringRecord(
-                    trigger.getKey,
-                    monitoringPriority,
-                    errorTime,
-                    monitoringTeam,
-                  )
+                triggers.foreach {
+                  case TriggerFormValue(
+                        trigger,
+                        monitoringPriority,
+                        errorTime,
+                        monitoringTeam,
+                      ) =>
+                    scheduler.scheduleJob(trigger)
+                    triggerMonitoringModel.setTriggerMonitoringRecord(
+                      trigger.getKey,
+                      monitoringPriority,
+                      errorTime,
+                      monitoringTeam,
+                    )
                 }
                 ImportSuccess(Some(jobDetail.getKey))
               }
@@ -351,13 +452,22 @@ class Jobs(
         formWithErrors =>
           BadRequest(
             com.lucidchart.piezo.admin.views.html
-              .editJob(getJobsByGroup(), formWithErrors, submitNewMessage, formNewAction, false),
+              .editJob(
+                getJobsByGroup(),
+                formWithErrors,
+                submitNewMessage,
+                formNewAction,
+                false,
+              ),
           ),
         value => {
           try {
             val jobDetail = JobUtils.cleanup(value)
             scheduler.addJob(jobDetail, false)
-            Redirect(routes.Jobs.getJob(value.getKey.getGroup(), value.getKey.getName()))
+            Redirect(
+              routes.Jobs
+                .getJob(value.getKey.getGroup(), value.getKey.getName()),
+            )
               .flashing("message" -> "Successfully added job.", "class" -> "")
           } catch {
             case alreadyExists: ObjectAlreadyExistsException =>
@@ -385,10 +495,18 @@ class Jobs(
     }))
   }
 
-  def jobNameTypeAhead(group: String, sofar: String): Action[AnyContent] = Action { implicit request =>
-    val jobs = scheduler.getJobKeys(GroupMatcher.jobGroupEquals(group)).asScala.toSet
+  def jobNameTypeAhead(group: String, sofar: String): Action[AnyContent] =
+    Action { implicit request =>
+      val jobs =
+        scheduler.getJobKeys(GroupMatcher.jobGroupEquals(group)).asScala.toSet
 
-    Ok(Json.obj("jobs" -> jobs.filter(_.getName.toLowerCase.contains(sofar.toLowerCase)).map(_.getName)))
-  }
+      Ok(
+        Json.obj(
+          "jobs" -> jobs
+            .filter(_.getName.toLowerCase.contains(sofar.toLowerCase))
+            .map(_.getName),
+        ),
+      )
+    }
 
 }

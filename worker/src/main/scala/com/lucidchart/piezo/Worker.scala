@@ -10,11 +10,22 @@ import org.quartz.Scheduler
 import org.slf4j.LoggerFactory
 import scala.util.Try
 import scala.util.control.NonFatal
+import org.quartz.utils.DBConnectionManager
+import java.sql.Connection
+import org.quartz.SchedulerContext
 
 /**
  * To stop the worker without stopping SBT: Ctrl+D Enter
  */
 object Worker {
+
+  type GetConnection = () => Connection
+
+  /**
+   * A key to lookup the connectionManager in the SchedulerContext
+   */
+  private val PiezoConnectionKey = "com.lucidchart.piezo.getConnection"
+
   private val logger = LoggerFactory.getLogger(this.getClass)
   private[piezo] val runSemaphore = new Semaphore(0)
   private val shutdownSemaphore = new Semaphore(1)
@@ -39,8 +50,22 @@ object Worker {
       .port(Try(props.getProperty("com.lucidchart.piezo.statsd.port").toInt).getOrElse(8125))
       .build()
 
-    scheduler.getListenerManager.addJobListener(new WorkerJobListener(props, statsd, useDatadog))
-    scheduler.getListenerManager.addTriggerListener(new WorkerTriggerListener(props, statsd, useDatadog))
+    val connectionManager = DBConnectionManager.getInstance()
+
+    val piezoDataSource = {
+      var source = props.getProperty("com.lucidchart.piezo.dataSource")
+      if (source == null) {
+        source = props.getProperty("org.quartz.jobStore.dataSource")
+      }
+      source
+    }
+
+    val getConnection = () => connectionManager.getConnection(piezoDataSource)
+
+    scheduler.getContext().put(PiezoConnectionKey, getConnection)
+
+    scheduler.getListenerManager.addJobListener(new WorkerJobListener(getConnection, statsd, useDatadog))
+    scheduler.getListenerManager.addTriggerListener(new WorkerTriggerListener(getConnection, statsd, useDatadog))
     run(scheduler, props)
 
     logger.info("exiting")
@@ -48,6 +73,10 @@ object Worker {
     shutdownSemaphore.release()
 
     System.exit(0)
+  }
+
+  def connectionFactory(context: SchedulerContext): () => Connection = {
+    context.get(PiezoConnectionKey).asInstanceOf[() => Connection]
   }
 
   private[piezo] def run(

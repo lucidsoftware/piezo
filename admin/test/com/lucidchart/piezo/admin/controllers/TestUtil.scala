@@ -2,6 +2,7 @@ package com.lucidchart.piezo.admin.controllers
 
 import org.quartz.{JobBuilder, Scheduler, SimpleScheduleBuilder, TriggerBuilder}
 import com.lucidchart.piezo.jobs.monitoring.HeartBeat
+import com.lucidchart.piezo.admin.models.ModelComponents
 import java.util.Date
 
 /**
@@ -31,4 +32,6 @@ object TestUtil {
     scheduler.deleteJob(jobDetail.getKey())
     scheduler.scheduleJob(jobDetail, trigger)
   }
+
+  val mockModelComponents = new ModelComponents(() => throw new Exception("fake connection"))
 }

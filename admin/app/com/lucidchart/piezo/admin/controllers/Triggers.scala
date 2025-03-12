@@ -15,16 +15,18 @@ import scala.util.Try
 import play.api.Logging
 import play.api.i18n.I18nSupport
 
-class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponents, monitoringTeams: MonitoringTeams)
-    extends AbstractController(cc)
+class Triggers(
+  scheduler: Scheduler,
+  modelComponents: ModelComponents,
+  cc: ControllerComponents,
+  monitoringTeams: MonitoringTeams,
+) extends AbstractController(cc)
     with Logging
     with ErrorLogging
     with play.api.i18n.I18nSupport {
 
-  val scheduler: Scheduler = logExceptions(schedulerFactory.getScheduler())
-  val properties = schedulerFactory.props
-  val triggerHistoryModel: TriggerHistoryModel = logExceptions(new TriggerHistoryModel(properties))
-  val triggerMonitoringPriorityModel: TriggerMonitoringModel = logExceptions(new TriggerMonitoringModel(properties))
+  import modelComponents.*
+
   val triggerFormHelper = new TriggerFormHelper(scheduler, monitoringTeams)
 
   def firesFirst(time: Date)(trigger1: Trigger, trigger2: Trigger): Boolean = {
@@ -77,7 +79,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
         }
 
         val (triggerMonitoringPriority, triggerMaxErrorTime, triggerMonitoringTeam) = Try {
-          triggerMonitoringPriorityModel
+          triggerMonitoringModel
             .getTriggerMonitoringRecord(
               triggerDetail.getKey,
             )
@@ -132,7 +134,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
     } else {
       try {
         scheduler.unscheduleJob(triggerKey)
-        triggerMonitoringPriorityModel.deleteTriggerMonitoringRecord(triggerKey)
+        triggerMonitoringModel.deleteTriggerMonitoringRecord(triggerKey)
         Ok(
           com.lucidchart.piezo.admin.views.html.trigger(
             TriggerHelper.getTriggersByGroup(scheduler),
@@ -201,7 +203,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
     } else {
       val triggerDetail: Trigger = scheduler.getTrigger(triggerKey)
       val (triggerMonitoringPriority, triggerMaxErrorTime, triggerMonitoringTeam) = Try {
-        triggerMonitoringPriorityModel
+        triggerMonitoringModel
           .getTriggerMonitoringRecord(
             triggerDetail.getKey,
           )
@@ -268,7 +270,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
         value => {
           val TriggerFormValue(trigger, triggerMonitoringPriority, triggerMaxErrorTime, triggerMonitoringTeam) = value
           scheduler.rescheduleJob(trigger.getKey(), trigger)
-          triggerMonitoringPriorityModel.setTriggerMonitoringRecord(
+          triggerMonitoringModel.setTriggerMonitoringRecord(
             trigger.getKey,
             triggerMonitoringPriority,
             triggerMaxErrorTime,
@@ -299,7 +301,7 @@ class Triggers(schedulerFactory: WorkerSchedulerFactory, cc: ControllerComponent
           val TriggerFormValue(trigger, triggerMonitoringPriority, triggerMaxErrorTime, triggerMonitoringTeam) = value
           try {
             scheduler.scheduleJob(trigger)
-            triggerMonitoringPriorityModel.setTriggerMonitoringRecord(
+            triggerMonitoringModel.setTriggerMonitoringRecord(
               trigger.getKey,
               triggerMonitoringPriority,
               triggerMaxErrorTime,

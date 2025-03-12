@@ -3,8 +3,9 @@ package com.lucidchart.piezo
 import java.sql.Timestamp
 import org.quartz.TriggerKey
 import org.slf4j.LoggerFactory
-import java.util.{Date, Properties}
+import java.util.Date
 import org.slf4j.Logger
+import java.sql.Connection
 
 case class TriggerRecord(
   name: String,
@@ -16,9 +17,8 @@ case class TriggerRecord(
   fire_instance_id: String,
 )
 
-class TriggerHistoryModel(props: Properties) {
+class TriggerHistoryModel(getConnection: () => Connection) {
   val logger: Logger = LoggerFactory.getLogger(this.getClass)
-  val connectionProvider = new ConnectionProvider(props)
 
   def addTrigger(
     triggerKey: TriggerKey,
@@ -27,7 +27,7 @@ class TriggerHistoryModel(props: Properties) {
     misfire: Boolean,
     fireInstanceId: Option[String],
   ): Unit = {
-    val connection = connectionProvider.getConnection
+    val connection = getConnection()
     try {
       val prepared = connection.prepareStatement(
         """
@@ -66,7 +66,7 @@ class TriggerHistoryModel(props: Properties) {
   }
 
   def deleteTriggers(minScheduledStart: Long): Int = {
-    val connection = connectionProvider.getConnection
+    val connection = getConnection()
     try {
       val prepared = connection.prepareStatement("""DELETE FROM trigger_history WHERE scheduled_start < ?""")
       prepared.setTimestamp(1, new Timestamp(minScheduledStart))
@@ -81,7 +81,7 @@ class TriggerHistoryModel(props: Properties) {
   }
 
   def getTrigger(triggerKey: TriggerKey): List[TriggerRecord] = {
-    val connection = connectionProvider.getConnection
+    val connection = getConnection()
 
     try {
       val prepared = connection.prepareStatement(
