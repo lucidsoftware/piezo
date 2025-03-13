@@ -92,9 +92,10 @@ class TriggerFormHelper(scheduler: Scheduler, monitoringTeams: MonitoringTeams) 
     ),
   ] = {
     val trigger = value.trigger
-    val (triggerType: String, simple, cron) = (trigger: @unchecked) match {
+    val (triggerType: String, simple, cron) = trigger match {
       case cron: CronTrigger => ("cron", None, Some(cron.getScheduleBuilder))
       case simple: SimpleTrigger => ("simple", Some(simple.getScheduleBuilder), None)
+      case _ => throw new MatchError(trigger)
     }
     val description = if (trigger.getDescription() == null) "" else trigger.getDescription()
     Some(

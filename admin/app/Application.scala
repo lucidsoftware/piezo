@@ -87,9 +87,5 @@ class PiezoAdminComponents(context: Context)
     _.configure(context.environment, context.initialConfiguration, Map.empty)
   }
 
-  lazy val router: Router = {
-    // add the prefix string in local scope for the Routes constructor
-    // val prefix: String = "/"
-    wire[Routes]
-  }
+  lazy val router: Router = wire[Routes]
 }

@@ -25,9 +25,10 @@ request: play.api.mvc.Request[AnyContent]
     @if(!currentTrigger.isEmpty) {
         <h3 class="pull-left">@currentTrigger.get.getKey.getGroup() &raquo; <span class="text-info">@currentTrigger.get.getKey.getName()</span></h3>
         <a class="piezo-button pull-right" data-toggle="tooltip" title="Duplicate trigger" href="@{piezoRoutes.Triggers.getNewTriggerForm(
-            (currentTrigger.get: @unchecked) match {
+            currentTrigger.get match {
                 case c: CronTrigger => "cron"
                 case s: SimpleTrigger => "simple"
+                case t => throw new MatchError(t)
             }
             )}?templateGroup=@currentTrigger.get.getKey.getGroup()&templateName=@currentTrigger.get.getKey.getName()">
             <span class="glyphicon glyphicon-duplicate"></span>
