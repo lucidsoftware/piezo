@@ -4,7 +4,6 @@ import com.lucidchart.piezo.TriggerMonitoringModel
 import com.lucidchart.piezo.admin.controllers.{JobDataHelper, JobFormHelper, TriggerHelper}
 import org.quartz.*
 import play.api.libs.json.*
-import scala.jdk.CollectionConverters.*
 
 object JobDetailHelper extends JobDataHelper {
   lazy val jobFormHelper = new JobFormHelper()

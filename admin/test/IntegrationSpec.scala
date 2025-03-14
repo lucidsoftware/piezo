@@ -5,7 +5,7 @@ import org.specs2.mutable.*
 import com.lucidchart.piezo.admin.PiezoAdminApplicationLoader
 
 import play.api.test.*
-import play.api.test.Helpers.*
+//import play.api.test.Helpers.*
 
 /**
  * add your integration spec here. An integration test will fire up a whole play application in a real (or headless)

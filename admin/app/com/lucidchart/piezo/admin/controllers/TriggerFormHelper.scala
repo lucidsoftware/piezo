@@ -11,6 +11,7 @@ import play.api.data.Forms.*
 import play.api.data.format.Formats.parsing
 import play.api.data.format.Formatter
 import play.api.data.validation.{Constraint, Constraints, Invalid, Valid, ValidationError}
+import scala.language.existentials
 
 case class TriggerFormValue(
   trigger: Trigger,
@@ -94,6 +95,7 @@ class TriggerFormHelper(scheduler: Scheduler, monitoringTeams: MonitoringTeams) 
     val (triggerType: String, simple, cron) = trigger match {
       case cron: CronTrigger => ("cron", None, Some(cron.getScheduleBuilder))
       case simple: SimpleTrigger => ("simple", Some(simple.getScheduleBuilder), None)
+      case _ => throw new MatchError(trigger)
     }
     val description = if (trigger.getDescription() == null) "" else trigger.getDescription()
     Some(

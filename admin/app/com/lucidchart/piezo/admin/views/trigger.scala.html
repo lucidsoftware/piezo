@@ -28,6 +28,7 @@ request: play.api.mvc.Request[AnyContent]
             currentTrigger.get match {
                 case c: CronTrigger => "cron"
                 case s: SimpleTrigger => "simple"
+                case t => throw new MatchError(t)
             }
             )}?templateGroup=@currentTrigger.get.getKey.getGroup()&templateName=@currentTrigger.get.getKey.getName()">
             <span class="glyphicon glyphicon-duplicate"></span>

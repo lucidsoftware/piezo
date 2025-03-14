@@ -1,19 +1,17 @@
 package com.lucidchart.piezo.admin.controllers
 
-import com.lucidchart.piezo.{TriggerHistoryModel, TriggerMonitoringModel, TriggerMonitoringPriority, WorkerSchedulerFactory}
+import com.lucidchart.piezo.TriggerMonitoringPriority
 import java.util.Date
 import org.quartz.Trigger.TriggerState
 import org.quartz.*
 import org.quartz.impl.triggers.{CronTriggerImpl, SimpleTriggerImpl}
-import play.api.*
 import play.api.libs.json.*
 import play.api.mvc.*
-import com.lucidchart.piezo.admin.models.*
+import com.lucidchart.piezo.admin.models.{ModelComponents, MonitoringTeams}
 import scala.collection.mutable
 import scala.jdk.CollectionConverters.*
 import scala.util.Try
 import play.api.Logging
-import play.api.i18n.I18nSupport
 
 class Triggers(
   scheduler: Scheduler,
@@ -338,7 +336,7 @@ class Triggers(
     }))
   }
 
-  def triggerJob(group: String, name: String): Action[AnyContent] = Action { implicit request =>
+  def triggerJob(group: String, name: String): Action[AnyContent] = Action { request =>
     val jobKey = new JobKey(name, group)
 
     if (scheduler.checkExists(jobKey)) {

@@ -1,11 +1,18 @@
 enablePlugins(PlayScala)
 enablePlugins(SystemdPlugin)
 
+import play.sbt.routes.RoutesKeys
+
 bashScriptExtraDefines ++= Seq(
   s"addJava -Dorg.quartz.properties=${defaultLinuxConfigLocation.value}/${(Linux / packageName).value}/quartz.properties",
   "addJava -Dpidfile.path=/run/piezo-admin/piezo-admin.pid",
   s"addJava -Dhttp.port=${PlayKeys.playDefaultPort.value}",
 )
+
+// Workaround for https://github.com/playframework/playframework/issues/7382
+// so we don't get unused import warnings
+RoutesKeys.routesImport := Seq.empty
+// templateImports := Seq.empty
 
 javaOptions += s"-Dorg.quartz.properties=${(Compile / resourceDirectory).value / "quartz.properties"}"
 
@@ -17,6 +24,10 @@ libraryDependencies ++= Seq(
   "org.quartz-scheduler" % "quartz-jobs" % "2.5.0",
   "com.softwaremill.macwire" %% "macros" % "2.6.6" % "provided",
   specs2 % Test,
+)
+
+scalacOptions ++= Seq(
+  "-Wconf:src=.*html&msg=unused import:s",
 )
 
 Universal / doc / sources := Seq.empty

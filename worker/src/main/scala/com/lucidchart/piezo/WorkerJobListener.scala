@@ -1,7 +1,6 @@
 package com.lucidchart.piezo
 
 import com.timgroup.statsd.StatsDClient
-import java.util.Properties
 import org.quartz.{JobExecutionContext, JobExecutionException, JobListener}
 import org.slf4j.LoggerFactory
 import org.slf4j.Logger
