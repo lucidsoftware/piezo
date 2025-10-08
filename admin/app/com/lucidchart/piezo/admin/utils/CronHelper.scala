@@ -18,35 +18,41 @@ object CronHelper extends Logging {
    * problem to solve perfectly, so this represents a "best effort approach" - the goal is to handle the most
    * expressions with the least amount of complexity.
    *
+   * Returns an option of the cron's max interval. If the cron only runs in the past, or is too far in the future, the
+   * method returns None
+   *
    * Known limitations:
    *   1. Daylight savings
    *   1. Complex year subexpressions
+   *   1. Quartz scheduler doesn't allow cron expressions that execute only in the past, or those that execute for the
+   *      first time more than 100 years from when they are scheduled
    * @param cronExpression
    */
-  def getMaxInterval(cronExpression: String): Long = {
+  def getMaxInterval(cronExpression: String): Option[Int] = {
     try {
       val (secondsMinutesHourStrings, dayStrings) = cronExpression.split("\\s+").splitAt(3)
       val subexpressions = getSubexpressions(secondsMinutesHourStrings :+ dayStrings.mkString(" ")).reverse
 
       // find the largest subexpression that is not continuously triggering (*)
       val outermostIndex = subexpressions.indexWhere(!_.isContinuouslyTriggering)
-      if (outermostIndex == NON_EXISTENT) 1
+      if (outermostIndex == NON_EXISTENT) Some(1)
       else {
         // get the max interval for this expression
         val outermost = subexpressions(outermostIndex)
-        if (outermost.maxInterval == IMPOSSIBLE_MAX_INTERVAL) IMPOSSIBLE_MAX_INTERVAL
+        // When cron represents a past-time (or time too far in the future), the Long.MaxValue needs to be passed in
+        if (outermost.maxInterval == IMPOSSIBLE_MAX_INTERVAL) None
         else {
           // subtract the inner intervals of the smaller, nested subexpressions
           val nested = subexpressions.slice(outermostIndex + 1, subexpressions.size)
           val innerIntervalsOfNested = nested.collect { case expr: BoundSubexpression => expr.innerInterval }.sum
-          outermost.maxInterval - innerIntervalsOfNested
+          longToIntBounded(outermost.maxInterval - innerIntervalsOfNested)
         }
       }
 
     } catch {
       case NonFatal(e) =>
         logger.error("Failed to validate cron expression", e)
-        DEFAULT_MAX_INTERVAL
+        Some(DEFAULT_MAX_INTERVAL)
     }
   }
 
@@ -55,6 +61,13 @@ object CronHelper extends Logging {
       .zip(List(Seconds.apply, Minutes.apply, Hours.apply, Days.apply))
       .map { case (str, cronType) => cronType(str) }
       .toIndexedSeq
+  }
+
+  // Need to bound Long values to Int when validating, since the formatter expects Int type
+  private def longToIntBounded(l: Long): Option[Int] = {
+    if (l >= Int.MaxValue) None
+    else if (l < Int.MinValue) None
+    else Some(l.toInt)
   }
 }
 
