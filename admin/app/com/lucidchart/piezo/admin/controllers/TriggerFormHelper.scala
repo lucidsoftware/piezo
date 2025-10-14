@@ -193,11 +193,11 @@ object MaxSecondsBetweenSuccessesFormatter extends Formatter[Int] {
             data,
           )
         } else {
-          parsing(_.toLong, "try again.", Nil)("simple.repeatInterval", data)
+          parsing(expr => Some(expr.toInt), "try again.", Nil)("simple.repeatInterval", data)
         }
       }
       _ <- Either.cond(
-        maxSecondsBetweenSuccesses > maxIntervalTime,
+        maxIntervalTime.forall(_ < maxSecondsBetweenSuccesses),
         maxSecondsBetweenSuccesses,
         List(
           FormError(
