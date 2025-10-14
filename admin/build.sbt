@@ -51,5 +51,3 @@ packageDescription := "Piezo web admin"
 PlayKeys.playDefaultPort := 8001
 
 Debian / defaultLinuxStartScriptLocation := "/lib/systemd/system"
-
-publishTo := sonatypePublishToBundle.value
