@@ -36,5 +36,3 @@ scalacOptions ++= Seq(
 )
 
 Compile / unmanagedClasspath += sourceDirectory.value / "run" / "resources"
-
-version := sys.props.getOrElse("build.version", "0.0-SNAPSHOT")
