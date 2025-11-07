@@ -54,10 +54,17 @@ request: play.api.mvc.Request[AnyContent]
             <p id="errorMessage"></p>
         </div>
 
+        <!-- Delete Trigger Alert -->
         <div id="deleteConfirm" style="display:none;" class="alert alert-warning fade in">
           <h4>This will permanently delete the trigger!</h4>
             <button type="button" class="btn btn-danger" onclick="deleteTrigger()">Delete</button>
             <button type="button" class="btn btn-default" onclick="$('#deleteConfirm').hide()">Cancel</button>
+        </div>
+        <!-- Modify Trigger Alert -->
+        <div id="editConfirm" style="display:none;" class="alert alert-warning fade in">
+            <h4>This will permanently delete the trigger!</h4>
+            <button type="button" class="btn btn-danger" onclick="editTrigger()">Edit</button>
+            <button type="button" class="btn btn-default" onclick="$('#editConfirm').hide()">Cancel</button>
         </div>
         <script>
 
