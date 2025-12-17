@@ -25,6 +25,22 @@ trait JobDataHelper {
     }
   }
 
+  protected def jobDataToMap(
+    jobData: JobDataMap,
+    jobName: String,
+    jobGroup: String,
+  ): List[DataMap] = {
+    jobData.getKeys.foldLeft(List[DataMap]())((sofar, key) => {
+      val value = jobData.get(key)
+      if (value == null) {
+        throw new NullPointerException(
+          s"Null value in JobDataMap for job '$jobGroup.$jobName', key '$key'",
+        )
+      }
+      sofar :+ DataMap(key, value.toString)
+    })
+  }
+
   protected def jobDataToMap(jobData: JobDataMap): List[DataMap] = {
     jobData.getKeys.foldLeft(List[DataMap]())((sofar, key) => {
       sofar :+ DataMap(key, jobData.get(key).toString)
