@@ -23,7 +23,7 @@ object JobDetailHelper extends JobDataHelper {
       "concurrent" -> jobDetail.isConcurrentExecutionDisallowed,
       "durable" -> jobDetail.isDurable,
       "requests-recovery" -> jobDetail.requestsRecovery,
-      "job-data-map" -> Json.toJson(jobDataToMap(jobDataMap)),
+      "job-data-map" -> Json.toJson(jobDataToMap(jobDataMap, jobKey.getName, jobKey.getGroup)),
       "triggers" -> Json.toJson(triggers)(TriggerHelper.writesTriggerSeq(triggerMonitoringModel)),
     )
   }
