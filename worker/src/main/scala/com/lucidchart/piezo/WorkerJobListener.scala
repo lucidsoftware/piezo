@@ -23,14 +23,25 @@ class WorkerJobListener(getConnection: () => Connection, statsd: StatsDClient, u
   def jobWasExecuted(context: JobExecutionContext, jobException: JobExecutionException): Unit = {
     try {
       val success = jobException == null
-      jobHistoryModel.addJob(
-        context.getFireInstanceId,
-        context.getTrigger.getJobKey,
-        context.getTrigger.getKey,
-        context.getFireTime,
-        context.getJobRunTime,
-        success = success,
-      )
+      val oneTimeJobIdOption: Option[String] = jobHistoryModel.getOneTimeJobIdFromDataMap(context.getMergedJobDataMap)
+      oneTimeJobIdOption match {
+        case Some(oneTimeJobId) => // Update the existing record from the job_history table
+          jobHistoryModel.completeOneTimeJob(
+            oneTimeJobId,
+            context.getFireTime.toInstant,
+            context.getJobRunTime,
+            success = success,
+          )
+        case None =>
+          jobHistoryModel.addJob(
+            context.getFireInstanceId,
+            context.getTrigger.getJobKey,
+            context.getTrigger.getKey,
+            context.getFireTime,
+            context.getJobRunTime,
+            success = success,
+          )
+      }
 
       val suffix = if (success) "succeeded" else "failed"
       val jobKey = s"${context.getTrigger.getJobKey.getGroup}.${context.getTrigger.getJobKey.getName}"
