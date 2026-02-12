@@ -1,11 +1,11 @@
 package com.lucidchart.piezo
 
 import com.lucidchart.piezo.TriggerMonitoringPriority.TriggerMonitoringPriority
-import java.util.Date
 import org.quartz.TriggerKey
 import org.slf4j.LoggerFactory
 import org.slf4j.Logger
 import java.sql.Connection
+import java.time.Instant
 
 object TriggerMonitoringPriority {
   case class Value(id: Int, name: String) {
@@ -31,8 +31,8 @@ case class TriggerMonitoringRecord(
   priority: TriggerMonitoringPriority,
   maxSecondsInError: Int,
   monitoringTeam: Option[String],
-  created: Date,
-  modified: Date,
+  created: Instant,
+  modified: Instant,
 )
 
 class TriggerMonitoringModel(getConnection: () => Connection) {
@@ -127,8 +127,8 @@ class TriggerMonitoringModel(getConnection: () => Connection) {
             priority,
             rs.getInt("max_error_time"),
             Option(rs.getString("monitoring_team")),
-            rs.getDate("created"),
-            rs.getDate("modified"),
+            rs.getTimestamp("created").toInstant,
+            rs.getTimestamp("modified").toInstant,
           )
         }
       } else {

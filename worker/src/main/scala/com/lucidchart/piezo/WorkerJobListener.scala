@@ -37,7 +37,7 @@ class WorkerJobListener(getConnection: () => Connection, statsd: StatsDClient, u
             context.getFireInstanceId,
             context.getTrigger.getJobKey,
             context.getTrigger.getKey,
-            context.getFireTime,
+            context.getFireTime.toInstant,
             context.getJobRunTime,
             success = success,
           )

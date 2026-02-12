@@ -9,7 +9,6 @@ import java.sql.DriverManager
 import java.util.Properties
 import scala.jdk.CollectionConverters.*
 import scala.util.Using
-import java.util.Date
 import java.io.InputStream
 import java.time.Instant
 import java.time.temporal.ChronoUnit.SECONDS
@@ -86,7 +85,7 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
       val jobKey = new JobKey("blah", "blah")
       val triggerKey = new TriggerKey("blahtn", "blahtg")
       jobHistoryModel.getJobs().isEmpty must beTrue
-      jobHistoryModel.addJob("ab", jobKey, triggerKey, new Date(), 1000, true)
+      jobHistoryModel.addJob("ab", jobKey, triggerKey, Instant.now(), 1000, true)
       jobHistoryModel.getJob(jobKey).headOption must beSome
       jobHistoryModel.getLastJobSuccessByTrigger(triggerKey) must beSome
       jobHistoryModel.getJobs().nonEmpty must beTrue
@@ -105,7 +104,7 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
       val jobKey = new JobKey("blahc", "blahc")
       val triggerKey = new TriggerKey("blahtnc", "blahtgc")
       jobHistoryModel.getJob(jobKey).headOption must beNone
-      jobHistoryModel.addJob("abc", jobKey, triggerKey, new Date(), 1000, true)
+      jobHistoryModel.addJob("abc", jobKey, triggerKey, Instant.now(), 1000, true)
       jobHistoryModel.getJob(jobKey).headOption must beSome
       jobHistoryModel.getLastJobSuccessByTrigger(triggerKey) must beSome
 
@@ -141,7 +140,7 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
       val jobHistoryModel = new JobHistoryModel(getConnectionProvider())
       val temporaryTriggerKey = new TriggerKey("blahjz", "blahzg")
       val jobKey = new JobKey("blahjz123", "blahzg123")
-      val scheduledStart = java.util.Date.from(java.time.Instant.now())
+      val scheduledStart = java.time.Instant.now()
       val temporaryFireInstanceId = "FireInstanceId"
       val permanentFireInstanceId = 123456789
       val permanentFireInstanceIdString = permanentFireInstanceId.toString
@@ -152,7 +151,7 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
         .getJob(jobKey)
         .map(_.fire_instance_id)
         .toSet mustEqual Set(temporaryFireInstanceId, permanentFireInstanceIdString)
-      jobHistoryModel.deleteJobs(Instant.now().plusSeconds(3).toEpochMilli) mustEqual 1
+      jobHistoryModel.deleteJobs(Instant.now().plusSeconds(3)) mustEqual 1
       jobHistoryModel
         .getJob(jobKey)
         .map(_.fire_instance_id)
@@ -206,7 +205,7 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
       val expectedFinishSeconds = fireTime.plusMillis(instanceDurationInMillis).getEpochSecond
       jobHistoryModel
         .getJob(jobKey)
-        .map(record => (record.fire_instance_id, record.finish.toInstant.getEpochSecond)) must containTheSameElementsAs(
+        .map(record => (record.fire_instance_id, record.finish.getEpochSecond)) must containTheSameElementsAs(
         List(
           (
             fireInstanceId.toString,
@@ -214,7 +213,7 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
           ),
         ),
       )
-      jobHistoryModel.deleteJobs(Instant.now().plusSeconds(3).toEpochMilli) mustEqual 0
+      jobHistoryModel.deleteJobs(Instant.now().plusSeconds(3)) mustEqual 0
 
       // Delete the remaining record, so it doesn't affect other tests
       val connection = getConnectionProvider()()
@@ -241,12 +240,12 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
       insertedRecord.actual_start must beNone
       insertedRecord.fire_instance_id mustEqual ""
       // increase the time by 1 second so that the condition for the test satisfies.
-      triggerHistoryModel.deleteTriggers(new Date().getTime + 1000) mustEqual 1
+      triggerHistoryModel.deleteTriggers(Instant.now().plusSeconds(1)) mustEqual 1
       val triggerKey2 = new TriggerKey("blahj2", "blahg")
       triggerHistoryModel.addTrigger(
         triggerKey2,
         triggerFireTime = None,
-        actualStart = Some(new Date()),
+        actualStart = Some(Instant.now()),
         misfire = true,
         fireInstanceId = Some("blah"),
       )
@@ -254,7 +253,7 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
       newRecord.actual_start must beSome
       newRecord.fire_instance_id mustEqual "blah"
 
-      triggerHistoryModel.deleteTriggers(new Date().getTime + 1000) mustEqual 1
+      triggerHistoryModel.deleteTriggers(Instant.now().plusSeconds(1)) mustEqual 1
     }
   }
 }

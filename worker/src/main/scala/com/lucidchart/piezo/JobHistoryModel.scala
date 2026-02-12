@@ -1,12 +1,11 @@
 package com.lucidchart.piezo
 
-import java.sql.{ResultSet, Timestamp}
-import java.util.Date
-import org.quartz.{JobDataMap, JobKey, TriggerKey}
-import org.slf4j.LoggerFactory
-import org.slf4j.Logger
 import java.sql.Connection
+import java.sql.ResultSet
 import java.time.Instant
+import org.quartz.{JobDataMap, JobKey, TriggerKey}
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 case class JobRecord(
   name: String,
@@ -14,8 +13,8 @@ case class JobRecord(
   trigger_name: String,
   trigger_group: String,
   success: Int,
-  start: Date,
-  finish: Date,
+  start: Instant,
+  finish: Instant,
   fire_instance_id: String,
 )
 
@@ -40,7 +39,7 @@ class JobHistoryModel(getConnection: () => Connection) {
     fireInstanceId: String,
     jobKey: JobKey,
     triggerKey: TriggerKey,
-    fireTime: Date,
+    fireTime: Instant,
     instanceDurationInMillis: Long,
     success: Boolean,
   ): Unit = {
@@ -67,8 +66,8 @@ class JobHistoryModel(getConnection: () => Connection) {
       prepared.setString(4, triggerKey.getName)
       prepared.setString(5, triggerKey.getGroup)
       prepared.setBoolean(6, success)
-      prepared.setTimestamp(7, new Timestamp(fireTime.getTime))
-      prepared.setTimestamp(8, new Timestamp(fireTime.getTime + instanceDurationInMillis))
+      prepared.setObject(7, fireTime)
+      prepared.setObject(8, fireTime.plusMillis(instanceDurationInMillis))
       prepared.executeUpdate()
     } catch {
       case e: Exception => logger.error("error in recording start of job", e)
@@ -77,7 +76,7 @@ class JobHistoryModel(getConnection: () => Connection) {
     } // TODO: close statement?
   }
 
-  def deleteJobs(minStart: Long): Int = {
+  def deleteJobs(minStart: Instant): Int = {
     val connection = getConnection()
     try {
       val prepared = connection.prepareStatement(
@@ -88,7 +87,7 @@ class JobHistoryModel(getConnection: () => Connection) {
             AND trigger_group != '$oneTimeJobTriggerGroup'
         """.stripMargin,
       )
-      prepared.setTimestamp(1, new Timestamp(minStart))
+      prepared.setObject(1, minStart)
       prepared.executeUpdate()
     } catch {
       case e: Exception =>
@@ -201,8 +200,8 @@ class JobHistoryModel(getConnection: () => Connection) {
       rs.getString("trigger_name"),
       rs.getString("trigger_group"),
       rs.getInt("success"),
-      rs.getTimestamp("start"),
-      rs.getTimestamp("finish"),
+      rs.getTimestamp("start").toInstant,
+      rs.getTimestamp("finish").toInstant,
       rs.getString("fire_instance_id"),
     )
   }
