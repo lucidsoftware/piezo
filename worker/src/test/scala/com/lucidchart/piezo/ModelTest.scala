@@ -12,6 +12,7 @@ import scala.util.Using
 import java.util.Date
 import java.io.InputStream
 import java.time.Instant
+import java.time.temporal.ChronoUnit.SECONDS
 import scala.concurrent.ExecutionContext.global
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
@@ -187,8 +188,12 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
       // Doesn't matter which one inserted the record, as long as one did, and one didn't
       Await.result(combinedFutures, Duration.Inf) mustEqual Set(true, false)
 
-      val fireTime = java.time.Instant.now()
-      val instanceDurationInMillis: Long = 1000
+      // Truncate to the second, so that we don't end up with a rounding
+      // error when we do the comparison.
+      // Otherwise, on insert, the second might be rounded up, and we end up a second
+      // of from adding one second to the actual date time, and truncating it.
+      val fireTime = java.time.Instant.now().truncatedTo(SECONDS)
+      val instanceDurationInMillis: Long = 3000
       jobHistoryModel.completeOneTimeJob(
         fireInstanceId.toString,
         fireTime,
