@@ -47,9 +47,11 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
 
   override def afterAll(): Unit = {
     runSql(mysqlUrl, s"DROP DATABASE IF EXISTS $testDb")
+    println("--------- AFTER ALL --------------")
   }
 
   override def beforeAll(): Unit = {
+    println("--------- BEFORE ALL --------------")
     val piezoSchema = for (num <- 0 to 9) yield getPatchFile(s"piezo_mysql_$num.sql")
     val quartzSchema = getPatchFile("quartz_mysql_0.sql")
     val schema = (quartzSchema +: piezoSchema)
@@ -66,7 +68,10 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
     }
   }
 
-  private def getConnectionProvider(failoverEveryConnection: Boolean = false): () => java.sql.Connection = {
+  /**
+   * Run a body with a connection provider available
+   */
+  private def withConnectionProvider[T](failoverEveryConnection: Boolean = false)(body: (() => java.sql.Connection) => T): T = {
     val provider = new PiezoConnectionProvider(
       dbUrl,
       "com.mysql.cj.jdbc.Driver",
@@ -76,12 +81,16 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
       causeFailoverEveryConnection = failoverEveryConnection,
     )
 
-    () => provider.getConnection()
+    try {
+      body(() => provider.getConnection())
+    } finally {
+      provider.shutdown()
+    }
   }
 
   "JobHistoryModel" should {
-    "work correctly" in {
-      val jobHistoryModel = new JobHistoryModel(getConnectionProvider())
+    "work correctly" in withConnectionProvider() { getConnection =>
+      val jobHistoryModel = new JobHistoryModel(getConnection)
       val jobKey = new JobKey("blah", "blah")
       val triggerKey = new TriggerKey("blahtn", "blahtg")
       jobHistoryModel.getJobs().isEmpty must beTrue
@@ -91,7 +100,7 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
       jobHistoryModel.getJobs().nonEmpty must beTrue
 
       // Delete the remaining record, so it doesn't affect other tests
-      val connection = getConnectionProvider()()
+      val connection = getConnection()
       val prepared = connection.prepareStatement(s"""DELETE FROM job_history""")
       prepared.executeUpdate()
       connection.close()
@@ -99,8 +108,8 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
       jobHistoryModel.getJob(jobKey).toSet mustEqual Set.empty
     }
 
-    "work correctly with a failover for every connection to the database" in {
-      val jobHistoryModel = new JobHistoryModel(getConnectionProvider(true))
+    "work correctly with a failover for every connection to the database" in withConnectionProvider(failoverEveryConnection=true) { getConnection =>
+      val jobHistoryModel = new JobHistoryModel(getConnection)
       val jobKey = new JobKey("blahc", "blahc")
       val triggerKey = new TriggerKey("blahtnc", "blahtgc")
       jobHistoryModel.getJob(jobKey).headOption must beNone
@@ -109,7 +118,7 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
       jobHistoryModel.getLastJobSuccessByTrigger(triggerKey) must beSome
 
       // Delete the remaining record, so it doesn't affect other tests
-      val connection = getConnectionProvider()()
+      val connection = getConnection()
       val prepared = connection.prepareStatement(s"""DELETE FROM job_history""")
       prepared.executeUpdate()
       connection.close()
@@ -119,8 +128,8 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
   }
 
   "TriggerMonitoringModel" should {
-    "work correctly" in {
-      val triggerMonitoringPriorityModel = new TriggerMonitoringModel(getConnectionProvider())
+    "work correctly" in withConnectionProvider() { getConnection =>
+      val triggerMonitoringPriorityModel = new TriggerMonitoringModel(getConnection)
       val triggerKey = new TriggerKey("blahz", "blahz")
       triggerMonitoringPriorityModel.getTriggerMonitoringRecord(triggerKey) must beNone
       triggerMonitoringPriorityModel.setTriggerMonitoringRecord(
@@ -136,8 +145,8 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
   }
 
   "JobHistoryCleanup" should {
-    "cleanup only non-permanent records" in {
-      val jobHistoryModel = new JobHistoryModel(getConnectionProvider())
+    "cleanup only non-permanent records" in withConnectionProvider() { getConnection =>
+      val jobHistoryModel = new JobHistoryModel(getConnection)
       val temporaryTriggerKey = new TriggerKey("blahjz", "blahzg")
       val jobKey = new JobKey("blahjz123", "blahzg123")
       val scheduledStart = java.util.Date.from(java.time.Instant.now())
@@ -158,7 +167,7 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
         .toSet mustEqual Set(permanentFireInstanceIdString)
 
       // Delete the remaining record, so it doesn't affect other tests
-      val connection = getConnectionProvider()()
+      val connection = getConnection()
       val prepared = connection.prepareStatement(s"""DELETE FROM job_history""")
       prepared.executeUpdate()
       connection.close()
@@ -166,10 +175,10 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
       jobHistoryModel.getJob(jobKey).toSet mustEqual Set.empty
     }
 
-    "only triggers job once, when given the same fireInstanceId" in {
+    "only triggers job once, when given the same fireInstanceId" in withConnectionProvider() { getConnection =>
       given scala.concurrent.ExecutionContext = global
 
-      val jobHistoryModel = new JobHistoryModel(getConnectionProvider())
+      val jobHistoryModel = new JobHistoryModel(getConnection)
       val jobKey = new JobKey("blahjzasd", "blahzgasd")
       val fireInstanceId: Long = 123123123
 
@@ -212,7 +221,7 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
       jobHistoryModel.deleteJobs(Instant.now().plusSeconds(3).toEpochMilli) mustEqual 0
 
       // Delete the remaining record, so it doesn't affect other tests
-      val connection = getConnectionProvider()()
+      val connection = getConnection()
       val prepared = connection.prepareStatement(s"""DELETE FROM job_history""")
       prepared.executeUpdate()
       connection.close()
@@ -222,8 +231,8 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
   }
 
   "TriggerHistoryModel" should {
-    "work correctly" in {
-      val triggerHistoryModel = new TriggerHistoryModel(getConnectionProvider())
+    "work correctly" in withConnectionProvider() { getConnection =>
+      val triggerHistoryModel = new TriggerHistoryModel(getConnection)
       val triggerKey = new TriggerKey("blahj", "blahg")
       triggerHistoryModel.addTrigger(
         triggerKey,
