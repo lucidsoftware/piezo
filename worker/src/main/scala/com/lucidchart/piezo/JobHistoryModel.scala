@@ -2,10 +2,11 @@ package com.lucidchart.piezo
 
 import java.sql.{ResultSet, Timestamp}
 import java.util.Date
-import org.quartz.{JobKey, TriggerKey}
+import org.quartz.{JobDataMap, JobKey, TriggerKey}
 import org.slf4j.LoggerFactory
 import org.slf4j.Logger
 import java.sql.Connection
+import java.time.Instant
 
 case class JobRecord(
   name: String,
@@ -20,6 +21,20 @@ case class JobRecord(
 
 class JobHistoryModel(getConnection: () => Connection) {
   val logger: Logger = LoggerFactory.getLogger(this.getClass)
+
+  // Trigger Group for records that aren't deletable
+  private final val oneTimeJobTriggerGroup = "ONE_TIME_JOB"
+  final def oneTimeTriggerKey(fireInstanceId: Long): TriggerKey =
+    TriggerKey(fireInstanceId.toString, oneTimeJobTriggerGroup)
+
+  // Methods to store the one-time-job id in a job-data-map
+  final val jobDataMapOneTimeJobKey = "OneTimeJobId"
+  final def getOneTimeJobIdFromDataMap(jobDataMap: JobDataMap): Option[String] = Option(
+    jobDataMap.getString(jobDataMapOneTimeJobKey),
+  )
+  final def createJobDataMapForOneTimeJob(id: Long): JobDataMap = new JobDataMap(
+    java.util.Map.of(jobDataMapOneTimeJobKey, id),
+  )
 
   def addJob(
     fireInstanceId: String,
@@ -66,10 +81,11 @@ class JobHistoryModel(getConnection: () => Connection) {
     val connection = getConnection()
     try {
       val prepared = connection.prepareStatement(
-        """
+        s"""
           DELETE
           FROM job_history
           WHERE start < ?
+            AND trigger_group != '$oneTimeJobTriggerGroup'
         """.stripMargin,
       )
       prepared.setTimestamp(1, new Timestamp(minStart))
@@ -189,5 +205,100 @@ class JobHistoryModel(getConnection: () => Connection) {
       rs.getTimestamp("finish"),
       rs.getString("fire_instance_id"),
     )
+  }
+
+  /**
+   * Check if we have already triggered a one-time-job with the given trigger key and fireInstanceId.
+   *
+   * This is useful for seeing if a one-time job has already been triggered, to ensure that triggering a one-time job
+   * with the same instance id is an idempotent operation. If the one-time job has not been triggered, the same
+   * transaction is used to add the one-time-job to the database, to avoid race conditions
+   */
+  def addOneTimeJobIfNotExists(jobKey: JobKey, fireInstanceId: Long): Boolean = {
+    val connection = getConnection()
+    connection.setAutoCommit(false)
+
+    // Use a trigger key that the database won't clean up in "JobHistoryCleanup"
+    val triggerKey: TriggerKey = oneTimeTriggerKey(fireInstanceId)
+
+    try {
+      val prepared = connection.prepareStatement(
+        """
+          SELECT EXISTS(
+            SELECT 1
+            FROM job_history
+            WHERE fire_instance_id=?
+            LIMIT 1
+          ) as record_exists
+        """.stripMargin,
+      )
+      prepared.setString(1, fireInstanceId.toString)
+      val rs = prepared.executeQuery()
+      if (rs.next() && rs.getBoolean(1)) {
+        // Record already exists, don't add it again
+        false
+      } else {
+        // Mark this trigger (as already run) in the same transaction, to prevent race conditions where two requests
+        // trigger the same job
+        val triggerStartTime: Instant = Instant.now()
+        // Same as "addJob()" but without the finish
+        val prepared = connection.prepareStatement(
+          """
+            INSERT INTO job_history(
+              fire_instance_id,
+              job_name,
+              job_group,
+              trigger_name,
+              trigger_group,
+              success,
+              start
+            )
+            VALUES(?, ?, ?, ?, ?, ?, ?)
+          """.stripMargin,
+        )
+        prepared.setString(1, fireInstanceId.toString)
+        prepared.setString(2, jobKey.getName)
+        prepared.setString(3, jobKey.getGroup)
+        prepared.setString(4, triggerKey.getName)
+        prepared.setString(5, triggerKey.getGroup)
+        prepared.setBoolean(6, true)
+        prepared.setObject(7, triggerStartTime)
+        prepared.executeUpdate()
+        connection.commit()
+        true
+      }
+    } finally {
+      connection.close()
+    }
+  }
+
+  def completeOneTimeJob(
+    fireInstanceId: String,
+    fireTime: Instant,
+    instanceDurationInMillis: Long,
+    success: Boolean,
+  ): Unit = {
+    val connection = getConnection()
+    try {
+      val prepared = connection.prepareStatement(
+        """
+          UPDATE job_history
+          SET
+            success=?,
+            start=?,
+            finish=?
+          WHERE fire_instance_id=?
+        """.stripMargin,
+      )
+      prepared.setBoolean(1, success)
+      prepared.setObject(2, fireTime)
+      prepared.setObject(3, fireTime.plusMillis(instanceDurationInMillis))
+      prepared.setString(4, fireInstanceId)
+      prepared.executeUpdate()
+    } catch {
+      case e: Exception => logger.error("error in recording completion of one-time-job", e)
+    } finally {
+      connection.close()
+    }
   }
 }

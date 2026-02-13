@@ -11,8 +11,14 @@ import scala.jdk.CollectionConverters.*
 import scala.util.Using
 import java.util.Date
 import java.io.InputStream
+import java.time.Instant
+import scala.concurrent.ExecutionContext.global
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
 
 class ModelTest extends Specification with BeforeAll with AfterAll {
+  sequential
+
   val propertiesStream: InputStream = getClass().getResourceAsStream("/quartz_test_mysql.properties")
   val properties = new Properties
   properties.load(propertiesStream)
@@ -44,7 +50,7 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
   }
 
   override def beforeAll(): Unit = {
-    val piezoSchema = for (num <- 0 to 8) yield getPatchFile(s"piezo_mysql_$num.sql")
+    val piezoSchema = for (num <- 0 to 9) yield getPatchFile(s"piezo_mysql_$num.sql")
     val quartzSchema = getPatchFile("quartz_mysql_0.sql")
     val schema = (quartzSchema +: piezoSchema)
       .map { path =>
@@ -83,6 +89,14 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
       jobHistoryModel.getJob(jobKey).headOption must beSome
       jobHistoryModel.getLastJobSuccessByTrigger(triggerKey) must beSome
       jobHistoryModel.getJobs().nonEmpty must beTrue
+
+      // Delete the remaining record, so it doesn't affect other tests
+      val connection = getConnectionProvider()()
+      val prepared = connection.prepareStatement(s"""DELETE FROM job_history""")
+      prepared.executeUpdate()
+      connection.close()
+
+      jobHistoryModel.getJob(jobKey).toSet mustEqual Set.empty
     }
 
     "work correctly with a failover for every connection to the database" in {
@@ -93,13 +107,21 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
       jobHistoryModel.addJob("abc", jobKey, triggerKey, new Date(), 1000, true)
       jobHistoryModel.getJob(jobKey).headOption must beSome
       jobHistoryModel.getLastJobSuccessByTrigger(triggerKey) must beSome
+
+      // Delete the remaining record, so it doesn't affect other tests
+      val connection = getConnectionProvider()()
+      val prepared = connection.prepareStatement(s"""DELETE FROM job_history""")
+      prepared.executeUpdate()
+      connection.close()
+
+      jobHistoryModel.getJob(jobKey).toSet mustEqual Set.empty
     }
   }
 
   "TriggerMonitoringModel" should {
     "work correctly" in {
       val triggerMonitoringPriorityModel = new TriggerMonitoringModel(getConnectionProvider())
-      val triggerKey = new TriggerKey("blahj", "blahg")
+      val triggerKey = new TriggerKey("blahz", "blahz")
       triggerMonitoringPriorityModel.getTriggerMonitoringRecord(triggerKey) must beNone
       triggerMonitoringPriorityModel.setTriggerMonitoringRecord(
         triggerKey,
@@ -110,6 +132,92 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
       triggerMonitoringPriorityModel.getTriggerMonitoringRecord(triggerKey) must beSome
       triggerMonitoringPriorityModel.deleteTriggerMonitoringRecord(triggerKey) mustEqual 1
       triggerMonitoringPriorityModel.getTriggerMonitoringRecord(triggerKey) must beNone
+    }
+  }
+
+  "JobHistoryCleanup" should {
+    "cleanup only non-permanent records" in {
+      val jobHistoryModel = new JobHistoryModel(getConnectionProvider())
+      val temporaryTriggerKey = new TriggerKey("blahjz", "blahzg")
+      val jobKey = new JobKey("blahjz123", "blahzg123")
+      val scheduledStart = java.util.Date.from(java.time.Instant.now())
+      val temporaryFireInstanceId = "FireInstanceId"
+      val permanentFireInstanceId = 123456789
+      val permanentFireInstanceIdString = permanentFireInstanceId.toString
+      jobHistoryModel.addJob(temporaryFireInstanceId, jobKey, temporaryTriggerKey, scheduledStart, 1, true)
+      jobHistoryModel.addOneTimeJobIfNotExists(jobKey, permanentFireInstanceId)
+
+      jobHistoryModel
+        .getJob(jobKey)
+        .map(_.fire_instance_id)
+        .toSet mustEqual Set(temporaryFireInstanceId, permanentFireInstanceIdString)
+      jobHistoryModel.deleteJobs(Instant.now().plusSeconds(3).toEpochMilli) mustEqual 1
+      jobHistoryModel
+        .getJob(jobKey)
+        .map(_.fire_instance_id)
+        .toSet mustEqual Set(permanentFireInstanceIdString)
+
+      // Delete the remaining record, so it doesn't affect other tests
+      val connection = getConnectionProvider()()
+      val prepared = connection.prepareStatement(s"""DELETE FROM job_history""")
+      prepared.executeUpdate()
+      connection.close()
+
+      jobHistoryModel.getJob(jobKey).toSet mustEqual Set.empty
+    }
+
+    "only triggers job once, when given the same fireInstanceId" in {
+      given scala.concurrent.ExecutionContext = global
+
+      val jobHistoryModel = new JobHistoryModel(getConnectionProvider())
+      val jobKey = new JobKey("blahjzasd", "blahzgasd")
+      val fireInstanceId: Long = 123123123
+
+      val combinedFutures: Future[Set[Boolean]] = Future.sequence(
+        Set(
+          Future {
+            jobHistoryModel.addOneTimeJobIfNotExists(jobKey, fireInstanceId)
+          },
+          Future {
+            jobHistoryModel.addOneTimeJobIfNotExists(jobKey, fireInstanceId)
+          },
+        ),
+      )
+
+      // Doesn't matter which one inserted the record, as long as one did, and one didn't
+      Await.result(combinedFutures, Duration.Inf) mustEqual Set(true, false)
+
+      val fireTime = java.time.Instant.now()
+      val instanceDurationInMillis: Long = 1000
+      jobHistoryModel.completeOneTimeJob(
+        fireInstanceId.toString,
+        fireTime,
+        instanceDurationInMillis,
+        true,
+      )
+
+      // Verify that only one of the one-time-jobs was added to the table, and that it was "completed" with the correct time
+      // Calculate expected finish time the same way completeOneTimeJob does to avoid rounding issues
+      val expectedFinishSeconds = fireTime.plusMillis(instanceDurationInMillis).getEpochSecond
+      jobHistoryModel
+        .getJob(jobKey)
+        .map(record => (record.fire_instance_id, record.finish.toInstant.getEpochSecond)) must containTheSameElementsAs(
+        List(
+          (
+            fireInstanceId.toString,
+            expectedFinishSeconds,
+          ),
+        ),
+      )
+      jobHistoryModel.deleteJobs(Instant.now().plusSeconds(3).toEpochMilli) mustEqual 0
+
+      // Delete the remaining record, so it doesn't affect other tests
+      val connection = getConnectionProvider()()
+      val prepared = connection.prepareStatement(s"""DELETE FROM job_history""")
+      prepared.executeUpdate()
+      connection.close()
+
+      jobHistoryModel.getJob(jobKey).toSet mustEqual Set.empty
     }
   }
 

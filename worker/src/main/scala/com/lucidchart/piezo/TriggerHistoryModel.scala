@@ -1,11 +1,10 @@
 package com.lucidchart.piezo
 
-import java.sql.Timestamp
+import java.sql.{Connection, Timestamp}
 import org.quartz.TriggerKey
 import org.slf4j.LoggerFactory
 import java.util.Date
 import org.slf4j.Logger
-import java.sql.Connection
 
 case class TriggerRecord(
   name: String,
