@@ -216,35 +216,18 @@ class JobHistoryModel(getConnection: () => Connection) {
    */
   def addOneTimeJobIfNotExists(jobKey: JobKey, fireInstanceId: Long): Boolean = {
     val connection = getConnection()
-    connection.setAutoCommit(false)
 
     // Use a trigger key that the database won't clean up in "JobHistoryCleanup"
     val triggerKey: TriggerKey = oneTimeTriggerKey(fireInstanceId)
 
     try {
+      // Mark this trigger (as already run) in the same transaction, to prevent race conditions where two requests
+      // trigger the same job
+      val triggerStartTime: Instant = Instant.now()
+      // Same as "addJob()" but without the finish
       val prepared = connection.prepareStatement(
         """
-          SELECT EXISTS(
-            SELECT 1
-            FROM job_history
-            WHERE fire_instance_id=?
-            LIMIT 1
-          ) as record_exists
-        """.stripMargin,
-      )
-      prepared.setString(1, fireInstanceId.toString)
-      val rs = prepared.executeQuery()
-      if (rs.next() && rs.getBoolean(1)) {
-        // Record already exists, don't add it again
-        false
-      } else {
-        // Mark this trigger (as already run) in the same transaction, to prevent race conditions where two requests
-        // trigger the same job
-        val triggerStartTime: Instant = Instant.now()
-        // Same as "addJob()" but without the finish
-        val prepared = connection.prepareStatement(
-          """
-            INSERT INTO job_history(
+            INSERT IGNORE INTO job_history(
               fire_instance_id,
               job_name,
               job_group,
@@ -255,18 +238,17 @@ class JobHistoryModel(getConnection: () => Connection) {
             )
             VALUES(?, ?, ?, ?, ?, ?, ?)
           """.stripMargin,
-        )
-        prepared.setString(1, fireInstanceId.toString)
-        prepared.setString(2, jobKey.getName)
-        prepared.setString(3, jobKey.getGroup)
-        prepared.setString(4, triggerKey.getName)
-        prepared.setString(5, triggerKey.getGroup)
-        prepared.setBoolean(6, true)
-        prepared.setObject(7, triggerStartTime)
-        prepared.executeUpdate()
-        connection.commit()
-        true
-      }
+      )
+      prepared.setString(1, fireInstanceId.toString)
+      prepared.setString(2, jobKey.getName)
+      prepared.setString(3, jobKey.getGroup)
+      prepared.setString(4, triggerKey.getName)
+      prepared.setString(5, triggerKey.getGroup)
+      prepared.setBoolean(6, true)
+      prepared.setObject(7, triggerStartTime)
+      // Check if we actually inserted the row,
+      // if we didn't, then the firs_instance_id was already in use
+      prepared.executeUpdate() > 0
     } finally {
       connection.close()
     }
