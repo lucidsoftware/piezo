@@ -14,7 +14,7 @@ case class JobRecord(
   trigger_group: String,
   success: Int,
   start: Instant,
-  finish: Instant,
+  finish: Option[Instant],
   fire_instance_id: String,
 )
 
@@ -201,7 +201,7 @@ class JobHistoryModel(getConnection: () => Connection) {
       rs.getString("trigger_group"),
       rs.getInt("success"),
       rs.getTimestamp("start").toInstant,
-      rs.getTimestamp("finish").toInstant,
+      Option(rs.getTimestamp("finish")).map(_.toInstant),
       rs.getString("fire_instance_id"),
     )
   }

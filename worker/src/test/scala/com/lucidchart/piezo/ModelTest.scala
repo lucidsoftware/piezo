@@ -205,11 +205,11 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
       val expectedFinishSeconds = fireTime.plusMillis(instanceDurationInMillis).getEpochSecond
       jobHistoryModel
         .getJob(jobKey)
-        .map(record => (record.fire_instance_id, record.finish.getEpochSecond)) must containTheSameElementsAs(
+        .map(record => (record.fire_instance_id, record.finish.map(_.getEpochSecond))) must containTheSameElementsAs(
         List(
           (
             fireInstanceId.toString,
-            expectedFinishSeconds,
+            Some(expectedFinishSeconds),
           ),
         ),
       )

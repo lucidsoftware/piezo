@@ -27,4 +27,9 @@ object TimeFormat {
   def printInstant(i: Instant): String = {
     dtf.format(i)
   }
+
+  def printInstant(instant: Option[Instant]): String = instant match {
+    case Some(i) => dtf.format(i)
+    case None => "--"
+  }
 }
