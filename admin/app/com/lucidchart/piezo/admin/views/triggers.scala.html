@@ -9,9 +9,7 @@ implicit
 request: play.api.mvc.Request[AnyContent]
 )
 @import com.lucidchart.piezo.admin.views
-@import java.util.Date
-@import org.joda.time.format.DateTimeFormat
-@import org.joda.time.DateTime
+@import com.lucidchart.piezo.admin.views.TimeFormat.printDate
 
 @com.lucidchart.piezo.admin.views.html.triggersLayout(triggersByGroup, currentTrigger) {
     <h3>Select a trigger</h3>
@@ -42,19 +40,18 @@ request: play.api.mvc.Request[AnyContent]
         </tr>
         </thead>
         <tbody>
-        @defining(DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss")) { dtf =>
-        @defining(new Date()) { now =>
+        *{ quartz still uses java.util.Date }*
+        @defining(new java.util.Date()) { now =>
         @upcomingTriggers.map { trigger =>
         <tr>
-            <td>@dtf.print(new DateTime(trigger.getFireTimeAfter(now)))</td>
-            <td>@dtf.print(new DateTime(trigger.getFireTimeAfter(trigger.getFireTimeAfter(now))))</td>
+            <td>@printDate(trigger.getFireTimeAfter(now))</td>
+            <td>@printDate(trigger.getFireTimeAfter(trigger.getFireTimeAfter(now)))</td>
             <td>@trigger.getKey.getGroup</td>
             <td>@trigger.getKey.getName</td>
             <td>@trigger.getJobKey.getGroup</td>
             <td>@trigger.getJobKey.getName</td>
 
         </tr>
-        }
         }
         }
         </tbody>

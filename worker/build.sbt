@@ -15,8 +15,6 @@ libraryDependencies ++= Seq(
   "org.specs2" %% "specs2-core" % "4.20.9" % Test,
   "mysql" % "mysql-connector-java" % "8.0.33",
   "javax.transaction" % "jta" % "1.1",
-  "joda-time" % "joda-time" % "2.13.1",
-  "org.joda" % "joda-convert" % "3.0.1",
   "com.typesafe" % "config" % "1.4.3",
   "com.datadoghq" % "java-dogstatsd-client" % "4.4.3",
 )

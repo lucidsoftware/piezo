@@ -1,14 +1,17 @@
 package com.lucidchart.piezo.admin.controllers
 
-import org.joda.time.{DateTime, Minutes}
-import org.joda.time.format.ISODateTimeFormat
 import play.api.*
 import play.api.libs.json.*
 import play.api.Logging
 import play.api.mvc.*
 import scala.io.Source
+import java.time.Instant
+import java.time.ZoneOffset.UTC
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit.{MINUTES, SECONDS}
 
 class HealthCheck(configuration: Configuration, cc: ControllerComponents) extends AbstractController(cc) with Logging {
+  import HealthCheck.timeFormatter
 
   val heartbeatFilename: String = configuration.getOptional[String]("com.lucidchart.piezo.heartbeatFile").getOrElse {
     logger.warn("heartbeat file not specified")
@@ -34,13 +37,16 @@ class HealthCheck(configuration: Configuration, cc: ControllerComponents) extend
     try {
       val heartbeatFileLines = heartbeatFile.getLines().toList
       val heartbeatTimestamp = heartbeatFileLines(0)
-      val formatter = ISODateTimeFormat.dateTimeNoMillis().withZoneUTC()
-      val heartbeatTime = formatter.parseDateTime(heartbeatTimestamp)
-      val currentTime = new DateTime
-      val isTimestampRecent = Minutes.minutesBetween(heartbeatTime, currentTime).getMinutes < minutesBetweenBeats
-      (isTimestampRecent, formatter.print(heartbeatTime))
+      val heartbeatTime = timeFormatter.parse(heartbeatTimestamp, Instant.from)
+      val currentTime = Instant.now()
+      val isTimestampRecent = heartbeatTime.until(currentTime, MINUTES) < minutesBetweenBeats
+      (isTimestampRecent, timeFormatter.format(heartbeatTime.truncatedTo(SECONDS)))
     } finally {
       heartbeatFile.close()
     }
   }
+}
+
+object HealthCheck {
+  private[piezo] val timeFormatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(UTC)
 }

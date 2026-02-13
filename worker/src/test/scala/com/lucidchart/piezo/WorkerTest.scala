@@ -8,6 +8,7 @@ import org.quartz.JobBuilder.*
 import org.quartz.TriggerBuilder.*
 import org.quartz.SimpleScheduleBuilder.*
 import org.quartz.impl.StdSchedulerFactory
+import java.time.Instant
 import java.util.Properties
 
 import scala.util.Random
@@ -95,8 +96,8 @@ class WorkerTest extends Specification {
       val heartbeat = reader.readLine()
       reader.close()
       println("heartbeat timestamp: " + heartbeat)
-      val heartbeatTime = Worker.dtf.parseDateTime(heartbeat.trim)
-      val inRange = heartbeatTime.isAfter(System.currentTimeMillis() - 5 * 1000)
+      val heartbeatTime = Worker.dtf.parse(heartbeat.trim, Instant.from)
+      val inRange = heartbeatTime.isAfter(Instant.now().minusSeconds(5))
 
       inRange must equalTo(true)
     }
