@@ -49,8 +49,8 @@ class WorkerTriggerListener(getConnection: () => Connection, statsd: StatsDClien
     try {
       triggerHistoryModel.addTrigger(
         trigger.getKey,
-        Option(trigger.getPreviousFireTime),
-        Some(context.getFireTime),
+        Option(trigger.getPreviousFireTime).map(_.toInstant),
+        Some(context.getFireTime.toInstant),
         misfire = false,
         Some(context.getFireInstanceId),
       )
@@ -70,7 +70,7 @@ class WorkerTriggerListener(getConnection: () => Connection, statsd: StatsDClien
     try {
       triggerHistoryModel.addTrigger(
         trigger.getKey,
-        Option(trigger.getPreviousFireTime),
+        Option(trigger.getPreviousFireTime).map(_.toInstant),
         None,
         misfire = true,
         None,

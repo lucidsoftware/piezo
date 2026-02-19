@@ -1,17 +1,17 @@
 package com.lucidchart.piezo.admin.controllers
 
 import com.lucidchart.piezo.TriggerMonitoringPriority
-import java.util.Date
-import org.quartz.Trigger.TriggerState
+import com.lucidchart.piezo.admin.models.{ModelComponents, MonitoringTeams}
+import java.time.Instant
 import org.quartz.*
+import org.quartz.Trigger.TriggerState
 import org.quartz.impl.triggers.{CronTriggerImpl, SimpleTriggerImpl}
+import play.api.Logging
 import play.api.libs.json.*
 import play.api.mvc.*
-import com.lucidchart.piezo.admin.models.{ModelComponents, MonitoringTeams}
 import scala.collection.mutable
 import scala.jdk.CollectionConverters.*
 import scala.util.Try
-import play.api.Logging
 
 class Triggers(
   scheduler: Scheduler,
@@ -27,9 +27,10 @@ class Triggers(
 
   val triggerFormHelper = new TriggerFormHelper(scheduler, monitoringTeams)
 
-  def firesFirst(time: Date)(trigger1: Trigger, trigger2: Trigger): Boolean = {
-    val time1 = trigger1.getFireTimeAfter(time)
-    val time2 = trigger2.getFireTimeAfter(time)
+  def firesFirst(time: Instant)(trigger1: Trigger, trigger2: Trigger): Boolean = {
+    val d = java.util.Date.from(time)
+    val time1 = trigger1.getFireTimeAfter(d)
+    val time2 = trigger2.getFireTimeAfter(d)
     if (time2 == null) true
     else if (time1 == null) false
     else if (time1 != time2) time1 before time2
@@ -37,7 +38,7 @@ class Triggers(
   }
 
   def getIndex: Action[AnyContent] = Action { implicit request =>
-    val now = new Date()
+    val now = Instant.now()
     val allTriggers: List[Trigger] = TriggerHelper
       .getTriggersByGroup(scheduler)
       .flatMap { case (group, triggerKeys) =>

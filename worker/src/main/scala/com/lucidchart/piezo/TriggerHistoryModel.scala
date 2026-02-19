@@ -1,17 +1,17 @@
 package com.lucidchart.piezo
 
-import java.sql.{Connection, Timestamp}
+import java.time.Instant
+import java.sql.Connection
 import org.quartz.TriggerKey
-import org.slf4j.LoggerFactory
-import java.util.Date
 import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 case class TriggerRecord(
   name: String,
   group: String,
-  scheduled_start: Date,
-  actual_start: Option[Date],
-  finish: Date,
+  scheduled_start: Instant,
+  actual_start: Option[Instant],
+  finish: Instant,
   misfire: Int,
   fire_instance_id: String,
 )
@@ -21,8 +21,8 @@ class TriggerHistoryModel(getConnection: () => Connection) {
 
   def addTrigger(
     triggerKey: TriggerKey,
-    triggerFireTime: Option[Date],
-    actualStart: Option[Date],
+    triggerFireTime: Option[Instant],
+    actualStart: Option[Instant],
     misfire: Boolean,
     fireInstanceId: Option[String],
   ): Unit = {
@@ -51,9 +51,9 @@ class TriggerHistoryModel(getConnection: () => Connection) {
       )
       prepared.setString(1, triggerKey.getName)
       prepared.setString(2, triggerKey.getGroup)
-      prepared.setTimestamp(3, new Timestamp(triggerFireTime.getOrElse(new Date).getTime))
-      prepared.setTimestamp(4, actualStart.map(date => new Timestamp(date.getTime)).getOrElse(null))
-      prepared.setTimestamp(5, new Timestamp(System.currentTimeMillis))
+      prepared.setObject(3, triggerFireTime.getOrElse(Instant.now()))
+      prepared.setObject(4, actualStart.getOrElse(null))
+      prepared.setObject(5, Instant.now())
       prepared.setBoolean(6, misfire)
       prepared.setString(7, fireInstanceId.getOrElse(""))
       prepared.executeUpdate()
@@ -64,11 +64,11 @@ class TriggerHistoryModel(getConnection: () => Connection) {
     }
   }
 
-  def deleteTriggers(minScheduledStart: Long): Int = {
+  def deleteTriggers(minScheduledStart: Instant): Int = {
     val connection = getConnection()
     try {
       val prepared = connection.prepareStatement("""DELETE FROM trigger_history WHERE scheduled_start < ?""")
-      prepared.setTimestamp(1, new Timestamp(minScheduledStart))
+      prepared.setObject(1, minScheduledStart)
       prepared.executeUpdate()
     } catch {
       case e: Exception =>
@@ -95,9 +95,9 @@ class TriggerHistoryModel(getConnection: () => Connection) {
         result :+= new TriggerRecord(
           rs.getString("trigger_name"),
           rs.getString("trigger_group"),
-          rs.getTimestamp("scheduled_start"),
-          Option(rs.getTimestamp("actual_start")),
-          rs.getTimestamp("finish"),
+          rs.getTimestamp("scheduled_start").toInstant,
+          Option(rs.getTimestamp("actual_start")).map(_.toInstant),
+          rs.getTimestamp("finish").toInstant,
           rs.getInt("misfire"),
           rs.getString("fire_instance_id"),
         )

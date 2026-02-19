@@ -83,7 +83,7 @@ class Jobs(
       .flatMap { job =>
         jobHistoryModel.getJob(job).headOption
       }
-      .sortWith(_.start after _.start)
+      .sortWith((a, b) => a.start.isAfter(b.start))
     val triggeredJobs: List[JobKey] = TriggerHelper
       .getTriggersByGroup(scheduler)
       .flatMap { case (group, triggerKeys) =>

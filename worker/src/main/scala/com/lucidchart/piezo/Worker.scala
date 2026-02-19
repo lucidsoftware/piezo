@@ -4,13 +4,15 @@ import com.timgroup.statsd.NonBlockingStatsDClientBuilder
 import java.io.*
 import java.util.Properties
 import java.util.concurrent.{Semaphore, TimeUnit}
-import org.joda.time.DateTime
-import org.joda.time.format.ISODateTimeFormat
 import org.quartz.Scheduler
 import org.slf4j.LoggerFactory
 import scala.util.Try
 import scala.util.control.NonFatal
 import org.quartz.utils.DBConnectionManager
+import java.time.Instant
+import java.time.ZoneOffset.UTC
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit.SECONDS
 import java.sql.Connection
 import org.quartz.SchedulerContext
 
@@ -29,7 +31,7 @@ object Worker {
   private val logger = LoggerFactory.getLogger(this.getClass)
   private[piezo] val runSemaphore = new Semaphore(0)
   private val shutdownSemaphore = new Semaphore(1)
-  private[piezo] val dtf = ISODateTimeFormat.dateTimeNoMillis().withZoneUTC()
+  private[piezo] val dtf = DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(UTC)
 
   def main(args: Array[String]): Unit = {
     logger.info("worker starting")
@@ -129,7 +131,7 @@ object Worker {
       val file = new File(filePath)
       file.getParentFile.mkdirs()
       val fileWrite = new FileWriter(file)
-      val heartbeatTime = dtf.print(new DateTime(System.currentTimeMillis()))
+      val heartbeatTime = dtf.format(Instant.now().truncatedTo(SECONDS))
       fileWrite.write(heartbeatTime)
       fileWrite.close()
     } catch {

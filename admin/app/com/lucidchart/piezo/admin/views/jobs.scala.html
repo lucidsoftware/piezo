@@ -1,7 +1,6 @@
 @import com.lucidchart.piezo.admin.controllers.{routes=>piezoRoutes}
-@import org.joda.time.format.DateTimeFormat
-@import org.joda.time.DateTime
 @import org.quartz.{JobKey, SchedulerMetaData}
+@import com.lucidchart.piezo.admin.views.TimeFormat.printInstant
 @(
 jobsByGroup: scala.collection.mutable.Buffer[(String, scala.collection.immutable.List[org.quartz.JobKey])],
 currentJob: Option[org.quartz.JobDetail],
@@ -63,11 +62,10 @@ implicit request: play.api.mvc.Request[AnyContent]
         </tr>
         </thead>
         <tbody>
-        @defining(DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss")) { dtf =>
         @jobsHistory.get.map { record =>
         <tr>
-            <td>@dtf.print(new DateTime(record.start))</td>
-            <td>@dtf.print(new DateTime(record.finish))</td>
+            <td>@printInstant(record.start)</td>
+            <td>@printInstant(record.finish)</td>
             <td>@record.group</td>
             <td><a href="@piezoRoutes.Jobs.getJob(record.group, record.name)">@record.name</a></td>
             <td>@record.trigger_group</td>
@@ -75,7 +73,6 @@ implicit request: play.api.mvc.Request[AnyContent]
             <td>@record.success</td>
 
         </tr>
-        }
         }
         </tbody>
     </table>

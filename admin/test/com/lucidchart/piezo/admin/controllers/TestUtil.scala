@@ -3,7 +3,7 @@ package com.lucidchart.piezo.admin.controllers
 import org.quartz.{JobBuilder, Scheduler, SimpleScheduleBuilder, TriggerBuilder}
 import com.lucidchart.piezo.jobs.monitoring.HeartBeat
 import com.lucidchart.piezo.admin.models.ModelComponents
-import java.util.Date
+import java.time.Instant
 
 /**
  */
@@ -13,7 +13,7 @@ object TestUtil {
   val triggerGroup = "testTriggerGroup"
   val triggerName = "testTriggerName"
 
-  def createJob(scheduler: Scheduler): Date = {
+  def createJob(scheduler: Scheduler): Instant = {
     val jobDetail = JobBuilder
       .newJob(classOf[HeartBeat])
       .withIdentity(jobName, jobGroup)
@@ -30,7 +30,7 @@ object TestUtil {
       .withDescription("test schedule description")
       .build()
     scheduler.deleteJob(jobDetail.getKey())
-    scheduler.scheduleJob(jobDetail, trigger)
+    scheduler.scheduleJob(jobDetail, trigger).toInstant
   }
 
   val mockModelComponents = new ModelComponents(() => throw new Exception("fake connection"))
