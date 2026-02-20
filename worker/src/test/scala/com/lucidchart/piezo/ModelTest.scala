@@ -71,7 +71,9 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
   /**
    * Run a body with a connection provider available
    */
-  private def withConnectionProvider[T](failoverEveryConnection: Boolean = false)(body: (() => java.sql.Connection) => T): T = {
+  private def withConnectionProvider[T](
+    failoverEveryConnection: Boolean = false,
+  )(body: (() => java.sql.Connection) => T): T = {
     val provider = new PiezoConnectionProvider(
       dbUrl,
       "com.mysql.cj.jdbc.Driver",
@@ -108,7 +110,9 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
       jobHistoryModel.getJob(jobKey).toSet mustEqual Set.empty
     }
 
-    "work correctly with a failover for every connection to the database" in withConnectionProvider(failoverEveryConnection=true) { getConnection =>
+    "work correctly with a failover for every connection to the database" in withConnectionProvider(
+      failoverEveryConnection = true,
+    ) { getConnection =>
       val jobHistoryModel = new JobHistoryModel(getConnection)
       val jobKey = new JobKey("blahc", "blahc")
       val triggerKey = new TriggerKey("blahtnc", "blahtgc")

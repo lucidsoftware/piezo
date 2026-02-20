@@ -364,7 +364,8 @@ class Triggers(
         if (jobHistoryModel.addOneTimeJobIfNotExists(jobKey, id)) {
           // Single run trigger has its id passed to the scheduler via the job-data-map. The WorkerJobListener will
           // use that id to update the existing record in job_history table
-          val jobDataMap = jobHistoryModel.createJobDataMapForOneTimeJob(id)
+          // Piezo-admin expects job-data-map values for triggers to be stored as strings
+          val jobDataMap = jobHistoryModel.createJobDataMapForOneTimeJob(id.toString)
           scheduler.triggerJob(jobKey, jobDataMap)
         }
         Ok

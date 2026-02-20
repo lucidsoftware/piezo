@@ -31,7 +31,7 @@ class JobHistoryModel(getConnection: () => Connection) {
   final def getOneTimeJobIdFromDataMap(jobDataMap: JobDataMap): Option[String] = Option(
     jobDataMap.getString(jobDataMapOneTimeJobKey),
   )
-  final def createJobDataMapForOneTimeJob(id: Long): JobDataMap = new JobDataMap(
+  final def createJobDataMapForOneTimeJob(id: String): JobDataMap = new JobDataMap(
     java.util.Map.of(jobDataMapOneTimeJobKey, id),
   )
 
