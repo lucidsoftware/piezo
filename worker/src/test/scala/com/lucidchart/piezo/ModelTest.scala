@@ -155,20 +155,19 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
       val jobKey = new JobKey("blahjz123", "blahzg123")
       val scheduledStart = java.time.Instant.now()
       val temporaryFireInstanceId = "FireInstanceId"
-      val permanentFireInstanceId = 123456789
-      val permanentFireInstanceIdString = permanentFireInstanceId.toString
+      val permanentFireInstanceId = jobHistoryModel.getOneTimeJobId(jobKey.getGroup, jobKey.getName, 123456789)
       jobHistoryModel.addJob(temporaryFireInstanceId, jobKey, temporaryTriggerKey, scheduledStart, 1, true)
       jobHistoryModel.addOneTimeJobIfNotExists(jobKey, permanentFireInstanceId)
 
       jobHistoryModel
         .getJob(jobKey)
         .map(_.fire_instance_id)
-        .toSet mustEqual Set(temporaryFireInstanceId, permanentFireInstanceIdString)
+        .toSet mustEqual Set(temporaryFireInstanceId, permanentFireInstanceId)
       jobHistoryModel.deleteJobs(Instant.now().plusSeconds(3)) mustEqual 1
       jobHistoryModel
         .getJob(jobKey)
         .map(_.fire_instance_id)
-        .toSet mustEqual Set(permanentFireInstanceIdString)
+        .toSet mustEqual Set(permanentFireInstanceId)
 
       // Delete the remaining record, so it doesn't affect other tests
       val connection = getConnection()
@@ -184,7 +183,7 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
 
       val jobHistoryModel = new JobHistoryModel(getConnection)
       val jobKey = new JobKey("blahjzasd", "blahzgasd")
-      val fireInstanceId: Long = 123123123
+      val fireInstanceId = jobHistoryModel.getOneTimeJobId(jobKey.getGroup, jobKey.getName, 123123123)
 
       val combinedFutures: Future[Set[Boolean]] = Future.sequence(
         Set(
@@ -207,7 +206,7 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
       val fireTime = java.time.Instant.now().truncatedTo(SECONDS)
       val instanceDurationInMillis: Long = 3000
       jobHistoryModel.completeOneTimeJob(
-        fireInstanceId.toString,
+        fireInstanceId,
         fireTime,
         instanceDurationInMillis,
         true,
@@ -221,7 +220,7 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
         .map(record => (record.fire_instance_id, record.finish.map(_.getEpochSecond))) must containTheSameElementsAs(
         List(
           (
-            fireInstanceId.toString,
+            fireInstanceId,
             Some(expectedFinishSeconds),
           ),
         ),
