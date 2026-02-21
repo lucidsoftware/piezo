@@ -23,8 +23,12 @@ class JobHistoryModel(getConnection: () => Connection) {
 
   // Trigger Group for records that aren't deletable
   private final val oneTimeJobTriggerGroup = "ONE_TIME_JOB"
-  final def oneTimeTriggerKey(fireInstanceId: Long): TriggerKey =
-    TriggerKey(fireInstanceId.toString, oneTimeJobTriggerGroup)
+  final def oneTimeTriggerKey(fireInstanceId: String): TriggerKey =
+    TriggerKey(fireInstanceId, oneTimeJobTriggerGroup)
+
+  // Makes the job id unique per job, instead of globally unique
+  final def getOneTimeJobId(group: String, name: String, fireInstanceId: Long): String =
+    s"${group}_${name}_$fireInstanceId"
 
   // Methods to store the one-time-job id in a job-data-map
   final val jobDataMapOneTimeJobKey = "OneTimeJobId"
@@ -213,7 +217,7 @@ class JobHistoryModel(getConnection: () => Connection) {
    * with the same instance id is an idempotent operation. If the one-time job has not been triggered, the same
    * transaction is used to add the one-time-job to the database, to avoid race conditions
    */
-  def addOneTimeJobIfNotExists(jobKey: JobKey, fireInstanceId: Long): Boolean = {
+  def addOneTimeJobIfNotExists(jobKey: JobKey, fireInstanceId: String): Boolean = {
     val connection = getConnection()
 
     // Use a trigger key that the database won't clean up in "JobHistoryCleanup"
@@ -238,7 +242,7 @@ class JobHistoryModel(getConnection: () => Connection) {
             VALUES(?, ?, ?, ?, ?, ?, ?)
           """.stripMargin,
       )
-      prepared.setString(1, fireInstanceId.toString)
+      prepared.setString(1, fireInstanceId)
       prepared.setString(2, jobKey.getName)
       prepared.setString(3, jobKey.getGroup)
       prepared.setString(4, triggerKey.getName)
