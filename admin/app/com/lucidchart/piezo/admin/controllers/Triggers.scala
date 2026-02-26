@@ -355,17 +355,17 @@ class Triggers(
     }
   }
 
-  def triggerJobOneTime(group: String, name: String, id: Long): Action[AnyContent] = Action { request =>
+  def triggerJobOneTime(group: String, name: String, oneTimeJobId: Long): Action[AnyContent] = Action { request =>
     val jobKey = new JobKey(name, group)
 
     if (scheduler.checkExists(jobKey)) {
       try {
         // Only run a trigger, if we haven't seen this id before
-        if (jobHistoryModel.addOneTimeJobIfNotExists(jobKey, id)) {
+        jobHistoryModel.addOneTimeJobIfNotExists(jobKey, oneTimeJobId).foreach { fireInstanceId =>
           // Single run trigger has its id passed to the scheduler via the job-data-map. The WorkerJobListener will
           // use that id to update the existing record in job_history table
           // Piezo-admin expects job-data-map values for triggers to be stored as strings
-          val jobDataMap = jobHistoryModel.createJobDataMapForOneTimeJob(id.toString)
+          val jobDataMap = jobHistoryModel.createJobDataMapForOneTimeJob(fireInstanceId)
           scheduler.triggerJob(jobKey, jobDataMap)
         }
         Ok
@@ -373,7 +373,7 @@ class Triggers(
         case e: SchedulerException => {
           logger.error(
             "Exception caught triggering job one-time %s %s - %s. -- %s"
-              .format(group, name, id, e.getLocalizedMessage),
+              .format(group, name, oneTimeJobId, e.getLocalizedMessage),
             e,
           )
           InternalServerError

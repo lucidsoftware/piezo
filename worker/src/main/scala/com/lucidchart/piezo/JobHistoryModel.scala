@@ -23,16 +23,20 @@ class JobHistoryModel(getConnection: () => Connection) {
 
   // Trigger Group for records that aren't deletable
   private final val oneTimeJobTriggerGroup = "ONE_TIME_JOB"
-  final def oneTimeTriggerKey(fireInstanceId: Long): TriggerKey =
-    TriggerKey(fireInstanceId.toString, oneTimeJobTriggerGroup)
+  final def oneTimeTriggerKey(fireInstanceId: String): TriggerKey =
+    TriggerKey(fireInstanceId, oneTimeJobTriggerGroup)
+
+  // Makes the job id unique per job, instead of globally unique
+  final def getFireInstanceIdFromOneTimeJobId(group: String, name: String, oneTimeJobId: Long): String =
+    s"${group}_${name}_$oneTimeJobId"
 
   // Methods to store the one-time-job id in a job-data-map
   final val jobDataMapOneTimeJobKey = "OneTimeJobId"
   final def getOneTimeJobIdFromDataMap(jobDataMap: JobDataMap): Option[String] = Option(
     jobDataMap.getString(jobDataMapOneTimeJobKey),
   )
-  final def createJobDataMapForOneTimeJob(id: String): JobDataMap = new JobDataMap(
-    java.util.Map.of(jobDataMapOneTimeJobKey, id),
+  final def createJobDataMapForOneTimeJob(fireInstanceId: String): JobDataMap = new JobDataMap(
+    java.util.Map.of(jobDataMapOneTimeJobKey, fireInstanceId),
   )
 
   def addJob(
@@ -207,15 +211,18 @@ class JobHistoryModel(getConnection: () => Connection) {
   }
 
   /**
-   * Check if we have already triggered a one-time-job with the given trigger key and fireInstanceId.
+   * Check if we have already triggered a one-time-job with the given trigger key and fireInstanceId. Returns the
+   * fireInstanceId of the one-time-job, if it doesn't exist
    *
    * This is useful for seeing if a one-time job has already been triggered, to ensure that triggering a one-time job
    * with the same instance id is an idempotent operation. If the one-time job has not been triggered, the same
    * transaction is used to add the one-time-job to the database, to avoid race conditions
    */
-  def addOneTimeJobIfNotExists(jobKey: JobKey, fireInstanceId: Long): Boolean = {
+  def addOneTimeJobIfNotExists(jobKey: JobKey, oneTimeJobId: Long): Option[String] = {
     val connection = getConnection()
 
+    // Make the job id unique for that job, instead of globally unique
+    val fireInstanceId: String = getFireInstanceIdFromOneTimeJobId(jobKey.getGroup, jobKey.getName, oneTimeJobId)
     // Use a trigger key that the database won't clean up in "JobHistoryCleanup"
     val triggerKey: TriggerKey = oneTimeTriggerKey(fireInstanceId)
 
@@ -238,16 +245,19 @@ class JobHistoryModel(getConnection: () => Connection) {
             VALUES(?, ?, ?, ?, ?, ?, ?)
           """.stripMargin,
       )
-      prepared.setString(1, fireInstanceId.toString)
+      prepared.setString(1, fireInstanceId)
       prepared.setString(2, jobKey.getName)
       prepared.setString(3, jobKey.getGroup)
       prepared.setString(4, triggerKey.getName)
       prepared.setString(5, triggerKey.getGroup)
       prepared.setBoolean(6, true)
       prepared.setObject(7, triggerStartTime)
-      // Check if we actually inserted the row,
-      // if we didn't, then the firs_instance_id was already in use
-      prepared.executeUpdate() > 0
+      // Check if we actually inserted the row, to determine whether to return the fire_instance_id
+      if (prepared.executeUpdate() > 0) {
+        Some(fireInstanceId)
+      } else {
+        None
+      }
     } finally {
       connection.close()
     }
