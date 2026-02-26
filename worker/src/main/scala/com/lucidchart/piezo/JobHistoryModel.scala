@@ -18,25 +18,31 @@ case class JobRecord(
   fire_instance_id: String,
 )
 
+class OneTimeFireId private[piezo] (val id: String) extends AnyVal
+
 class JobHistoryModel(getConnection: () => Connection) {
   val logger: Logger = LoggerFactory.getLogger(this.getClass)
 
   // Trigger Group for records that aren't deletable
   private final val oneTimeJobTriggerGroup = "ONE_TIME_JOB"
-  final def oneTimeTriggerKey(fireInstanceId: String): TriggerKey =
-    TriggerKey(fireInstanceId, oneTimeJobTriggerGroup)
+  private final def oneTimeTriggerKey(fireInstanceId: OneTimeFireId): TriggerKey =
+    TriggerKey(fireInstanceId.id, oneTimeJobTriggerGroup)
 
   // Makes the job id unique per job, instead of globally unique
-  final def getFireInstanceIdFromOneTimeJobId(group: String, name: String, oneTimeJobId: Long): String =
-    s"${group}_${name}_$oneTimeJobId"
+  private[piezo] final def getFireInstanceIdFromOneTimeJobId(
+    group: String,
+    name: String,
+    oneTimeJobId: Long,
+  ): OneTimeFireId =
+    new OneTimeFireId(s"${group}_${name}_$oneTimeJobId")
 
   // Methods to store the one-time-job id in a job-data-map
   final val jobDataMapOneTimeJobKey = "OneTimeJobId"
-  final def getOneTimeJobIdFromDataMap(jobDataMap: JobDataMap): Option[String] = Option(
+  final def getOneTimeJobIdFromDataMap(jobDataMap: JobDataMap): Option[OneTimeFireId] = Option(
     jobDataMap.getString(jobDataMapOneTimeJobKey),
-  )
-  final def createJobDataMapForOneTimeJob(fireInstanceId: String): JobDataMap = new JobDataMap(
-    java.util.Map.of(jobDataMapOneTimeJobKey, fireInstanceId),
+  ).map(s => new OneTimeFireId(s))
+  final def createJobDataMapForOneTimeJob(fireInstanceId: OneTimeFireId): JobDataMap = new JobDataMap(
+    java.util.Map.of(jobDataMapOneTimeJobKey, fireInstanceId.id),
   )
 
   def addJob(
@@ -218,11 +224,11 @@ class JobHistoryModel(getConnection: () => Connection) {
    * with the same instance id is an idempotent operation. If the one-time job has not been triggered, the same
    * transaction is used to add the one-time-job to the database, to avoid race conditions
    */
-  def addOneTimeJobIfNotExists(jobKey: JobKey, oneTimeJobId: Long): Option[String] = {
+  def addOneTimeJobIfNotExists(jobKey: JobKey, oneTimeJobId: Long): Option[OneTimeFireId] = {
     val connection = getConnection()
 
     // Make the job id unique for that job, instead of globally unique
-    val fireInstanceId: String = getFireInstanceIdFromOneTimeJobId(jobKey.getGroup, jobKey.getName, oneTimeJobId)
+    val fireInstanceId: OneTimeFireId = getFireInstanceIdFromOneTimeJobId(jobKey.getGroup, jobKey.getName, oneTimeJobId)
     // Use a trigger key that the database won't clean up in "JobHistoryCleanup"
     val triggerKey: TriggerKey = oneTimeTriggerKey(fireInstanceId)
 
@@ -245,7 +251,7 @@ class JobHistoryModel(getConnection: () => Connection) {
             VALUES(?, ?, ?, ?, ?, ?, ?)
           """.stripMargin,
       )
-      prepared.setString(1, fireInstanceId)
+      prepared.setString(1, fireInstanceId.id)
       prepared.setString(2, jobKey.getName)
       prepared.setString(3, jobKey.getGroup)
       prepared.setString(4, triggerKey.getName)
@@ -264,7 +270,7 @@ class JobHistoryModel(getConnection: () => Connection) {
   }
 
   def completeOneTimeJob(
-    fireInstanceId: String,
+    fireInstanceId: OneTimeFireId,
     fireTime: Instant,
     instanceDurationInMillis: Long,
     success: Boolean,
@@ -284,7 +290,7 @@ class JobHistoryModel(getConnection: () => Connection) {
       prepared.setBoolean(1, success)
       prepared.setObject(2, fireTime)
       prepared.setObject(3, fireTime.plusMillis(instanceDurationInMillis))
-      prepared.setString(4, fireInstanceId)
+      prepared.setString(4, fireInstanceId.id)
       prepared.executeUpdate()
     } catch {
       case e: Exception => logger.error("error in recording completion of one-time-job", e)
