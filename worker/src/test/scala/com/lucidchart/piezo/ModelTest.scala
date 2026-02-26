@@ -156,7 +156,7 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
       val scheduledStart = java.time.Instant.now()
       val temporaryFireInstanceId = "FireInstanceId"
       val permanentFireInstanceIdLong = 123456789
-      val permanentFireInstanceIdString = jobHistoryModel.getFireInstanceIdFromOneTimeJobId(jobKey.getGroup, jobKey.getName, permanentFireInstanceIdLong)
+      val permanentFireInstanceIdString = jobHistoryModel.getFireInstanceIdFromOneTimeJobId(jobKey.getGroup, jobKey.getName, permanentFireInstanceIdLong).id
       jobHistoryModel.addJob(temporaryFireInstanceId, jobKey, temporaryTriggerKey, scheduledStart, 1, true)
       jobHistoryModel.addOneTimeJobIfNotExists(jobKey, permanentFireInstanceIdLong)
 
@@ -222,7 +222,7 @@ class ModelTest extends Specification with BeforeAll with AfterAll {
         .map(record => (record.fire_instance_id, record.finish.map(_.getEpochSecond))) must containTheSameElementsAs(
         List(
           (
-            fireInstanceId,
+            fireInstanceId.id,
             Some(expectedFinishSeconds),
           ),
         ),

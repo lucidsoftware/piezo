@@ -23,7 +23,7 @@ class WorkerJobListener(getConnection: () => Connection, statsd: StatsDClient, u
   def jobWasExecuted(context: JobExecutionContext, jobException: JobExecutionException): Unit = {
     try {
       val success = jobException == null
-      val oneTimeJobIdOption: Option[String] = jobHistoryModel.getOneTimeJobIdFromDataMap(context.getMergedJobDataMap)
+      val oneTimeJobIdOption = jobHistoryModel.getOneTimeJobIdFromDataMap(context.getMergedJobDataMap)
       oneTimeJobIdOption match {
         case Some(oneTimeJobId) => // Update the existing record from the job_history table
           jobHistoryModel.completeOneTimeJob(
