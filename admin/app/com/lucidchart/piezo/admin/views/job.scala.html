@@ -66,13 +66,23 @@ request: play.api.mvc.Request[AnyContent]
             <button type="button" class="btn btn-default" onclick="$('#runConfirm').hide()">Cancel</button>
         </div>
 
-        <!-- Delete Job Alerts -->
-        <div id="deleteConfirm" style="display:none;" class="alert alert-warning fade in">
-          <h4>This will permanently delete the job!</h4>
-          <button type="button" class="btn btn-danger" onclick="deleteJob()">Delete</button>
-          <button type="button" class="btn btn-default" onclick="$('#deleteConfirm').hide()">Cancel</button>
-        </div>
         @defining(configuration.getOptional[Boolean]("com.lucidchart.piezo.admin.production").contains(true)) { inProd =>
+            @defining(configuration.getOptional[String]("com.lucidchart.piezo.admin.confirmDeleteMessage").getOrElse("This will permanently delete the job!")) { confirmDeleteMessage =>
+                <!-- Delete Job Alerts -->
+                <div id="deleteConfirm" style="display:none;" class="alert alert-@if(inProd) {danger} else {warning} fade in">
+                    <h4>@(confirmDeleteMessage)</h4>
+                    <button type="button" class="btn btn-danger" onclick="deleteJob()">Delete</button>
+                    <button type="button" class="btn btn-default" onclick="$('#deleteConfirm').hide()">Cancel</button>
+                </div>
+            }
+            @defining(configuration.getOptional[String]("com.lucidchart.piezo.admin.confirmEditMessage").getOrElse("This will modify the job!")) { confirmEditMessage =>
+                <!-- Edit Job Alerts -->
+                <div id="editConfirm" style="display:none;" class="alert alert-@if(inProd) {danger} else {warning} fade in">
+                    <h4>@(confirmEditMessage)</h4>
+                    <button type="button" class="btn btn-danger" onclick="editTrigger()">Edit</button>
+                    <button type="button" class="btn btn-default" onclick="$('#editConfirm').hide()">Cancel</button>
+                </div>
+            }
             <!-- Pause Job Alerts -->
             <div id="pauseConfirm" style="display: none;" class="alert alert-@if(inProd) {danger} else {warning} fade in">
                 <h4>Are you sure you want to pause the job?</h4>
