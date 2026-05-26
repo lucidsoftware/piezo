@@ -57,44 +57,31 @@ implicit request: RequestHeader
 </nav>
 
 <script type="text/javascript">
-var url = window.location;
-// Will only work if string in href matches with location
-$('ul.nav a[href="'+ url +'"]').parent().addClass('active');
-
-// Will also work for relative and absolute hrefs
-$('ul.nav a').filter(function() {
-    return this.href == url;
-}).parent().addClass('active');
+const url = window.location.href;
+document.querySelectorAll('ul.nav a').forEach(function(a) {
+    if (a.href === url) {
+        a.parentElement.classList.add('active');
+    }
+});
 </script>
 
 <div class="container">
     <div class="flash-container alert-success">
         @if(!request.flash.isEmpty) {
+        @* See main.css for animation to faid the flash after load *@
         <div id="flash-page" class="@request.flash("class")">
         @request.flash("message")
+        </div>
+        }
     </div>
-    <script type="text/javascript">
-        $(document).ready(function() {
-            setTimeout(function() {
-                var element = $('#flash-page');
-                element.fadeTo(2000, 0, function() {
-                    element.slideUp(400, function() {
-                        element.remove();
-                    });
-                });
-            }, 3000);
-        });
-    </script>
-    }
-</div>
 
-@content
+    @content
 
-<hr />
-<footer>
-    <p class="text-muted pull-left">&copy; Apache License Version 2.0</p>
-    <div class="text-muted pull-right">Created by&nbsp;&nbsp;&nbsp;<img src="@routes.Assets.at(path="/public","img/LucidLogo.png")"></div>
-</footer>
+    <hr />
+    <footer>
+        <p class="text-muted pull-left">&copy; Apache License Version 2.0</p>
+        <div class="text-muted pull-right">Created by&nbsp;&nbsp;&nbsp;<img src="@routes.Assets.at(path="/public","img/LucidLogo.png")"></div>
+    </footer>
 </div>
 
 @for(script <- scripts) {

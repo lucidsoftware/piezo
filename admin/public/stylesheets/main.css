@@ -3,13 +3,51 @@ body {
     padding-top: 60px; /* 40px to make the container go all the way to the bottom of the topbar */
 }
 
+:root {
+    --space: 10px;
+}
+
+/*
+ * smooth transition for hiding flash message
+ *
+ * This waits 3s, then fades the message to 0 opacity over 2s, then
+ * shrinks the size to 0 so that content below it moves up.
+ */
+@keyframes flash-dismiss {
+    83%, to {
+        opacity: 0;
+    }
+    83% {
+        margin-top: var(--space);
+        padding: var(--space);
+        height: auto;
+    }
+    to {
+        margin-top: 0;
+        padding: 0 var(--space);
+        height: 0;
+        display: none;
+    }
+}
+
+#flash-page {
+
+
+    /**
+     * Animation lasts 2.4s after a delay of 3s.
+     */
+    animation: flash-dismiss 2.4s ease 3s forwards;
+
+    overflow: hidden;
+}
+
 .flash-container {
     text-align: center;
 }
 
 .flash-container div {
-    margin-top: 10px;
-    padding: 10px;
+    margin-top: var(--space);
+    padding: var(--space);
 }
 
 a:link.piezoicon, a:visited.piezoicon {
