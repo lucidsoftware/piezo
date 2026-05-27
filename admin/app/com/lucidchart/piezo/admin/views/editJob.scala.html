@@ -5,7 +5,7 @@ submitValue: String,
 formAction: play.api.mvc.Call,
 existing: Boolean,
 errorMessage: Option[String] = None,
-scripts: List[String] = List[String]("js/jobData.js", "js/typeAhead.js")
+scripts: List[String] = List[String]("js/jobData.js")
 )(
 implicit
 request: play.api.mvc.Request[AnyContent],
@@ -30,7 +30,15 @@ messagesProvider: play.api.i18n.MessagesProvider
     <div class="form-horizontal">
       @defining(if(existing) {Symbol("readonly")} else {Symbol("none")}) { newEditOnly =>
 
-        @helper.inputText(jobForm("group"), Symbol("_label") -> "Group", Symbol("labelClass") -> "col-sm-3 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "Group", newEditOnly -> None, Symbol("class") -> "job-group-type-ahead form-control form-inline-control")
+        @if(!existing) {
+            <datalist id="job-groups-list">
+                @jobsByGroup.map { case (name, _) =>
+                    <option value="@name"></option>
+                }
+            </datalist>
+        }
+
+        @helper.inputText(jobForm("group"), Symbol("_label") -> "Group", Symbol("labelClass") -> "col-sm-3 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "Group", newEditOnly -> None, Symbol("class") -> "form-control form-inline-control", Symbol("list") -> "job-groups-list")
         @helper.inputText(jobForm("name"), Symbol("_label") -> "Name", Symbol("labelClass") -> "col-sm-3 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "Name", newEditOnly -> None, Symbol("class") -> "form-control form-inline-control")
         @helper.inputText(jobForm("class"), Symbol("_label") -> "Class", Symbol("labelClass") -> "col-sm-3 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "Name", Symbol("class") -> "form-control form-inline-control")
         @helper.inputText(jobForm("description"), Symbol("_label") -> "Description", Symbol("labelClass") -> "col-sm-3 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "Description", Symbol("class") -> "form-control form-inline-control")

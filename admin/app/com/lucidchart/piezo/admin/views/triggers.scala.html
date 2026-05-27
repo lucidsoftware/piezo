@@ -40,7 +40,7 @@ request: play.api.mvc.Request[AnyContent]
         </tr>
         </thead>
         <tbody>
-        *{ quartz still uses java.util.Date }*
+        @* quartz still uses java.util.Date }*@
         @defining(new java.util.Date()) { now =>
         @upcomingTriggers.map { trigger =>
         <tr>
