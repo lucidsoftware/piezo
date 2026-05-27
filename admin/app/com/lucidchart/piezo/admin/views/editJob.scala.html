@@ -42,21 +42,23 @@ messagesProvider: play.api.i18n.MessagesProvider
 
         <h4>Job Data Map</h4>
 
-        <div class="job-data-map">
+        <div class="job-data-map" id="job-data-map">
           @helper.repeat(jobForm("job-data-map"), min = jobForm("job-data-map").indexes.length + 1) { dataMap =>
 
+            <div class="job-data-entry">
             @dataMap("key").value.map { _ =>
               @dataMap("value").value.map { _ =>
-                <div class="job-data-delete text-right"><a href="#">delete</a></div>
+                <a class="job-data-delete text-right" href="#">delete</a>
               }
             }
 
             @helper.inputText(dataMap("key"), Symbol("_label") -> "Key", Symbol("labelClass") -> "col-sm-3 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "Key", Symbol("class") -> "job-data-key form-control form-inline-control")
             @helper.inputText(dataMap("value"), Symbol("_label") -> "Value", Symbol("labelClass") -> "col-sm-3 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "Value", Symbol("class") -> "job-data-value form-control form-inline-control")
+            </div>
 
           }
 
-          <div class="job-data-add text-right"><a href="#">add</a></div>
+          <a class="job-data-add text-right" id="job-data-add" href="#">add</a>
         </div>
       }
 

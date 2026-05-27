@@ -96,9 +96,10 @@ h3.job-name {
     max-width: 585px;
 }
 
-div.job-data-delete, div.job-data-add {
+a.job-data-delete, a.job-data-add {
     float: right;
     margin-right: 240px;
+    display: block;
 }
 
 .table-fixed-first-col {

@@ -28,6 +28,8 @@ implicit request: RequestHeader
     <script type="text/javascript" src="@routes.Assets.at(path="/public","js/jquery-2.0.3.min.js")"></script>
     <script type="text/javascript" src="@routes.Assets.at(path="/public","bootstrap-3.3.6/js/bootstrap.min.js")"></script>
 
+    @* TODO: remove this at some point, so we don't load all the scritps both before and after the document is parsed
+       or use defer. *@
     @for(script <- scripts) {
       <script type="text/javascript" src="@routes.Assets.at(path="/public",script)"></script>
     }
