@@ -13,21 +13,21 @@ request: play.api.mvc.Request[AnyContent]
 
 @com.lucidchart.piezo.admin.views.html.triggersLayout(triggersByGroup, currentTrigger) {
     <h3>Select a trigger</h3>
-    <table class="table table-condensed table-fixed-first-col table-bordered table-striped table-hover">
+    <table class="table table-sm table-fixed-first-col table-bordered table-striped table-hover">
         <tbody>
         <tr>
-            <td class="text-right">Scheduler name</td>
+            <td class="text-end">Scheduler name</td>
             <td>@schedulerMetadata.getSchedulerName()</td>
         </tr>
         <tr>
-            <td class="text-right">Total triggers</td>
+            <td class="text-end">Total triggers</td>
             <td>@{triggersByGroup.foldLeft(0)((a, b) => a + b._2.length)}</td>
         </tr>
         </tbody>
     </table>
 
     <h4>Upcoming Triggers</h4>
-    <table class="table table-bordered table-striped table-hover table-condensed table-fixed-layout">
+    <table class="table table-bordered table-striped table-hover table-sm table-fixed-layout">
         <thead>
         <tr>
             <th class="column-time">Next Fire Time</th>

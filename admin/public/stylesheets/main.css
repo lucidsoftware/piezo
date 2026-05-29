@@ -31,8 +31,6 @@ body {
 }
 
 #flash-page {
-
-
     /**
      * Animation lasts 2.4s after a delay of 3s.
      */
@@ -133,10 +131,16 @@ table > tbody > tr > td {
 }
 
 .piezo-button {
+    --btn-size: 20px;
     padding: 6px 8px;
-    font-size: 20px;
+    font-size: var(--btn-size);
     line-height: 1.33;
     color: #29aae1;
+    cursor: pointer;
+    svg {
+        width: var(--btn-size);
+        height: var(--btn-size);
+    }
 }
 
 a.piezo-button:hover, a.piezo-button:focus {
@@ -149,6 +153,40 @@ a.piezo-button:hover, a.piezo-button:focus {
 
 .submit-btn {
     margin-top: 10px;
+}
+
+/* Gray out readonly inputs (Bootstrap only styles :disabled by default) */
+.form-control[readonly] {
+    background-color: var(--bs-secondary-bg);
+    opacity: 1;
+}
+
+/* we don't have a good way to aumatically add the class to the input itself */
+.is-invalid input {
+    border-color: var(--bs-form-invalid-border-color);
+}
+
+.job-data-entry .input-group {
+    width: 80%;
+}
+
+.job-data-delete {
+    display: none;
+    width: 20%;
+
+    &.shown {
+        display: block;
+    }
+}
+
+#job-data-add {
+    margin-right: calc(20% + var(--bs-gutter-x)*.5);
+    margin-left: auto;
+}
+
+
+.w-40 {
+    width: 40%;
 }
 
 .inline-header {
@@ -173,4 +211,26 @@ th, td {
 
 .column-time {
     min-width: 85px;
+}
+
+.alert-pop-in:not(.show) {
+    display: none;
+    opacity: 0;
+}
+
+@keyframes fade-dismiss {
+    from {
+        opacity: 1;
+        display: block;
+    }
+    to {
+        opacity: 0;
+        display: none;
+    }
+}
+
+#errorGrowl, #runSuccess {
+    &.show {
+        animation: fade-dismiss 1s ease 5s forwards;
+    }
 }

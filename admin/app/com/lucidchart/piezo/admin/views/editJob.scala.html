@@ -25,54 +25,29 @@ messagesProvider: play.api.i18n.MessagesProvider
     <h3>New Job</h3>
   }
 
-  <h4 class="text-danger">@jobForm.errors.filter(_.key == "").map(_.message).mkString(", ")</h4>
-  <form role="form" action="@formAction" method="POST">
-    <div class="form-horizontal">
-      @defining(if(existing) {Symbol("readonly")} else {Symbol("none")}) { newEditOnly =>
+<h4 class="text-danger">@jobForm.errors.filter(_.key == "").map(_.message).mkString(", ")</h4>
+<form role="form" action="@formAction" method="POST">
+    @defining(if(existing) {Symbol("readonly")} else {Symbol("none")}) { newEditOnly =>
 
-        @if(!existing) {
-            <datalist id="job-groups-list">
-                @jobsByGroup.map { case (name, _) =>
-                    <option value="@name"></option>
-                }
-            </datalist>
+    @if(!existing) {
+    <datalist id="job-groups-list">
+        @jobsByGroup.map { case (name, _) =>
+        <option value="@name"></option>
         }
+    </datalist>
+    }
 
-        @helper.inputText(jobForm("group"), Symbol("_label") -> "Group", Symbol("labelClass") -> "col-sm-3 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "Group", newEditOnly -> None, Symbol("class") -> "form-control form-inline-control", Symbol("list") -> "job-groups-list")
-        @helper.inputText(jobForm("name"), Symbol("_label") -> "Name", Symbol("labelClass") -> "col-sm-3 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "Name", newEditOnly -> None, Symbol("class") -> "form-control form-inline-control")
-        @helper.inputText(jobForm("class"), Symbol("_label") -> "Class", Symbol("labelClass") -> "col-sm-3 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "Name", Symbol("class") -> "form-control form-inline-control")
-        @helper.inputText(jobForm("description"), Symbol("_label") -> "Description", Symbol("labelClass") -> "col-sm-3 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "Description", Symbol("class") -> "form-control form-inline-control")
-        @helper.checkbox(jobForm("durable"), Symbol("_label") -> "Durable", Symbol("labelClass") -> "col-sm-3 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("readonly") -> None, Symbol("class") -> "form-inline-control", Symbol("checked") -> true, Symbol("disabled") -> true, Symbol("id") -> "durable-placeholder")
+    @helper.inputText(jobForm("group"), Symbol("_label") -> "Group", Symbol("placeholder") -> "Group", newEditOnly -> None, Symbol("class") -> "form-control", Symbol("list") -> "job-groups-list")
+    @helper.inputText(jobForm("name"), Symbol("_label") -> "Name", Symbol("placeholder") -> "Name", newEditOnly -> None, Symbol("class") -> "form-control") @helper.inputText(jobForm("class"), Symbol("_label") -> "Class", Symbol("placeholder") -> "Name", Symbol("class") -> "form-control")
+    @helper.inputText(jobForm("description"), Symbol("_label") -> "Description", Symbol("placeholder") -> "Description", Symbol("class") -> "form-control") @helper.checkbox(jobForm("durable"), Symbol("_label") -> "Durable", Symbol("readonly") -> None, Symbol("class") -> "form-check-input my-auto ms-3", Symbol("checked") -> true, Symbol("disabled") -> true, Symbol("id") -> "durable-placeholder")
 
-        <input type="hidden" id="durable" name="durable" value="true" readonly="true" />
+    <input type="hidden" id="durable" name="durable" value="true" readonly="true" />
 
-        @helper.checkbox(jobForm("requests-recovery"), Symbol("_label") -> "Requests recovery", Symbol("labelClass") -> "col-sm-3 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("class") -> "form-inline-control")
+    @helper.checkbox(jobForm("requests-recovery"), Symbol("_label") -> "Requests recovery", Symbol("class") -> "form-check-input my-auto ms-3") }
 
-        <h4>Job Data Map</h4>
+    @com.lucidchart.piezo.admin.views.html.jobDataMap(jobForm("job-data-map"))
 
-        <div class="job-data-map" id="job-data-map">
-          @helper.repeat(jobForm("job-data-map"), min = jobForm("job-data-map").indexes.length + 1) { dataMap =>
-
-            <div class="job-data-entry">
-            @dataMap("key").value.map { _ =>
-              @dataMap("value").value.map { _ =>
-                <a class="job-data-delete text-right" href="#">delete</a>
-              }
-            }
-
-            @helper.inputText(dataMap("key"), Symbol("_label") -> "Key", Symbol("labelClass") -> "col-sm-3 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "Key", Symbol("class") -> "job-data-key form-control form-inline-control")
-            @helper.inputText(dataMap("value"), Symbol("_label") -> "Value", Symbol("labelClass") -> "col-sm-3 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "Value", Symbol("class") -> "job-data-value form-control form-inline-control")
-            </div>
-
-          }
-
-          <a class="job-data-add text-right" id="job-data-add" href="#">add</a>
-        </div>
-      }
-
-    </div>
-
-    <button type="submit" class="btn btn-default submit-btn">@submitValue</button>
-    <button type="button" class="btn btn-default submit-btn" onclick="history.back();" value="Cancel">Cancel</button>
-  </form>
+    <button type="submit" class="btn btn-primary submit-btn">@submitValue</button>
+    <button type="button" class="btn btn-danger submit-btn" onclick="history.back()" value="Cancel">Cancel</button>
+</form>
 }

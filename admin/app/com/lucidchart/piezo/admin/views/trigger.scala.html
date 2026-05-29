@@ -23,53 +23,55 @@ request: play.api.mvc.Request[AnyContent]
         <h3 class="text-danger">@errorMessage.get</h3>
     }
     @if(!currentTrigger.isEmpty) {
-        <h3 class="pull-left">@currentTrigger.get.getKey.getGroup() &raquo; <span class="text-info">@currentTrigger.get.getKey.getName()</span></h3>
-        <a class="piezo-button pull-right" data-toggle="tooltip" title="Duplicate trigger" href="@{piezoRoutes.Triggers.getNewTriggerForm(
+        <h3 class="float-start">@currentTrigger.get.getKey.getGroup() &raquo; <span class="text-info">@currentTrigger.get.getKey.getName()</span></h3>
+        <a class="piezo-button float-end" data-bs-toggle="tooltip" title="Duplicate trigger" href="@{piezoRoutes.Triggers.getNewTriggerForm(
             currentTrigger.get match {
                 case c: CronTrigger => "cron"
                 case s: SimpleTrigger => "simple"
                 case t => throw new MatchError(t)
             }
             )}?templateGroup=@currentTrigger.get.getKey.getGroup()&templateName=@currentTrigger.get.getKey.getName()">
-            <span class="glyphicon glyphicon-duplicate"></span>
+            @Icon.duplicate
         </a>
-        <a class="piezo-button pull-right" href="@piezoRoutes.Triggers.getEditTriggerAction(currentTrigger.get.getKey.getGroup(), currentTrigger.get.getKey.getName())" data-toggle="tooltip" title="Edit trigger">
-            <span class="glyphicon glyphicon-pencil"></span>
+        <a class="piezo-button float-end" href="@piezoRoutes.Triggers.getEditTriggerAction(currentTrigger.get.getKey.getGroup(), currentTrigger.get.getKey.getName())" data-bs-toggle="tooltip" title="Edit trigger">
+            @Icon.pencil
         </a>
-        <a id="deleteTrigger" class="piezo-button pull-right" data-toggle="tooltip" title="Delete trigger" onclick="$('#deleteConfirm').show()">
-            <span class="glyphicon glyphicon-remove"></span>
+        <a id="deleteTrigger" class="piezo-button float-end" data-bs-toggle="tooltip" title="Delete trigger" onclick="document.getElementById('deleteConfirm').classList.add('show')">
+            @Icon.remove
         </a>
 
         @if(triggerState.contains(TriggerState.PAUSED) || triggerState.contains(TriggerState.ERROR)) {
-            <a id="resumeTrigger" class="piezo-button pull-right" data-toggle="tooltip" title="Resume trigger">
-                <span class="glyphicon glyphicon-play"></span>
+            <a id="resumeTrigger" class="piezo-button float-end" data-bs-toggle="tooltip" title="Resume trigger">
+                @Icon.play
             </a>
         } else {
-            <a id="pauseTrigger" class="piezo-button pull-right" data-toggle="tooltip" title="Pause trigger">
-                <span class="glyphicon glyphicon-pause"></span>
+            <a id="pauseTrigger" class="piezo-button float-end" data-bs-toggle="tooltip" title="Pause trigger">
+                @Icon.pause
             </a>
         }
         <div class="clearfix"></div>
-        <div id="errorGrowl" style="display:none;" class="alert alert-danger">
+        <div id="errorGrowl" class="alert alert-danger alert-pop-in">
             <p id="errorMessage"></p>
         </div>
 
-        <div id="deleteConfirm" style="display:none;" class="alert alert-warning fade in">
+        <div id="deleteConfirm" class="alert alert-warning alert-pop-in fade">
           <h4>This will permanently delete the trigger!</h4>
             <button type="button" class="btn btn-danger" onclick="deleteTrigger()">Delete</button>
-            <button type="button" class="btn btn-default" onclick="$('#deleteConfirm').hide()">Cancel</button>
+            <button type="button" class="btn btn-secondary" onclick="document.getElementById('deleteConfirm').classList.remove('show')">Cancel</button>
         </div>
         <script>
-
             function showErrorMessage(message) {
-                $('#errorGrowl').show();
-                $('#errorMessage').text(message);
-                setTimeout(function() {
-                    $('#errorGrowl').fadeOut(1000);
-                }, 5000);
+                const growl = document.getElementById('errorGrowl');
+                document.getElementById('errorMessage').textContent = message;
+
+                growl.addEventListener('animationend', function() {
+                    growl.classList.remove('show');
+                }, { once: true });
+                growl.classList.add('show');
             }
 
             function deleteTrigger() {
+                document.getElementById('deleteConfirm')?.classList.remove('show');
                 var triggerUrl = "@piezoRoutes.Triggers.deleteTrigger(currentTrigger.get.getKey.getGroup(), currentTrigger.get.getKey.getName())";
                 var deleteRequest = new XMLHttpRequest();
                 deleteRequest.onreadystatechange = function() {
@@ -85,76 +87,74 @@ request: play.api.mvc.Request[AnyContent]
                 deleteRequest.send(null);
             }
 
-            function setTriggerState(pause) {;
-                $.ajax({
-                    url:"@piezoRoutes.Triggers.patchTrigger(currentTrigger.get.getKey.getGroup(), currentTrigger.get.getKey.getName())",
-                    type:'PATCH',
-                    headers : {
-                        'Accept' : 'application/json',
-                        'Content-Type' : 'application/json'
+            function setTriggerState(pause) {
+                fetch("@piezoRoutes.Triggers.patchTrigger(currentTrigger.get.getKey.getGroup(), currentTrigger.get.getKey.getName())", {
+                    method: 'PATCH',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
                     },
-                    data: JSON.stringify({"state": (pause? "PAUSED" : "NORMAL")}),
-                    success: function(resp, status) {
-                        window.location.reload();
-                    },
-                    error: function() {
-                        showErrorMessage(pause? 'Failed to pause trigger.' : 'Failed to resume trigger.');
-                    }
+                    body: JSON.stringify({state: pause ? 'PAUSED' : 'NORMAL' })
+                }).then(function(response) {
+                    if (!response.ok) throw new Error('request failed');
+                    window.location.reload();
+                }).catch(function() {
+                    showErrorMessage(pause ? 'Failed to pause trigger.' : 'Failed to resume trigger.');
                 });
             }
-            $('#pauseTrigger').click(setTriggerState.bind(this,true));
-            $('#resumeTrigger').click(setTriggerState.bind(this,false));
+            document.getElementById('pauseTrigger')?.addEventListener('click', setTriggerState.bind(this, true));
+            document.getElementById('resumeTrigger')?.addEventListener('click', setTriggerState.bind(this, false));
         </script>
-        <table class="table table-condensed table-bordered table-striped table-hover">
+        <table class="table table-sm table-bordered table-striped table-hover">
             <tbody>
             <tr>
-                <td class="text-right">Class name:</td>
+                <td class="text-end">Class name:</td>
                 <td>@currentTrigger.get.getClass()</td>
             </tr>
             <tr>
-                <td class="text-right">Trigger group:</td>
+                <td class="text-end">Trigger group:</td>
                 <td>@currentTrigger.get.getKey.getGroup()</td>
             </tr>
             <tr>
-                <td class="text-right">Trigger name:</td>
+                <td class="text-end">Trigger name:</td>
                 <td>@currentTrigger.get.getKey.getName</td>
             </tr>
             @if(currentTrigger.get.getJobKey() != null) {
             <tr>
-                <td class="text-right">Job group:</td>
+                <td class="text-end">Job group:</td>
                 <td>@currentTrigger.get.getJobKey.getGroup()</td>
             </tr>
             <tr>
-                <td class="text-right">Job name:</td>
+                <td class="text-end">Job name:</td>
                 <td><a href="@piezoRoutes.Jobs.getJob(currentTrigger.get.getJobKey.getGroup(), currentTrigger.get.getJobKey.getName())">@currentTrigger.get.getJobKey.getName()</a></td>
             </tr>
             }
             @currentTrigger.get match {
                 case c: CronTrigger => {
                     <tr>
-                        <td class="text-right">Cron expression:</td>
+                        <td class="text-end">Cron expression:</td>
                         <td>@c.getCronExpression()</td>
                     </tr>
                     <tr>
-                        <td class="text-right">Expression summary:</td>
+                        <td class="text-end">Expression summary:</td>
                         <td>@c.getExpressionSummary()</td>
                     </tr>
                     <tr>
-                        <td class="text-right">Time zone:</td>
+                        <td class="text-end">Time zone:</td>
                         <td>@c.getTimeZone().getDisplayName()</td>
                     </tr>
                 }
                 case s: SimpleTrigger => {
                     <tr>
-                        <td class="text-right">Repeat count:</td>
+                        <td class="text-end">Repeat count:</td>
                         <td>@s.getRepeatCount()</td>
                     </tr>
                     <tr>
-                        <td class="text-right">Repeat interval (seconds):</td>
+                        <td class="text-end">Repeat interval (seconds):</td>
                         <td>@{s.getRepeatInterval() / 1000}</td>
                     </tr>
                     <tr>
-                        <td class="text-right">Times triggered:</td>
+                        <td class="text-end">Times triggered:</td>
                         <td>@s.getTimesTriggered()</td>
                     </tr>
                 }
@@ -162,50 +162,50 @@ request: play.api.mvc.Request[AnyContent]
             }
             @triggerMonitoringPriority.map { triggerMonitoringPriority =>
             <tr>
-                <td class="text-right">Monitoring priority:</td>
+                <td class="text-end">Monitoring priority:</td>
                 <td>@triggerMonitoringPriority</td>
             </tr>
             <tr>
-                <td class="text-right">Monitoring - max seconds between successes:</td>
+                <td class="text-end">Monitoring - max seconds between successes:</td>
                 <td>@triggerMaxErrorTime seconds</td>
             </tr>
             <tr>
-                <td class="text-right">Monitoring team:</td>
+                <td class="text-end">Monitoring team:</td>
                 <td>@triggerMonitoringTeam.getOrElse("")</td>
             </tr>
             }
             <tr>
-                <td class="text-right">Description:</td>
+                <td class="text-end">Description:</td>
                 <td>
                     @if(currentTrigger.get.getDescription() != null) {@currentTrigger.get.getDescription()} else {}
                 </td>
             </tr>
             <tr>
-                <td class="text-right small">State:</td>
+                <td class="text-end small">State:</td>
                 <td class="small">@triggerState.map(_.toString)</td>
             </tr>
             <tr>
-                <td class="text-right small">End time:</td>
+                <td class="text-end small">End time:</td>
                 <td class="small">@currentTrigger.get.getEndTime()</td>
             </tr>
             <tr>
-                <td class="text-right small">Final fire time:</td>
+                <td class="text-end small">Final fire time:</td>
                 <td class="small">@currentTrigger.get.getFinalFireTime()</td>
             </tr>
             <tr>
-                <td class="text-right small">Misfire instruction:</td>
+                <td class="text-end small">Misfire instruction:</td>
                 <td class="small">@currentTrigger.get.getMisfireInstruction()</td>
             </tr>
             <tr>
-                <td class="text-right small">Next fire time:</td>
+                <td class="text-end small">Next fire time:</td>
                 <td class="small">@currentTrigger.get.getNextFireTime()</td>
             </tr>
             <tr>
-                <td class="text-right small">Previous fire time:</td>
+                <td class="text-end small">Previous fire time:</td>
                 <td class="small">@currentTrigger.get.getPreviousFireTime()</td>
             </tr>
             <tr>
-                <td class="text-right small">Start time:</td>
+                <td class="text-end small">Start time:</td>
                 <td class="small">@currentTrigger.get.getStartTime()</td>
             </tr>
             </tbody>
@@ -214,17 +214,17 @@ request: play.api.mvc.Request[AnyContent]
         <hr />
 
         <h4>Trigger Data Map</h4>
-        <table class="table table-bordered table-striped table-hover table-condensed">
+        <table class="table table-bordered table-striped table-hover table-sm">
             <thead>
                 <tr>
-                    <th class="text-right">Key</th>
+                    <th class="text-end">Key</th>
                     <th>Value</th>
                 </tr>
             </thead>
             <tbody>
             @currentTrigger.get.getJobDataMap.getKeys.map { triggerDataKey =>
                 <tr>
-                    <td class="text-right">@triggerDataKey</td>
+                    <td class="text-end">@triggerDataKey</td>
                     <td>@currentTrigger.get.getJobDataMap.getString(triggerDataKey)</td>
                 </tr>
             }
@@ -235,7 +235,7 @@ request: play.api.mvc.Request[AnyContent]
 
         @if(triggerHistory.isDefined) {
             <h4>Trigger History</h4>
-            <table class="table table-bordered table-striped table-hover table-condensed">
+            <table class="table table-bordered table-striped table-hover table-sm">
                 <thead>
                 <tr>
                     <th>Scheduled Start</th>
