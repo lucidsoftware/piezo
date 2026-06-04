@@ -102,15 +102,15 @@ implicit request: play.api.mvc.Request[AnyContent]
 
     <script type="text/javascript">
         function fileSelected() {
-            var files = document.getElementById("file").files;
-            var input = document.getElementById("file-name");
+            const files = document.getElementById("file").files;
+            const input = document.getElementById("file-name");
             input.setAttribute("value", files[0].name);
         }
 
         function importJobs() {
-            var files = document.getElementById("file").files;
+            const files = document.getElementById("file").files;
             if (files.length > 0) {
-                var form = new FormData();
+                const form = new FormData();
                 form.append('file', files[0]);
                 fetch("@{piezoRoutes.Jobs.postJobs}", {
                     method: 'POST',
@@ -119,14 +119,14 @@ implicit request: play.api.mvc.Request[AnyContent]
                     if (!response.ok) throw new Error(response.statusText);
                     return response.json();
                 }).then(function (data) {
-                    var count = data['count'];
-                    var failures = data['failures'];
-                    var report;
+                    let count = data['count'];
+                    const failures = data['failures'];
+                    let report;
                     if (failures.length > 0) {
                         report = failures.length + " out of " + count + " jobs failed to import! <br/>";
                         report += "<table class='table table-bordered table-striped table-sm table-fixed-layout table-hover'>";
                         report += "<tr><th>Job Group</th><th>Job Name </th> <th> Reason</th></tr>";
-                        for (var i = 0; i < failures.length; i++) {
+                        for (let i = 0; i < failures.length; i++) {
                             report += "<tr class='table-warning'>";
                             report += "<td>" + failures[i]['jobGroup'] + "</td><td>" + failures[i]["jobName"] + "</td><td>" + failures[i]['errorMessage'] + "</td>";
                             report += "</tr>";
@@ -141,7 +141,7 @@ implicit request: play.api.mvc.Request[AnyContent]
                     }
                     document.getElementById("import-result").innerHTML = report;
                 }).catch(function (error) {
-                    var report = "Something wrong happened! Got a response " + error.message + " while importing jobs.";
+                    const report = "Something wrong happened! Got a response " + error.message + " while importing jobs.";
                     document.getElementById("import-result").innerHTML = report;
                 });
             }
