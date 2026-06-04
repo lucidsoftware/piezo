@@ -65,7 +65,6 @@ messagesProvider: play.api.i18n.MessagesProvider,
         </datalist>
     }
 
-    <div class="form-horizontal">
     @defining(if(existing) {Symbol("readonly")} else {Symbol("none")}) { newEditOnly =>
     @helper.input(triggerForm("group"), Symbol("_label") -> "Group", Symbol("placeholder") -> "Group", Symbol("value")-> triggerForm.data.get("group").getOrElse(""), newEditOnly -> None) { (id, name, value, args) =>
       <input type="text" class="form-control" list="trigger-groups-list" name="@name" id="@id" @toHtmlArgs(args)>
