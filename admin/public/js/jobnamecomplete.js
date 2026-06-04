@@ -6,7 +6,7 @@
 
         const datalist = document.getElementById('job-names-list');
 
-        if (jobGroup == currentJobGroup) {
+        if (!datalist || jobGroup == currentJobGroup) {
             return;
         }
 
