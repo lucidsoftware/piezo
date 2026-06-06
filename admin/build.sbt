@@ -12,7 +12,7 @@ bashScriptExtraDefines ++= Seq(
 // Workaround for https://github.com/playframework/playframework/issues/7382
 // so we don't get unused import warnings
 RoutesKeys.routesImport := Seq.empty
-// templateImports := Seq.empty
+TwirlKeys.templateImports += "com.lucidchart.piezo.admin.views.Icon"
 
 javaOptions += s"-Dorg.quartz.properties=${(Compile / resourceDirectory).value / "quartz.properties"}"
 

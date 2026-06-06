@@ -22,91 +22,96 @@ request: play.api.mvc.Request[AnyContent]
         <h3 class="text-danger">@errorMessage.get</h3>
     }
     @if(!currentJob.isEmpty) {
-      <h3 class="pull-left job-name">@currentJob.get.getKey.getGroup() &raquo; <span class="text-info">@currentJob.get.getKey.getName()</span></h3>
-      <a class="piezo-button pull-right" data-toggle="tooltip" title="Export job" href="@{piezoRoutes.Jobs.getJobDetail(currentJob.get.getKey.getGroup(),currentJob.get.getKey.getName())}" download="@{currentJob.get.getKey.getGroup()}-@{currentJob.get.getKey.getName()}.json">
-        <span class="glyphicon glyphicon-download"></span>
+      <h3 class="float-start job-name">@currentJob.get.getKey.getGroup() &raquo; <span class="text-info">@currentJob.get.getKey.getName()</span></h3>
+      <a class="piezo-button float-end" title="Export job" href="@{piezoRoutes.Jobs.getJobDetail(currentJob.get.getKey.getGroup(),currentJob.get.getKey.getName())}" download="@{currentJob.get.getKey.getGroup()}-@{currentJob.get.getKey.getName()}.json">
+        @Icon.download
       </a>
-      <a class="piezo-button pull-right" data-toggle="tooltip" title="Duplicate job" href="@{piezoRoutes.Jobs.getNewJobForm()}?templateGroup=@currentJob.get.getKey.getGroup()&templateName=@currentJob.get.getKey.getName()">
-        <span class="glyphicon glyphicon-duplicate"></span>
+      <a class="piezo-button float-end" title="Duplicate job" href="@{piezoRoutes.Jobs.getNewJobForm()}?templateGroup=@currentJob.get.getKey.getGroup()&templateName=@currentJob.get.getKey.getName()">
+        @Icon.duplicate
       </a>
-      <a class="piezo-button pull-right" href="@piezoRoutes.Jobs.getEditJobAction(currentJob.get.getKey.getGroup(), currentJob.get.getKey.getName())" data-toggle="tooltip" title="Edit job">
-        <span class="glyphicon glyphicon-pencil"></span>
+      <a class="piezo-button float-end" href="@piezoRoutes.Jobs.getEditJobAction(currentJob.get.getKey.getGroup(), currentJob.get.getKey.getName())" title="Edit job">
+        @Icon.pencil
       </a>
-      <a id="deleteJob" class="piezo-button pull-right" data-toggle="tooltip" title="Delete job" onclick="$('#deleteConfirm').show()">
-        <span class="glyphicon glyphicon-remove"></span>
+      <a id="deleteJob" class="piezo-button float-end" title="Delete job" onclick="document.getElementById('deleteConfirm').classList.add('show')">
+          @Icon.remove
       </a>
-      <a id="runJob" class="piezo-button pull-right" data-toggle="tooltip" title="Trigger job" onclick="$('#runConfirm').show()">
-        <span class="glyphicon glyphicon-flash"></span>
+      <a id="runJob" class="piezo-button float-end" title="Trigger job" onclick="document.getElementById('runConfirm').classList.add('show')">
+        @Icon.flash
       </a>
       @if(!pausableTriggers.isEmpty) {
-        <a id="pauseJob" class="piezo-button pull-right" data-toggle="tooltip" title="Pause job" onclick="$('#pauseConfirm').show()">
-            <span class="glyphicon glyphicon-pause"></span>
+        <a id="pauseJob" class="piezo-button float-end" title="Pause job" onclick="document.getElementById('pauseConfirm').classList.add('show')">
+            @Icon.pause
         </a>
       } else {
         @if(!resumableTriggers.isEmpty) {
-            <a id="resumeJob" class="piezo-button pull-right" data-toggle="tooltip" title="Resume job">
-                <span class="glyphicon glyphicon-play"></span>
+            <a id="resumeJob" class="piezo-button float-end" title="Resume job">
+                @Icon.play
             </a>
         }
       }
 
       <div class="clearfix"></div>
 
-        <div id="errorGrowl" style="display:none;" class="alert alert-danger">
+        <div id="errorGrowl" class="alert alert-danger alert-pop-in">
             <p id="errorMessage">Failed to delete job.</p>
         </div>
 
         <!-- Run Job Alerts -->
-        <div id="runSuccess"  style="display:none;" class="alert alert-success">
+        <div id="runSuccess"  class="alert alert-success alert-pop-in">
           <p>The job has been triggered, and will run once a thread becomes available.</p>
         </div>
-        <div id="runConfirm" style="display:none;" class="alert alert-warning fade in">
+        <div id="runConfirm" class="alert alert-warning alert-pop-in fade">
             <h4>Are you sure you want to run this job right now?</h4>
             <button type="button" class="btn btn-success" onclick="runJob()">Run</button>
-            <button type="button" class="btn btn-default" onclick="$('#runConfirm').hide()">Cancel</button>
+            <button type="button" class="btn btn-secondary" onclick="document.getElementById('runConfirm').classList.remove('show')">Cancel</button>
         </div>
 
         <!-- Delete Job Alerts -->
-        <div id="deleteConfirm" style="display:none;" class="alert alert-warning fade in">
+        <div id="deleteConfirm" class="alert alert-warning alert-pop-in fade">
           <h4>This will permanently delete the job!</h4>
           <button type="button" class="btn btn-danger" onclick="deleteJob()">Delete</button>
-          <button type="button" class="btn btn-default" onclick="$('#deleteConfirm').hide()">Cancel</button>
+          <button type="button" class="btn btn-secondary" onclick="document.getElementById('deleteConfirm').classList.remove('show')">Cancel</button>
         </div>
         @defining(configuration.getOptional[Boolean]("com.lucidchart.piezo.admin.production").contains(true)) { inProd =>
             <!-- Pause Job Alerts -->
-            <div id="pauseConfirm" style="display: none;" class="alert alert-@if(inProd) {danger} else {warning} fade in">
+            <div id="pauseConfirm" class="alert alert-@if(inProd) {danger} else {warning} alert-pop-in fade">
                 <h4>Are you sure you want to pause the job?</h4>
                 @if(inProd) {<h2><b>THIS IS IN PRODUCTION!!!</b></h2>}
                 <button type="button" class="btn btn-@if(inProd) {danger} else {warning}" onclick="pauseJob()">Pause</button>
-                <button type="button" class="btn btn-default" onclick="$('#pauseConfirm').hide()">Cancel</button>
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('pauseConfirm').classList.remove('show')">Cancel</button>
             </div>
         }
         <script>
-            var deleteConfirm = $('#deleteError');
-            var deleteError = $('#deleteConfirm');
-            var pauseConfirm = $('pauseError');
-            var pauseError = $('pauseConfirm');
-            var runConfirm = $('#runConfirm');
-            var runSuccess = $('#runSuccess');
-            var runError = $('#runError');
-
-            function showErrorMessage(message) {
-                $('#errorGrowl').show();
-                $('#errorMessage').text(message);
-                setTimeout(function() {
-                    $('#errorGrowl').fadeOut(1000);
-                }, 5000);
+            function hideById(id) {
+                const el = document.getElementById(id);
+                if (el) el.classList.remove('show');
             }
 
-            function pauseJob(){
-                pauseConfirm.hide();
+            // TODO: use css class instead.
+            function showWithFadeOut(element) {
+                // this assumes we have an animation triggered by adding the show class
+                element.addEventListener('animationend', function() {
+                    element.classList.remove('show');
+                }, { once: true });
+                element.classList.add('show');
+            }
+
+            function showErrorMessage(message) {
+                const growl = document.getElementById('errorGrowl');
+                document.getElementById('errorMessage').textContent = message;
+
+                showWithFadeOut(growl)
+            }
+
+            function pauseJob() {
+                hideById('pauseConfirm');
                 @pausableTriggers.map { triggerKey =>
                     setTrigger(true, "@piezoRoutes.Triggers.patchTrigger(triggerKey.getGroup(), triggerKey.getName())");
                 }
             }
 
             function deleteJob() {
-                deleteConfirm.hide();
+                hideById('deleteConfirm');
                 var jobUrl = "@piezoRoutes.Jobs.deleteJob(currentJob.get.getKey.getGroup(), currentJob.get.getKey.getName())";
                 var deleteRequest = new XMLHttpRequest();
                 deleteRequest.onreadystatechange = function() {
@@ -123,16 +128,14 @@ request: play.api.mvc.Request[AnyContent]
             }
 
             function runJob() {
-                runConfirm.hide();
+                hideById('runConfirm');
                 var jobUrl = "@piezoRoutes.Triggers.triggerJob(currentJob.get.getKey.getGroup(), currentJob.get.getKey.getName())";
                 var runRequest = new XMLHttpRequest();
                 runRequest.onreadystatechange = function() {
                     if (runRequest.readyState === 4) {
                         if (runRequest.status === 200) {
-                            runSuccess.show();
-                            setTimeout(function() {
-                                runSuccess.fadeOut(1000);
-                            }, 5000);
+                            const success = document.getElementById('runSuccess');
+                            showWithFadeOut(success);
                         } else {
                             showErrorMessage('Failed to run job.');
                         }
@@ -143,55 +146,54 @@ request: play.api.mvc.Request[AnyContent]
             }
 
             function setTrigger(pause, triggerUrl) {
-                $.ajax({
-                    url:triggerUrl,
-                    type:'PATCH',
-                    headers : {
-                        'Accept' : 'application/json',
-                        'Content-Type' : 'application/json'
+                fetch(triggerUrl, {
+                    method: 'PATCH',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
                     },
-                    data: JSON.stringify({"state": (pause? "PAUSED" : "NORMAL")}),
-                    success: function(resp, status) {
-                        window.location.reload();
-                    },
-                    error: function() {
-                        showErrorMessage(pause? 'Failed to pause trigger.' : 'Failed to resume trigger.');
-                    }
+                    body: JSON.stringify({ state: pause ? 'PAUSED' : 'NORMAL' })
+                }).then(function(response) {
+                    if (!response.ok) throw new Error('request failed');
+                    window.location.reload();
+                }).catch(function() {
+                    showErrorMessage(pause ? 'Failed to pause trigger.' : 'Failed to resume trigger.');
                 });
             }
-            $('#resumeJob').click(function() {
+
+            document.getElementById('resumeJob')?.addEventListener('click', function() {
                 @resumableTriggers.map { triggerKey =>
                     setTrigger(false, "@piezoRoutes.Triggers.patchTrigger(triggerKey.getGroup(), triggerKey.getName())");
                 }
             });
         </script>
         <div class="clearfix"></div>
-        <table class="table table-condensed table-fixed-first-col table-bordered table-striped table-hover">
+        <table class="table table-sm table-fixed-first-col table-bordered table-striped table-hover">
             <tbody>
             <tr>
-                <td class="text-right">Class</td>
+                <td class="text-end">Class</td>
                 <td>@currentJob.get.getJobClass.getName()</td>
             </tr>
             <tr>
-                <td class="text-right">Description</td>
+                <td class="text-end">Description</td>
                 <td>
                     @if(currentJob.get.getDescription() != null) {@currentJob.get.getDescription()} else {}
                 </td>
             </tr>
             <tr>
-                <td class="text-right small">Durable</td>
+                <td class="text-end small">Durable</td>
                 <td class="small">@currentJob.get.isDurable()</td>
             </tr>
             <tr>
-                <td class="text-right small">Persist job data after execution</td>
+                <td class="text-end small">Persist job data after execution</td>
                 <td class="small">@currentJob.get.isPersistJobDataAfterExecution()</td>
             </tr>
             <tr>
-                <td class="text-right small">Concurrent execution disallowed</td>
+                <td class="text-end small">Concurrent execution disallowed</td>
                 <td class="small">@currentJob.get.isConcurrentExecutionDisallowed()</td>
             </tr>
             <tr>
-                <td class="text-right small">Requests recovery</td>
+                <td class="text-end small">Requests recovery</td>
                 <td class="small">@currentJob.get.requestsRecovery()</td>
             </tr>
             </tbody>
@@ -200,17 +202,17 @@ request: play.api.mvc.Request[AnyContent]
         <hr />
 
         <h4>Job Data Map</h4>
-        <table class="table table-bordered table-striped table-condensed job-data table-hover">
+        <table class="table table-bordered table-striped table-sm job-data table-hover">
             <thead>
             <tr>
-                <th class="text-right">Key</th>
+                <th class="text-end">Key</th>
                 <th>Value</th>
             </tr>
             </thead>
             <tbody>
             @currentJob.get.getJobDataMap.getKeys.map { jobDataKey =>
                 <tr>
-                    <td class="text-right">@jobDataKey</td>
+                    <td class="text-end">@jobDataKey</td>
                     <td>@currentJob.get.getJobDataMap.get(jobDataKey)</td>
                 </tr>
             }
@@ -220,18 +222,18 @@ request: play.api.mvc.Request[AnyContent]
         <hr />
 
         <h4 class="inline-header">Triggers</h4>
-        <a class="piezo-button" href="@{piezoRoutes.Triggers.getNewTriggerForm("cron")}?jobGroup=@currentJob.get.getKey.getGroup()&jobName=@currentJob.get.getKey.getName()" data-toggle="tooltip" title="Add trigger for this job"><span class="glyphicon glyphicon-plus"></span></a>
-        <table class="table table-bordered table-striped table-condensed">
+        <a class="piezo-button" href="@{piezoRoutes.Triggers.getNewTriggerForm("cron")}?jobGroup=@currentJob.get.getKey.getGroup()&jobName=@currentJob.get.getKey.getName()" data-bs-toggle="tooltip" title="Add trigger for this job">@Icon.plus</a>
+        <table class="table table-bordered table-striped table-sm">
           <thead>
             <tr>
-              <th class="text-right">Group</th>
+              <th class="text-end">Group</th>
               <th>Name</th>
             </tr>
           </thead>
           <tbody>
             @triggers.get.map { trigger =>
               <tr>
-                <td class="text-right">@trigger.getKey.getGroup()</td>
+                <td class="text-end">@trigger.getKey.getGroup()</td>
                 <td><a href="@piezoRoutes.Triggers.getTrigger(trigger.getKey.getGroup(), trigger.getKey.getName())">@trigger.getKey.getName()</a></td>
               </tr>
             }
@@ -240,7 +242,7 @@ request: play.api.mvc.Request[AnyContent]
 
         @if(jobHistory.isDefined) {
             <h4>Job History</h4>
-            <table class="table table-bordered table-striped table-hover table-condensed">
+            <table class="table table-bordered table-striped table-hover table-sm">
                 <thead>
                 <tr>
                     <th>Trigger Group</th>

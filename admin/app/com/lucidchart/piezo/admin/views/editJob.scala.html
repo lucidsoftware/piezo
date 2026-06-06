@@ -5,7 +5,7 @@ submitValue: String,
 formAction: play.api.mvc.Call,
 existing: Boolean,
 errorMessage: Option[String] = None,
-scripts: List[String] = List[String]("js/jobData.js", "js/typeAhead.js")
+scripts: List[String] = List[String]("js/jobData.js")
 )(
 implicit
 request: play.api.mvc.Request[AnyContent],
@@ -25,44 +25,29 @@ messagesProvider: play.api.i18n.MessagesProvider
     <h3>New Job</h3>
   }
 
-  <h4 class="text-danger">@jobForm.errors.filter(_.key == "").map(_.message).mkString(", ")</h4>
-  <form role="form" action="@formAction" method="POST">
-    <div class="form-horizontal">
-      @defining(if(existing) {Symbol("readonly")} else {Symbol("none")}) { newEditOnly =>
+<h4 class="text-danger">@jobForm.errors.filter(_.key == "").map(_.message).mkString(", ")</h4>
+<form role="form" action="@formAction" method="POST">
+    @defining(if(existing) {Symbol("readonly")} else {Symbol("none")}) { newEditOnly =>
 
-        @helper.inputText(jobForm("group"), Symbol("_label") -> "Group", Symbol("labelClass") -> "col-sm-3 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "Group", newEditOnly -> None, Symbol("class") -> "job-group-type-ahead form-control form-inline-control")
-        @helper.inputText(jobForm("name"), Symbol("_label") -> "Name", Symbol("labelClass") -> "col-sm-3 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "Name", newEditOnly -> None, Symbol("class") -> "form-control form-inline-control")
-        @helper.inputText(jobForm("class"), Symbol("_label") -> "Class", Symbol("labelClass") -> "col-sm-3 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "Name", Symbol("class") -> "form-control form-inline-control")
-        @helper.inputText(jobForm("description"), Symbol("_label") -> "Description", Symbol("labelClass") -> "col-sm-3 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "Description", Symbol("class") -> "form-control form-inline-control")
-        @helper.checkbox(jobForm("durable"), Symbol("_label") -> "Durable", Symbol("labelClass") -> "col-sm-3 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("readonly") -> None, Symbol("class") -> "form-inline-control", Symbol("checked") -> true, Symbol("disabled") -> true, Symbol("id") -> "durable-placeholder")
+    @if(!existing) {
+    <datalist id="job-groups-list">
+        @jobsByGroup.map { case (name, _) =>
+        <option value="@name"></option>
+        }
+    </datalist>
+    }
 
-        <input type="hidden" id="durable" name="durable" value="true" readonly="true" />
+    @helper.inputText(jobForm("group"), Symbol("_label") -> "Group", Symbol("placeholder") -> "Group", newEditOnly -> None, Symbol("class") -> "form-control", Symbol("list") -> "job-groups-list")
+    @helper.inputText(jobForm("name"), Symbol("_label") -> "Name", Symbol("placeholder") -> "Name", newEditOnly -> None, Symbol("class") -> "form-control") @helper.inputText(jobForm("class"), Symbol("_label") -> "Class", Symbol("placeholder") -> "Name", Symbol("class") -> "form-control")
+    @helper.inputText(jobForm("description"), Symbol("_label") -> "Description", Symbol("placeholder") -> "Description", Symbol("class") -> "form-control") @helper.checkbox(jobForm("durable"), Symbol("_label") -> "Durable", Symbol("readonly") -> None, Symbol("class") -> "form-check-input my-auto ms-3", Symbol("checked") -> true, Symbol("disabled") -> true, Symbol("id") -> "durable-placeholder")
 
-        @helper.checkbox(jobForm("requests-recovery"), Symbol("_label") -> "Requests recovery", Symbol("labelClass") -> "col-sm-3 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("class") -> "form-inline-control")
+    <input type="hidden" id="durable" name="durable" value="true" readonly="true" />
 
-        <h4>Job Data Map</h4>
+    @helper.checkbox(jobForm("requests-recovery"), Symbol("_label") -> "Requests recovery", Symbol("class") -> "form-check-input my-auto ms-3") }
 
-        <div class="job-data-map">
-          @helper.repeat(jobForm("job-data-map"), min = jobForm("job-data-map").indexes.length + 1) { dataMap =>
+    @com.lucidchart.piezo.admin.views.html.jobDataMap(jobForm("job-data-map"))
 
-            @dataMap("key").value.map { _ =>
-              @dataMap("value").value.map { _ =>
-                <div class="job-data-delete text-right"><a href="#">delete</a></div>
-              }
-            }
-
-            @helper.inputText(dataMap("key"), Symbol("_label") -> "Key", Symbol("labelClass") -> "col-sm-3 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "Key", Symbol("class") -> "job-data-key form-control form-inline-control")
-            @helper.inputText(dataMap("value"), Symbol("_label") -> "Value", Symbol("labelClass") -> "col-sm-3 text-right", Symbol("inputDivClass") -> "col-sm-4", Symbol("placeholder") -> "Value", Symbol("class") -> "job-data-value form-control form-inline-control")
-
-          }
-
-          <div class="job-data-add text-right"><a href="#">add</a></div>
-        </div>
-      }
-
-    </div>
-
-    <button type="submit" class="btn btn-default submit-btn">@submitValue</button>
-    <button type="button" class="btn btn-default submit-btn" onclick="history.back();" value="Cancel">Cancel</button>
-  </form>
+    <button type="submit" class="btn btn-primary submit-btn">@submitValue</button>
+    <button type="button" class="btn btn-danger submit-btn" onclick="history.back()" value="Cancel">Cancel</button>
+</form>
 }

@@ -3,13 +3,49 @@ body {
     padding-top: 60px; /* 40px to make the container go all the way to the bottom of the topbar */
 }
 
+:root {
+    --space: 10px;
+}
+
+/*
+ * smooth transition for hiding flash message
+ *
+ * This waits 3s, then fades the message to 0 opacity over 2s, then
+ * shrinks the size to 0 so that content below it moves up.
+ */
+@keyframes flash-dismiss {
+    83%, to {
+        opacity: 0;
+    }
+    83% {
+        margin-top: var(--space);
+        padding: var(--space);
+        height: auto;
+    }
+    to {
+        margin-top: 0;
+        padding: 0 var(--space);
+        height: 0;
+        display: none;
+    }
+}
+
+#flash-page {
+    /**
+     * Animation lasts 2.4s after a delay of 3s.
+     */
+    animation: flash-dismiss 2.4s ease 3s forwards;
+
+    overflow: hidden;
+}
+
 .flash-container {
     text-align: center;
 }
 
 .flash-container div {
-    margin-top: 10px;
-    padding: 10px;
+    margin-top: var(--space);
+    padding: var(--space);
 }
 
 a:link.piezoicon, a:visited.piezoicon {
@@ -58,9 +94,10 @@ h3.job-name {
     max-width: 585px;
 }
 
-div.job-data-delete, div.job-data-add {
+a.job-data-delete, a.job-data-add {
     float: right;
     margin-right: 240px;
+    display: block;
 }
 
 .table-fixed-first-col {
@@ -94,10 +131,16 @@ table > tbody > tr > td {
 }
 
 .piezo-button {
+    --btn-size: 20px;
     padding: 6px 8px;
-    font-size: 20px;
+    font-size: var(--btn-size);
     line-height: 1.33;
     color: #29aae1;
+    cursor: pointer;
+    svg {
+        width: var(--btn-size);
+        height: var(--btn-size);
+    }
 }
 
 a.piezo-button:hover, a.piezo-button:focus {
@@ -110,6 +153,40 @@ a.piezo-button:hover, a.piezo-button:focus {
 
 .submit-btn {
     margin-top: 10px;
+}
+
+/* Gray out readonly inputs (Bootstrap only styles :disabled by default) */
+.form-control[readonly] {
+    background-color: var(--bs-secondary-bg);
+    opacity: 1;
+}
+
+/* we don't have a good way to aumatically add the class to the input itself */
+.is-invalid input {
+    border-color: var(--bs-form-invalid-border-color);
+}
+
+.job-data-entry .input-group {
+    width: 80%;
+}
+
+.job-data-delete {
+    display: none;
+    width: 20%;
+
+    &.shown {
+        display: block;
+    }
+}
+
+#job-data-add {
+    margin-right: calc(20% + var(--bs-gutter-x)*.5);
+    margin-left: auto;
+}
+
+
+.w-40 {
+    width: 40%;
 }
 
 .inline-header {
@@ -134,4 +211,26 @@ th, td {
 
 .column-time {
     min-width: 85px;
+}
+
+.alert-pop-in:not(.show) {
+    display: none;
+    opacity: 0;
+}
+
+@keyframes fade-dismiss {
+    from {
+        opacity: 1;
+        display: block;
+    }
+    to {
+        opacity: 0;
+        display: none;
+    }
+}
+
+#errorGrowl, #runSuccess {
+    &.show {
+        animation: fade-dismiss 1s ease 5s forwards;
+    }
 }

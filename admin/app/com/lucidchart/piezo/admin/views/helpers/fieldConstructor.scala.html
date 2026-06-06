@@ -1,9 +1,9 @@
 @(elements: helper.FieldElements)
 
-<div class="form-group @elements.args.get(Symbol("_class")) @if(elements.hasErrors) {has-error}">
-    <label for="@elements.id" class="piezo-label @elements.args.get(Symbol("labelClass"))">@elements.label</label>
-    <div class="input @elements.args.get(Symbol("inputDivClass"))">
+<div class="row mb-2 @elements.args.get(Symbol("_class")) @if(elements.hasErrors) {is-invalid}">
+    <label for="@elements.id" class="col-sm-3 col-form-label piezo-label justify-content-end text-end @elements.args.get(Symbol("labelClass"))">@elements.label</label>
+    <div class="@elements.args.getOrElse(Symbol("inputDivClass"), "col-sm-4 d-flex flex-column justify-content-center")">
         @elements.input
-        <span class="errors">@elements.errors.mkString(", ")</span>
+        <div class="invalid-feedback d-block">@elements.errors.mkString(", ")</div>
     </div>
 </div>

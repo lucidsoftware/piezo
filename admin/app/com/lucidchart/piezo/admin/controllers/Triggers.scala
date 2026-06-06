@@ -181,6 +181,7 @@ class Triggers(
         Ok(
           com.lucidchart.piezo.admin.views.html.editTrigger(
             TriggerHelper.getTriggersByGroup(scheduler),
+            scheduler.getJobGroupNames().asScala,
             monitoringTeams.value,
             newTriggerForm,
             formNewAction,
@@ -225,6 +226,7 @@ class Triggers(
         Ok(
           com.lucidchart.piezo.admin.views.html.editTrigger(
             TriggerHelper.getTriggersByGroup(scheduler),
+            scheduler.getJobGroupNames().asScala,
             monitoringTeams.value,
             editTriggerForm,
             formNewAction,
@@ -236,6 +238,7 @@ class Triggers(
         Ok(
           com.lucidchart.piezo.admin.views.html.editTrigger(
             TriggerHelper.getTriggersByGroup(scheduler),
+            scheduler.getJobGroupNames().asScala,
             monitoringTeams.value,
             editTriggerForm,
             formEditAction(group, name),
@@ -259,6 +262,7 @@ class Triggers(
           BadRequest(
             com.lucidchart.piezo.admin.views.html.editTrigger(
               TriggerHelper.getTriggersByGroup(scheduler),
+              scheduler.getJobGroupNames().asScala,
               monitoringTeams.value,
               formWithErrors,
               formEditAction(group, name),
@@ -289,6 +293,7 @@ class Triggers(
           BadRequest(
             com.lucidchart.piezo.admin.views.html.editTrigger(
               TriggerHelper.getTriggersByGroup(scheduler),
+              scheduler.getJobGroupNames().asScala,
               monitoringTeams.value,
               formWithErrors,
               formNewAction,
@@ -316,6 +321,7 @@ class Triggers(
               Ok(
                 com.lucidchart.piezo.admin.views.html.editTrigger(
                   TriggerHelper.getTriggersByGroup(scheduler),
+                  scheduler.getJobGroupNames().asScala,
                   monitoringTeams.value,
                   form,
                   formNewAction,
@@ -327,14 +333,6 @@ class Triggers(
           }
         },
       )
-  }
-
-  def triggerGroupTypeAhead(sofar: String): Action[AnyContent] = Action { implicit request =>
-    val groups = scheduler.getTriggerGroupNames().asScala.toList
-
-    Ok(Json.obj("groups" -> groups.filter { group =>
-      group.toLowerCase.contains(sofar.toLowerCase)
-    }))
   }
 
   def triggerJob(group: String, name: String): Action[AnyContent] = Action { request =>

@@ -485,24 +485,14 @@ class Jobs(
       )
   }
 
-  def jobGroupTypeAhead(sofar: String): Action[AnyContent] = Action { request =>
-    val groups = scheduler.getJobGroupNames().asScala.toList
-
-    Ok(Json.obj("groups" -> groups.filter { group =>
-      group.toLowerCase.contains(sofar.toLowerCase)
-    }))
-  }
-
-  def jobNameTypeAhead(group: String, sofar: String): Action[AnyContent] =
+  def jobNameTypeAhead(group: String): Action[AnyContent] =
     Action { request =>
       val jobs =
         scheduler.getJobKeys(GroupMatcher.jobGroupEquals(group)).asScala.toSet
 
       Ok(
-        Json.obj(
-          "jobs" -> jobs
-            .filter(_.getName.toLowerCase.contains(sofar.toLowerCase))
-            .map(_.getName),
+        Json.toJson(
+          jobs.map(_.getName),
         ),
       )
     }

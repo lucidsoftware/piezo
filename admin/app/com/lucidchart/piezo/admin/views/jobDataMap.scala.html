@@ -1,0 +1,54 @@
+@( jobData: play.api.data.Field )
+
+<h4>Job Data Map</h4>
+
+<div class="job-data-map" id="job-data-map">
+    <div class="row">
+        <div class="w-40 text-center">Key</div>
+        <div class="w-40 text-center">Value</div>
+    </div>
+    @helper.repeat(jobData, min = jobData.indexes.length + 1) { dataMap =>
+
+    <div class="job-data-entry row mb-2">
+        <div class="input-group">
+            @defining(dataMap("key")) { field =>
+            <input
+                type="text"
+                title="Key"
+                placeholder="Key"
+                class="form-control"
+                name="@field.name"
+                id="@field.id"
+                value="@field.value"
+            />
+            } @defining(dataMap("value")) { field =>
+            <input
+                type="text"
+                title="Value"
+                placeholder="Value"
+                class="form-control"
+                name="@field.name"
+                id="@field.id"
+                value="@field.value"
+            />
+            }
+        </div>
+        @defining(dataMap("value").value.map(_ => "shown")) { visClass =>
+        <div class="job-data-delete @visClass">
+            <button type="button" class="btn btn-danger">delete</button>
+        </div>
+        }
+    </div>
+    }
+
+    <div class="row">
+        <button
+            type="button"
+            class="job-data-add text-center btn btn-secondary col-auto"
+            id="job-data-add"
+            href="#"
+        >
+            add
+        </button>
+    </div>
+</div>

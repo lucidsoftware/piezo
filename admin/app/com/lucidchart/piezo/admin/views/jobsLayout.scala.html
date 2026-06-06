@@ -16,23 +16,18 @@ request: play.api.mvc.Request[AnyContent]
 <div class="row">
     <div class="col-md-3">
         <h3>Job groups</h3>
-        <div class="panel-group jobs-list" id="accordion">
+        <div class="accordion jobs-list" id="accordion">
             @jobsByGroup.map { jobGroup =>
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h5 class="title">
-                        <a data-toggle="collapse" data-parent="#accordion" href="#collapse@{jobGroup._1.replaceAll("\\W+", "_")}">
-                            @jobGroup._1
-                        </a>
-                    </h5>
-                </div>
-                <div id="collapse@{jobGroup._1.replaceAll("\\W+", "_")}"
-                @if(!currentJob.isEmpty && jobGroup._1 == currentJob.get.getKey().getGroup()) {
-                    class="panel-collapse collapse in">
-                } else {
-                    class="panel-collapse collapse ">
-                }
-                    <div class="panel-body">
+            @defining(jobGroup._1.replaceAll("\\W+", "_")) { collapseId =>
+            @defining(!currentJob.isEmpty && jobGroup._1 == currentJob.get.getKey().getGroup()) { isOpen =>
+            <div class="accordion-item">
+                <h5 class="accordion-header">
+                    <button class="accordion-button @if(!isOpen){collapsed}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse@collapseId" aria-expanded="@isOpen" aria-controls="collapse@collapseId">
+                        @jobGroup._1
+                    </button>
+                </h5>
+                <div id="collapse@collapseId" class="accordion-collapse collapse @if(isOpen){show}" data-bs-parent="#accordion">
+                    <div class="accordion-body">
                         <div class="list-group">
                         @jobGroup._2.map { jobKey =>
                             <a href="@piezoRoutes.Jobs.getJob(jobKey.getGroup(), jobKey.getName())"
@@ -41,7 +36,7 @@ request: play.api.mvc.Request[AnyContent]
                             } else {
                                 class="list-group-item"
                             }
-                            data-toggle="tooltip" data-placement="auto right"title="@jobKey.getName()">
+                            data-bs-toggle="tooltip" data-bs-placement="auto right" title="@jobKey.getName()">
                                 @jobKey.getName()
                             </a>
                         }
@@ -50,10 +45,12 @@ request: play.api.mvc.Request[AnyContent]
                 </div>
             </div>
             }
+            }
+            }
         </div>
     </div>
     <div class="col-md-9">
-      <a class="piezo-button pull-right" href="@piezoRoutes.Jobs.getNewJobForm()" data-toggle="tooltip" title="Add job"><span class="glyphicon glyphicon-plus"></span></a>
+      <a class="piezo-button float-end" href="@piezoRoutes.Jobs.getNewJobForm()" data-bs-toggle="tooltip" title="Add job">@Icon.plus</a>
       @detailsContent
     </div>
 </div>
