@@ -485,6 +485,56 @@ class Jobs(
       )
   }
 
+  def patchJobDataMaps: Action[JsValue] = Action(parse.json(maxFormSize)) { request =>
+    JobDataMapPatch.parse(request.body) match {
+      case error: JsError =>
+        BadRequest(
+          Json.obj(
+            "message" -> "Could not parse job data map updates",
+            "errors" -> JsError.toJson(error),
+          ),
+        )
+      case JsSuccess(patches, _) =>
+        val (failures, updated) = patches.map(applyJobDataMapPatch).partitionMap(identity)
+        val body = Json.obj(
+          "count" -> patches.size,
+          "updated" -> updated.map(jobKeyJson),
+          "failures" -> failures,
+        )
+        if (failures.isEmpty) Ok(body) else MultiStatus(body)
+    }
+  }
+
+  private def applyJobDataMapPatch(patch: JobDataMapPatch): Either[JsObject, JobKey] = {
+    val jobKey = patch.jobKey
+    try {
+      Option(scheduler.getJobDetail(jobKey)) match {
+        case None =>
+          Left(patchFailure(jobKey, "Job %s %s not found".format(jobKey.getGroup, jobKey.getName)))
+        case Some(jobDetail) =>
+          patch.entries.foreach(entry => jobDetail.getJobDataMap.put(entry.key, entry.value))
+          scheduler.addJob(jobDetail, true, true)
+          logger.info("Updated job data map for job %s %s".format(jobKey.getGroup, jobKey.getName))
+          Right(jobKey)
+      }
+    } catch {
+      case e: Exception =>
+        val errorMsg = "Exception caught updating the job data map of job %s %s. -- %s".format(
+          jobKey.getGroup,
+          jobKey.getName,
+          e.getLocalizedMessage(),
+        )
+        logger.error(errorMsg, e)
+        Left(patchFailure(jobKey, errorMsg))
+    }
+  }
+
+  private def jobKeyJson(jobKey: JobKey): JsObject =
+    Json.obj("jobGroup" -> jobKey.getGroup, "jobName" -> jobKey.getName)
+
+  private def patchFailure(jobKey: JobKey, errorMessage: String): JsObject =
+    jobKeyJson(jobKey) ++ Json.obj("errorMessage" -> errorMessage)
+
   def jobNameTypeAhead(group: String): Action[AnyContent] =
     Action { request =>
       val jobs =
