@@ -1,7 +1,7 @@
 @(
 triggersByGroup: scala.collection.mutable.Buffer[(String, scala.collection.immutable.List[org.quartz.TriggerKey])],
 currentTrigger: Option[org.quartz.Trigger],
-scripts: List[String] = List[String]()
+scripts: List[String] = List[String]("js/groupSearch.js")
 )(
 detailsContent: Html
 )(
@@ -13,27 +13,32 @@ request: play.api.mvc.Request[AnyContent]
 
 @com.lucidchart.piezo.admin.views.html.main("Piezo Triggers", scripts) {
 <div class="row">
-    <div class="col-md-3">
+    <div class="col-md-3" data-group-search>
         <h3>Trigger groups</h3>
-        <div class="accordion jobs-list" id="accordion">
+        <div class="group-search mb-2">
+            <label class="visually-hidden" for="trigger-search">Search trigger groups and names</label>
+            <input id="trigger-search" class="form-control group-search-input" type="search" placeholder="Search triggers"
+                autocomplete="off" aria-controls="triggers-accordion">
+        </div>
+        <div class="accordion jobs-list group-search-list" id="triggers-accordion">
             @triggersByGroup.map { triggerGroup =>
             @defining(triggerGroup._1.replaceAll("\\W+", "_")) { collapseId =>
             @defining(!currentTrigger.isEmpty && triggerGroup._1 == currentTrigger.get.getKey().getGroup()) { isOpen =>
             <div class="accordion-item">
                 <h5 class="accordion-header">
-                    <button class="accordion-button @if(!isOpen){collapsed}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse@collapseId" aria-expanded="@isOpen" aria-controls="collapse@collapseId">
+                    <button class="accordion-button group-search-group-name @if(!isOpen){collapsed}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse@collapseId" aria-expanded="@isOpen" aria-controls="collapse@collapseId">
                         @triggerGroup._1
                     </button>
                 </h5>
-                <div id="collapse@collapseId" class="accordion-collapse collapse @if(isOpen){show}" data-bs-parent="#accordion">
+                <div id="collapse@collapseId" class="accordion-collapse collapse @if(isOpen){show}" data-bs-parent="#triggers-accordion">
                     <div class="accordion-body">
                         <div class="list-group">
                             @triggerGroup._2.map { triggerKey =>
                             <a href="@piezoRoutes.Triggers.getTrigger(triggerKey.getGroup(), triggerKey.getName())"
                             @if(!currentTrigger.isEmpty && triggerGroup._1 == currentTrigger.get.getKey.getGroup() && triggerKey.getName() == currentTrigger.get.getKey.getName()) {
-                            class="list-group-item active"
+                            class="list-group-item group-search-item active"
                             } else {
-                            class="list-group-item"
+                            class="list-group-item group-search-item"
                             }
                             data-bs-toggle="tooltip" data-bs-placement="auto right" title="@triggerKey.getName()">
                             @triggerKey.getName()
@@ -47,6 +52,7 @@ request: play.api.mvc.Request[AnyContent]
             }
             }
         </div>
+        <p class="text-muted group-search-empty" role="status" aria-live="polite" hidden>No matching triggers</p>
     </div>
     <div class="col-md-9">
         <a class="piezo-button float-end" href="@piezoRoutes.Triggers.getNewTriggerForm("cron")" data-bs-toggle="tooltip" title="Add trigger">@Icon.plus</a>
