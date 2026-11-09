@@ -2,6 +2,7 @@ package com.lucidchart.piezo
 
 import com.timgroup.statsd.NonBlockingStatsDClientBuilder
 import java.io.*
+import java.nio.file.{Files, Paths, StandardCopyOption}
 import java.util.Properties
 import java.util.concurrent.{Semaphore, TimeUnit}
 import org.quartz.Scheduler
@@ -128,12 +129,19 @@ object Worker {
 
   private[piezo] def writeHeartbeat(filePath: String): Unit = {
     try {
-      val file = new File(filePath)
-      file.getParentFile.mkdirs()
-      val fileWrite = new FileWriter(file)
-      val heartbeatTime = dtf.format(Instant.now().truncatedTo(SECONDS))
-      fileWrite.write(heartbeatTime)
-      fileWrite.close()
+      val dest = Paths.get(filePath)
+      val parent = Option(dest.getParent).getOrElse(Paths.get("."))
+      Files.createDirectories(parent)
+      val tmp = Files.createTempFile(parent, dest.getFileName.toString, ".tmp")
+      try {
+        val heartbeatTime = dtf.format(Instant.now().truncatedTo(SECONDS))
+        Files.write(tmp, heartbeatTime.getBytes("UTF-8"))
+        Files.move(tmp, dest, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
+      } catch {
+        case NonFatal(e) =>
+          Files.deleteIfExists(tmp)
+          throw e
+      }
     } catch {
       case NonFatal(e) => logger.warn(s"Exception caught writing heartbeat timestamp to file $filePath)", e)
     }
