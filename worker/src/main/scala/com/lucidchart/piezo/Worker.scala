@@ -3,6 +3,7 @@ package com.lucidchart.piezo
 import com.timgroup.statsd.NonBlockingStatsDClientBuilder
 import java.io.*
 import java.nio.file.{Files, Paths, StandardCopyOption}
+import java.nio.file.attribute.PosixFilePermissions
 import java.util.Properties
 import java.util.concurrent.{Semaphore, TimeUnit}
 import org.quartz.Scheduler
@@ -33,6 +34,7 @@ object Worker {
   private[piezo] val runSemaphore = new Semaphore(0)
   private val shutdownSemaphore = new Semaphore(1)
   private[piezo] val dtf = DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(UTC)
+  private val defaultHeartbeatPerms = PosixFilePermissions.fromString("rw-r--r--")
 
   def main(args: Array[String]): Unit = {
     logger.info("worker starting")
@@ -132,7 +134,12 @@ object Worker {
       val dest = Paths.get(filePath)
       val parent = Option(dest.getParent).getOrElse(Paths.get("."))
       Files.createDirectories(parent)
-      val tmp = Files.createTempFile(parent, dest.getFileName.toString, ".tmp")
+      val tmp = Files.createTempFile(
+        parent,
+        dest.getFileName.toString,
+        ".tmp",
+        PosixFilePermissions.asFileAttribute(defaultHeartbeatPerms),
+      )
       try {
         val heartbeatTime = dtf.format(Instant.now().truncatedTo(SECONDS))
         Files.write(tmp, heartbeatTime.getBytes("UTF-8"))
