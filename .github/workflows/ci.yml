@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Startup MySQL service
         run: sudo systemctl start mysql.service
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v4
         with:
           java-version: '21'
