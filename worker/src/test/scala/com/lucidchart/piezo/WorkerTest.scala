@@ -1,6 +1,8 @@
 package com.lucidchart.piezo
 
 import java.io.{BufferedReader, File, FileReader}
+import java.nio.file.Files
+import java.nio.file.attribute.PosixFilePermission
 
 import org.specs2.mutable.*
 import org.quartz.*
@@ -99,7 +101,14 @@ class WorkerTest extends Specification {
       val heartbeatTime = Worker.dtf.parse(heartbeat.trim, Instant.from)
       val inRange = heartbeatTime.isAfter(Instant.now().minusSeconds(5))
 
-      inRange must equalTo(true)
+      val heartbeatPath = heartbeatFile.toPath
+      val posixReadable =
+        if (heartbeatPath.getFileSystem.supportedFileAttributeViews.contains("posix")) {
+          val perms = Files.getPosixFilePermissions(heartbeatPath)
+          perms.contains(PosixFilePermission.GROUP_READ) && perms.contains(PosixFilePermission.OTHERS_READ)
+        } else true
+
+      (inRange must equalTo(true)) and (posixReadable must equalTo(true))
     }
   }
 }
