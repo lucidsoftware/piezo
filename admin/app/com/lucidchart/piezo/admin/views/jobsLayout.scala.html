@@ -1,7 +1,7 @@
 @(
 jobsByGroup: scala.collection.mutable.Buffer[(String, scala.collection.immutable.List[org.quartz.JobKey])],
 currentJob: Option[org.quartz.JobDetail],
-scripts: List[String] = List[String]()
+scripts: List[String] = List[String]("js/groupSearch.js")
 )(
 detailsContent: Html
 )(
@@ -14,27 +14,32 @@ request: play.api.mvc.Request[AnyContent]
 
 @com.lucidchart.piezo.admin.views.html.main("Piezo Jobs", scripts) {
 <div class="row">
-    <div class="col-md-3">
+    <div class="col-md-3" data-group-search>
         <h3>Job groups</h3>
-        <div class="accordion jobs-list" id="accordion">
+        <div class="group-search mb-2">
+            <label class="visually-hidden" for="job-search">Search job groups and names</label>
+            <input id="job-search" class="form-control group-search-input" type="search" placeholder="Search jobs"
+                autocomplete="off" aria-controls="jobs-accordion">
+        </div>
+        <div class="accordion jobs-list group-search-list" id="jobs-accordion">
             @jobsByGroup.map { jobGroup =>
             @defining(jobGroup._1.replaceAll("\\W+", "_")) { collapseId =>
             @defining(!currentJob.isEmpty && jobGroup._1 == currentJob.get.getKey().getGroup()) { isOpen =>
             <div class="accordion-item">
                 <h5 class="accordion-header">
-                    <button class="accordion-button @if(!isOpen){collapsed}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse@collapseId" aria-expanded="@isOpen" aria-controls="collapse@collapseId">
+                    <button class="accordion-button group-search-group-name @if(!isOpen){collapsed}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse@collapseId" aria-expanded="@isOpen" aria-controls="collapse@collapseId">
                         @jobGroup._1
                     </button>
                 </h5>
-                <div id="collapse@collapseId" class="accordion-collapse collapse @if(isOpen){show}" data-bs-parent="#accordion">
+                <div id="collapse@collapseId" class="accordion-collapse collapse @if(isOpen){show}" data-bs-parent="#jobs-accordion">
                     <div class="accordion-body">
                         <div class="list-group">
                         @jobGroup._2.map { jobKey =>
                             <a href="@piezoRoutes.Jobs.getJob(jobKey.getGroup(), jobKey.getName())"
                             @if(!currentJob.isEmpty && jobGroup._1 == currentJob.get.getKey.getGroup() && jobKey.getName() == currentJob.get.getKey.getName()) {
-                                class="list-group-item active"
+                                class="list-group-item group-search-item active"
                             } else {
-                                class="list-group-item"
+                                class="list-group-item group-search-item"
                             }
                             data-bs-toggle="tooltip" data-bs-placement="auto right" title="@jobKey.getName()">
                                 @jobKey.getName()
@@ -48,6 +53,7 @@ request: play.api.mvc.Request[AnyContent]
             }
             }
         </div>
+        <p class="text-muted group-search-empty" role="status" aria-live="polite" hidden>No matching jobs</p>
     </div>
     <div class="col-md-9">
       <a class="piezo-button float-end" href="@piezoRoutes.Jobs.getNewJobForm()" data-bs-toggle="tooltip" title="Add job">@Icon.plus</a>

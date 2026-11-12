@@ -32,7 +32,7 @@ Worker also expands the set of tables that quartz uses with additional tables to
 5. Run Piezo as specified in [Running](#running).
 
 ### Building
-You must have [sbt](http://www.scala-sbt.org/) 0.13.
+You must have the [sbt runner](https://www.scala-sbt.org/). The runner will install the correct sbt version from the `project/build.properties` file
 
 `sbt worker/compile` compiles sources.
 
@@ -73,7 +73,7 @@ Admin is a web interface for viewing and managing the scheduled jobs.
 1. Follow the steps for the Worker [Setup](#setup) above.
 
 ### <a name="adminBuilding">Building</a>
-You must have [sbt](http://www.scala-sbt.org/) 0.13.
+You must have the [sbt runner](https://www.scala-sbt.org/). The runner will install the correct sbt version from the `project/build.properties` file
 
 `sbt admin/debian:packageBin` creates a .deb that includes all library dependencies, and installs piezo-admin as an Upstart service running as `piezo-admin`.
 

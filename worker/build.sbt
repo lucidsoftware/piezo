@@ -14,7 +14,7 @@ libraryDependencies ++= Seq(
   "org.slf4j" % "slf4j-api" % "2.0.16",
   "org.specs2" %% "specs2-core" % "4.20.9" % Test,
   "mysql" % "mysql-connector-java" % "8.0.33",
-  "javax.transaction" % "jta" % "1.1",
+  "jakarta.transaction" % "jakarta.transaction-api" % "2.0.1",
   "com.typesafe" % "config" % "1.4.3",
   "com.datadoghq" % "java-dogstatsd-client" % "4.4.3",
 )
